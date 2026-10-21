@@ -15,13 +15,21 @@ import {
 } from "lucide-react";
 import {
   InlineAlert,
-  MitraMark,
+  MitraLogo,
   PinInput,
   PrimaryButton,
   StepHeader,
 } from "@/components/primitives";
 import { DEMO, type Mode } from "@/lib/demo";
 import { cn } from "@/lib/cn";
+
+function PageFooter() {
+  return (
+    <p className="pt-8 text-center text-[13px] leading-5 text-[#6b7280]">
+      V1. Mitra powered by MIT
+    </p>
+  );
+}
 
 export function SplashScreen({
   mode,
@@ -32,31 +40,21 @@ export function SplashScreen({
 }) {
   const resumed = mode === "returning" && sessionActive;
   return (
-    <div className="auth-hero flex min-h-full flex-col px-6 pb-10 pt-16">
-      <div className="hero-orbit -right-24 top-16 h-72 w-72" />
-      <div className="hero-orbit -left-16 bottom-28 h-48 w-48" />
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-        <div className="relative">
-          <span className="absolute inset-0 -m-5 animate-ping rounded-[30px] bg-white/10" />
-          <MitraMark size={84} onDark className="relative rounded-[26px]" />
+    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-16">
+      <div className="flex flex-1 flex-col items-center justify-center pb-12 text-center">
+        <MitraLogo poweredBy />
+        <div className="mt-12 flex items-center gap-2.5 text-[13px] leading-5 text-[#6b7280]">
+          <span className="spinner spinner-dark" aria-hidden="true" />
+          <span>{resumed ? "Memulihkan sesi aman Anda…" : "Memeriksa sesi…"}</span>
         </div>
-        <div className="mt-6 text-[22px] font-extrabold tracking-[0.2em] text-white">
-          MITRA
-        </div>
-        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/55">
-          Mulia Informasi Teknologi
+        <p className="mt-2 max-w-[260px] text-[12px] leading-[18px] text-[#9ca3af]">
+          {resumed
+            ? "Sesi 30 hari masih aktif di perangkat ini."
+            : "Menyiapkan akses aman untuk Anda."}
         </p>
-        <div className="mt-14 flex items-center gap-2.5 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 backdrop-blur">
-          <span className="spinner" aria-hidden="true" />
-          <span className="text-[12px] font-medium text-white/85">
-            {resumed ? "Memulihkan sesi aman Anda…" : "Memeriksa sesi…"}
-          </span>
-        </div>
       </div>
-      <p className="relative z-10 text-center text-[11px] leading-relaxed text-white/50">
-        {resumed
-          ? "Sesi 30 hari masih aktif di perangkat ini."
-          : "Menyiapkan akses aman untuk Anda."}
+      <p className="text-center text-[13px] leading-5 text-[#6b7280]">
+        V1. Mitra powered by MIT
       </p>
     </div>
   );
@@ -81,63 +79,57 @@ export function FaceIntroScreen({
     { icon: ScanFace, title: "Posisi kamera", detail: "Sejajarkan wajah di dalam bingkai." },
   ];
   return (
-    <div className="min-h-full bg-[#f7f8fb] px-5 pb-24 pt-12">
+    <div className="flex min-h-full flex-col bg-white px-6 pb-24 pt-12">
       <StepHeader step={1} total={3} title="Verifikasi wajah" onBack={onBack} />
-      <p className="mt-2.5 text-[12.5px] leading-relaxed text-[#667085]">
-        Kami mencocokkan wajah Anda dengan foto yang terdaftar. Ini memastikan hanya Anda
-        yang dapat mengakses akun.
+      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
+        Kami mencocokkan wajah Anda dengan foto yang terdaftar.
       </p>
-      <div className="mt-6 overflow-hidden rounded-[22px] bg-[linear-gradient(160deg,#eaf1ff_0%,#f7f9ff_60%,#fff7ea_100%)] p-5">
-        <div className="relative mx-auto grid h-[150px] w-[150px] place-items-center">
-          <span className="absolute inset-0 rounded-full border border-[#2852a3]/10" />
-          <span className="absolute inset-4 rounded-full border border-[#2852a3]/15" />
-          <span className="absolute inset-8 rounded-full border border-dashed border-[#2852a3]/25" />
-          <span className="grid h-20 w-20 place-items-center rounded-full bg-white text-[#2852a3] shadow-[0_18px_40px_-20px_rgba(40,82,163,0.6)]">
-            <ScanFace className="h-9 w-9" strokeWidth={1.6} aria-hidden="true" />
-          </span>
-          <span className="absolute right-[18px] top-4 grid h-7 w-7 place-items-center rounded-full bg-[#f9a11f] text-white shadow">
-            <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" />
-          </span>
-        </div>
-        <p className="mt-3 text-center text-[11.5px] font-semibold text-[#1c3d7f]">
+
+      <div className="mt-8 flex flex-col items-center">
+        <span className="grid h-24 w-24 place-items-center rounded-full bg-[#f3f6fb] text-[#2852a3]">
+          <ScanFace className="h-11 w-11" strokeWidth={1.5} aria-hidden="true" />
+        </span>
+        <p className="mt-4 text-center text-[13px] leading-5 text-[#4b5563]">
           Sekali verifikasi, akses berikutnya lebih cepat.
         </p>
       </div>
-      <ul className="mt-6 space-y-3">
+
+      <ul className="mt-9 space-y-4">
         {tips.map((tip) => (
           <li key={tip.title} className="flex items-start gap-3">
-            <span className="grid h-9 w-9 flex-none place-items-center rounded-[11px] bg-white text-[#2852a3] shadow-[0_1px_2px_rgba(16,24,40,0.06)]">
-              <tip.icon className="h-[18px] w-[18px]" aria-hidden="true" />
-            </span>
+            <tip.icon className="mt-0.5 h-[18px] w-[18px] flex-none text-[#151b2b]" aria-hidden="true" />
             <div>
-              <p className="text-[12.5px] font-semibold text-[#344054]">{tip.title}</p>
-              <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#7c8ba3]">
+              <p className="text-[14px] font-medium leading-5 text-[#151b2b]">{tip.title}</p>
+              <p className="mt-0.5 text-[12px] leading-[18px] text-[#6b7280]">
                 {tip.detail}
               </p>
             </div>
           </li>
         ))}
       </ul>
-      <div className="mt-6 flex items-start gap-2.5 rounded-[13px] border border-[#e2eaf8] bg-[#f5f8fe] px-3.5 py-3">
-        <ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-[#2852a3]" aria-hidden="true" />
-        <p className="text-[11.5px] leading-relaxed text-[#3d5278]">
-          Foto hanya dipakai untuk verifikasi dan tidak ditampilkan ke pengguna lain.
-        </p>
-      </div>
-      <PrimaryButton
-        type="button"
-        className="mt-6"
-        onClick={onStart}
-        icon={<Camera className="h-4 w-4" aria-hidden="true" />}
-      >
+
+      <p className="mt-7 flex items-start gap-2 text-[12px] leading-[18px] text-[#6b7280]">
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
+        Foto hanya dipakai untuk verifikasi dan tidak ditampilkan ke pengguna lain.
+      </p>
+
+      <PrimaryButton type="button" className="mt-7" onClick={onStart}>
         Mulai verifikasi wajah
       </PrimaryButton>
       {allowPin ? (
-        <button type="button" onClick={onUsePin} className="ghost-button mx-auto mt-2 flex">
+        <button
+          type="button"
+          onClick={onUsePin}
+          className="mx-auto mt-5 text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
+        >
           Gunakan PIN
         </button>
       ) : (
-        <button type="button" onClick={onHelp} className="ghost-button mx-auto mt-2 flex">
+        <button
+          type="button"
+          onClick={onHelp}
+          className="mx-auto mt-5 text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
+        >
           Wajah tidak bisa diverifikasi?
         </button>
       )}
@@ -235,7 +227,7 @@ export function FaceCameraScreen({
   }
 
   return (
-    <div className="min-h-full bg-[#f7f8fb] px-5 pb-8 pt-12">
+    <div className="min-h-full bg-white px-6 pb-8 pt-12">
       <StepHeader step={1} total={3} title="Ambil foto wajah" onBack={onBack} />
       <div className="mt-1 flex items-center justify-between gap-3">
         <p className="text-[12px] leading-relaxed text-[#667085]">
@@ -353,12 +345,12 @@ export function FaceReviewScreen({
   onBack: () => void;
 }) {
   return (
-    <div className="min-h-full bg-[#f7f8fb] px-5 pb-8 pt-12">
+    <div className="min-h-full bg-white px-6 pb-8 pt-12">
       <StepHeader step={1} total={3} title="Periksa foto Anda" onBack={onBack} />
-      <p className="mt-2.5 text-[12.5px] leading-relaxed text-[#667085]">
+      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
         Pastikan wajah terlihat jelas, tidak buram, dan tidak terpotong.
       </p>
-      <div className="relative mt-5 overflow-hidden rounded-[24px] bg-[#18243c]">
+      <div className="relative mt-6 overflow-hidden rounded-[14px] bg-[#18243c]">
         <div className="relative h-[330px]">
           {image ? (
             <img src={image} alt="Hasil foto wajah" className="h-full w-full object-cover" />
@@ -395,12 +387,10 @@ export function FaceReviewScreen({
           </div>
         </div>
       </div>
-      <div className="mt-4 flex items-start gap-2.5 rounded-[13px] border border-[#e2eaf8] bg-[#f5f8fe] px-3.5 py-3">
-        <ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-[#2852a3]" aria-hidden="true" />
-        <p className="text-[11.5px] leading-relaxed text-[#3d5278]">
-          Foto ini hanya dipakai untuk mencocokkan identitas Anda.
-        </p>
-      </div>
+      <p className="mt-4 flex items-start gap-2 text-[12px] leading-[18px] text-[#6b7280]">
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
+        Foto ini hanya dipakai untuk mencocokkan identitas Anda.
+      </p>
       <PrimaryButton
         type="button"
         className="mt-5"
@@ -462,15 +452,12 @@ export function FaceCheckScreen({
   ];
 
   return (
-    <div className="flex min-h-full flex-col bg-[#f7f8fb] px-5 pb-8 pt-14">
+    <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-16">
       <div className="text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#7c8ba3]">
-          Verifikasi wajah
-        </p>
-        <h1 className="mt-2 text-[23px] font-extrabold tracking-[-0.02em] text-[#101a2e]">
+        <h1 className="text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
           {fail ? "Verifikasi belum selesai" : "Memverifikasi wajah…"}
         </h1>
-        <p className="mx-auto mt-2 max-w-[280px] text-[12px] leading-relaxed text-[#667085]">
+        <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#6b7280]">
           Jangan tutup halaman ini. Proses biasanya kurang dari 5 detik.
         </p>
       </div>
@@ -559,21 +546,21 @@ export function FaceFailedScreen({
   onBack: () => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col bg-[#f7f8fb] px-5 pb-8 pt-14">
+    <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-16">
       <div className="text-center">
-        <div className="mx-auto grid h-[84px] w-[84px] place-items-center rounded-full bg-[#fff1f0] text-[#d92d20] shadow-[0_0_0_10px_rgba(217,45,32,0.06)]">
-          <CameraOff className="h-9 w-9" strokeWidth={1.8} aria-hidden="true" />
+        <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#fff1f0] text-[#d92d20]">
+          <CameraOff className="h-8 w-8" strokeWidth={1.8} aria-hidden="true" />
         </div>
-        <h1 className="mt-6 text-[23px] font-extrabold tracking-[-0.02em] text-[#101a2e]">
+        <h1 className="mt-6 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
           Wajah belum cocok
         </h1>
-        <p className="mx-auto mt-2 max-w-[290px] text-[12.5px] leading-relaxed text-[#667085]">
+        <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#6b7280]">
           Pastikan pencahayaan cukup dan wajah tidak tertutup, lalu coba lagi.
         </p>
       </div>
-      <div className="mt-7 rounded-[15px] border border-[#e8ecf3] bg-white p-4">
-        <p className="text-[11.5px] font-semibold text-[#344054]">Sebelum mencoba lagi</p>
-        <ul className="mt-2 space-y-1.5 text-[11.5px] leading-relaxed text-[#7c8ba3]">
+      <div className="mt-8">
+        <p className="text-[14px] font-medium leading-5 text-[#151b2b]">Sebelum mencoba lagi</p>
+        <ul className="mt-3 space-y-2 text-[13px] leading-5 text-[#6b7280]">
           <li>Hadapkan wajah langsung ke kamera.</li>
           <li>Lepas masker, topi, dan kacamata gelap.</li>
           <li>Hindari posisi dengan cahaya di belakang.</li>
@@ -650,14 +637,14 @@ export function PinCreateScreen({
   }
 
   return (
-    <div className="min-h-full bg-[#f7f8fb] px-5 pb-8 pt-12">
+    <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-12">
       <StepHeader
         step={2}
         total={3}
         title={stage === "create" ? "Buat PIN" : "Ulangi PIN"}
         onBack={back}
       />
-      <p className="mt-2.5 text-[12.5px] leading-relaxed text-[#667085]">
+      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
         {stage === "create"
           ? "Buat PIN 6 angka untuk masuk tanpa kata sandi di perangkat ini."
           : "Masukkan kembali PIN yang baru Anda buat."}
@@ -693,25 +680,14 @@ export function PinCreateScreen({
         {stage === "create" ? "Lanjut" : "Buat PIN"}
       </PrimaryButton>
 
-      <div className="mt-5 flex items-start gap-2.5 rounded-[13px] border border-[#f5d9a8] bg-[#fffaf0] px-3.5 py-3">
-        <LockKeyhole className="mt-0.5 h-4 w-4 flex-none text-[#b54708]" aria-hidden="true" />
-        <p className="text-[11.5px] leading-relaxed text-[#8a4b08]">
-          Jangan bagikan PIN kepada siapa pun. MITRA tidak pernah meminta PIN melalui chat
-          atau telepon.
-        </p>
-      </div>
+      <p className="mt-6 flex items-start gap-2 text-[12px] leading-[18px] text-[#6b7280]">
+        <LockKeyhole className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
+        Jangan bagikan PIN kepada siapa pun. MITRA tidak pernah meminta PIN melalui chat
+        atau telepon.
+      </p>
 
-      <div className="mt-5 flex items-center justify-center gap-1.5">
-        {[0, 1, 2].map((index) => (
-          <span
-            key={index}
-            className={cn(
-              "h-1.5 rounded-full transition-all",
-              index === 1 ? "w-6 bg-[#2852a3]" : "w-1.5 bg-[#d5dce8]",
-            )}
-          />
-        ))}
-      </div>
+      <div className="flex-1" />
+      <PageFooter />
     </div>
   );
 }

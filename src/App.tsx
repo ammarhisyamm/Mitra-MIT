@@ -32,7 +32,7 @@ import {
   VerifyPinScreen,
 } from "@/screens/ResultScreens";
 import { PrototypePanel } from "@/components/PrototypePanel";
-import { MitraMark, StatusBar } from "@/components/primitives";
+import { MitraLogo, StatusBar } from "@/components/primitives";
 import {
   getUnit,
   screenLabel,
@@ -41,16 +41,6 @@ import {
   type Scenario,
   type Screen,
 } from "@/lib/demo";
-
-const lightStatusScreens: Screen[] = [
-  "checking",
-  "login",
-  "verify-choice",
-  "forgot",
-  "forgot-otp",
-  "forgot-reset",
-  "force-change",
-];
 
 export default function App() {
   const [mode, setMode] = useState<Mode>("first");
@@ -326,7 +316,7 @@ export default function App() {
   const phone = (
     <div className="phone-frame">
       <div className="phone-screen">
-        <StatusBar tone={lightStatusScreens.includes(screen) ? "light" : "dark"} />
+        <StatusBar />
         <div className="phone-scroll">
           <div key={screen} className="screen-enter min-h-full">
             {renderScreen()}
@@ -364,19 +354,12 @@ export default function App() {
 
   return (
     <div className="page-canvas relative min-h-dvh overflow-x-hidden">
-      <div className="dot-grid pointer-events-none fixed inset-0" aria-hidden="true" />
-
       <header className="relative z-10 mx-auto hidden w-full max-w-[1260px] items-center justify-between gap-4 px-5 pb-3 pt-6 lg:flex lg:px-10">
-        <div className="flex items-center gap-2.5">
-          <MitraMark size={30} />
-          <div>
-            <p className="text-[12.5px] font-extrabold leading-none tracking-[0.16em] text-[#122b5c]">
-              MITRA
-            </p>
-            <p className="mt-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-[#7c8ba3]">
-              Prototype · First login
-            </p>
-          </div>
+        <div>
+          <MitraLogo />
+          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9ca3af]">
+            Prototype · First login
+          </p>
         </div>
         <div className="hidden items-center gap-2 md:flex">
           <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1.5 text-[10.5px] font-semibold text-[#5b6b85] backdrop-blur">

@@ -1,19 +1,9 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { Check, ChevronLeft, LockKeyhole } from "lucide-react";
 import {
-  ArrowRight,
-  Check,
-  ChevronLeft,
-  Clock3,
-  KeyRound,
-  LockKeyhole,
-  Mail,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
-import {
-  BrandLockup,
   Field,
   InlineAlert,
+  MitraLogo,
   PasswordField,
   PasswordRules,
   PinInput,
@@ -21,46 +11,43 @@ import {
 } from "@/components/primitives";
 import { DEMO } from "@/lib/demo";
 
-function SecondaryHeader({
+function PageFooter() {
+  return (
+    <p className="pt-8 text-center text-[13px] leading-5 text-[#6b7280]">
+      V1. Mitra powered by MIT
+    </p>
+  );
+}
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="-ml-2 grid h-9 w-9 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
+      aria-label="Kembali"
+    >
+      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+    </button>
+  );
+}
+
+function PageHeader({
   title,
-  eyebrow,
+  description,
   onBack,
-  children,
 }: {
   title: string;
-  eyebrow: string;
+  description: string;
   onBack: () => void;
-  children: ReactNode;
 }) {
   return (
-    <div className="min-h-full bg-[#f5f7fb] pb-8">
-      <div className="relative overflow-hidden rounded-b-[30px] bg-[linear-gradient(150deg,#2f5fb8_0%,#2852a3_45%,#1b3a78_100%)] px-5 pb-12 pt-14 text-white">
-        <div className="pointer-events-none absolute -right-16 -top-10 h-52 w-52 rounded-full border border-white/10" />
-        <div className="pointer-events-none absolute -right-6 top-16 h-32 w-32 rounded-full border border-white/10" />
-        <div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-2xl bg-[#f9a11f]/10" />
-        <div className="relative flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onBack}
-            className="-ml-2 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-            aria-label="Kembali"
-          >
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <BrandLockup onDark compact />
-        </div>
-        <p className="relative mt-6 text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
-          {eyebrow}
-        </p>
-        <h1 className="relative mt-1.5 text-[24px] font-extrabold leading-tight tracking-[-0.02em]">
-          {title}
-        </h1>
-      </div>
-      <div className="relative -mt-6 px-3">
-        <div className="rounded-[22px] border border-white bg-white p-5 shadow-[0_20px_50px_-30px_rgba(18,43,92,0.4)]">
-          {children}
-        </div>
-      </div>
+    <div>
+      <BackButton onClick={onBack} />
+      <h1 className="mt-7 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
+        {title}
+      </h1>
+      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">{description}</p>
     </div>
   );
 }
@@ -76,7 +63,6 @@ export function LoginScreen({
 }) {
   const [nip, setNip] = useState(DEMO.nip);
   const [password, setPassword] = useState(DEMO.password);
-  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [errors, setErrors] = useState<{ nip?: string; password?: string }>({});
@@ -105,58 +91,27 @@ export function LoginScreen({
   }
 
   return (
-    <div className="min-h-full bg-[#f5f7fb]">
-      <div className="auth-hero relative px-5 pb-16 pt-14">
-        <div className="hero-orbit -right-20 top-10 h-56 w-56" />
-        <div className="hero-orbit -right-8 top-32 h-32 w-32" />
-        <div className="relative z-10 flex items-center justify-between">
-          <BrandLockup onDark />
-          <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white/80 backdrop-blur">
-            Mitra
-          </span>
-        </div>
-        <div className="relative z-10 mt-9">
-          <h1 className="text-[29px] font-extrabold leading-[1.14] tracking-[-0.025em]">
-            Masuk ke MITRA
-          </h1>
-          <p className="mt-2 max-w-[270px] text-[13px] leading-relaxed text-white/70">
-            Satu akun untuk semua unit kerja Anda.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span className="trust-chip">
-              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              Wajah + PIN
-            </span>
-            <span className="trust-chip">
-              <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
-              Sesi 30 hari
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
+      <div className="flex flex-1 flex-col justify-center pb-6">
+        <MitraLogo tagline className="pt-6" />
 
-      <div className="sheet px-5 pb-8 pt-6">
-        <form onSubmit={submit} noValidate>
-          <div>
-            <Field
-              label="NIP atau email"
-              value={nip}
-              onChange={(event) => {
-                setNip(event.target.value);
-                setErrors((current) => ({ ...current, nip: undefined }));
-                setFormError("");
-              }}
-              hint="Gunakan NIP atau email terdaftar."
-              error={errors.nip}
-              icon={<UserRound className="h-[18px] w-[18px]" aria-hidden="true" />}
-              inputMode="email"
-              autoComplete="username"
-              placeholder="Contoh: 240812"
-            />
-          </div>
-          <div className="mt-4">
+        <form onSubmit={submit} className="mt-10" noValidate>
+          <Field
+            label="NIP / Email"
+            value={nip}
+            onChange={(event) => {
+              setNip(event.target.value);
+              setErrors((current) => ({ ...current, nip: undefined }));
+              setFormError("");
+            }}
+            error={errors.nip}
+            inputMode="email"
+            autoComplete="username"
+            placeholder="Masukkan NIP / Email"
+          />
+          <div className="mt-5">
             <PasswordField
-              label="Kata sandi"
+              label="Kata Sandi"
               value={password}
               onChange={(value) => {
                 setPassword(value);
@@ -166,63 +121,31 @@ export function LoginScreen({
               error={errors.password}
               autoComplete="current-password"
               onEnter={() => submit()}
-              labelAction={
-                <button
-                  type="button"
-                  onClick={onForgot}
-                  className="text-[11.5px] font-semibold text-[#2852a3] hover:underline"
-                >
-                  Lupa kata sandi?
-                </button>
-              }
+              placeholder="Masukkan Kata Sandi"
             />
           </div>
+          <button
+            type="button"
+            onClick={onForgot}
+            className="mt-2 text-left text-[13px] leading-5 text-[#151b2b] underline decoration-[#151b2b] underline-offset-2"
+          >
+            Lupa Kata Sandi?
+          </button>
 
-          <div className="mt-4 flex items-start justify-between gap-3 rounded-[14px] border border-[#e8edf5] bg-[#fafbfe] px-3.5 py-3">
-            <div>
-              <p className="text-[12px] font-semibold text-[#344054]">
-                Ingat perangkat ini selama 30 hari
-              </p>
-              <p className="mt-0.5 text-[11px] leading-snug text-[#7c8ba3]">
-                Anda tidak perlu memverifikasi ulang di perangkat ini.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={remember}
-              aria-label="Ingat perangkat ini selama 30 hari"
-              className="switch mt-0.5"
-              onClick={() => setRemember((current) => !current)}
-            />
-          </div>
-
-          {formError ? (
-            <InlineAlert className="mt-4">{formError}</InlineAlert>
-          ) : null}
+          {formError ? <InlineAlert className="mt-5">{formError}</InlineAlert> : null}
 
           <PrimaryButton
             type="submit"
-            className="mt-5"
+            className="mt-8"
             loading={loading}
             loadingLabel="Memeriksa akun…"
-            icon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
           >
             Masuk
           </PrimaryButton>
         </form>
-
-        <div className="mt-5 flex items-start gap-2.5 rounded-[13px] bg-[#f5f8fe] px-3.5 py-3">
-          <KeyRound className="mt-0.5 h-4 w-4 flex-none text-[#2852a3]" aria-hidden="true" />
-          <p className="text-[11.5px] leading-relaxed text-[#5b6b85]">
-            Akses hanya untuk mitra terdaftar. Butuh bantuan?{" "}
-            <button type="button" className="font-semibold text-[#2852a3] hover:underline">
-              Hubungi admin unit
-            </button>
-            .
-          </p>
-        </div>
       </div>
+
+      <PageFooter />
     </div>
   );
 }
@@ -255,57 +178,53 @@ export function ForgotScreen({
   }
 
   return (
-    <SecondaryHeader
-      eyebrow="Pemulihan akun"
-      title="Atur ulang kata sandi"
-      onBack={onBack}
-    >
-      <p className="text-[12.5px] leading-relaxed text-[#5b6b85]">
-        Masukkan NIP atau email terdaftar. Kami akan mengirim kode verifikasi ke kontak
-        yang terdaftar.
-      </p>
-      <form onSubmit={submit} className="mt-5" noValidate>
+    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
+      <PageHeader
+        title="Lupa kata sandi"
+        description="Masukkan NIP atau email terdaftar. Kami akan mengirim kode verifikasi."
+        onBack={onBack}
+      />
+
+      <form onSubmit={submit} className="mt-8" noValidate>
         <Field
-          label="NIP atau email"
+          label="NIP / Email"
           value={identifier}
           onChange={(event) => {
             setIdentifier(event.target.value);
             setError("");
           }}
           error={error}
-          icon={<UserRound className="h-[18px] w-[18px]" aria-hidden="true" />}
           autoComplete="username"
-          placeholder="Contoh: 240812"
+          placeholder="Masukkan NIP / Email"
         />
-        <div className="mt-4 flex items-start gap-2.5 rounded-[12px] bg-[#f8fafc] px-3 py-2.5">
-          <Mail className="mt-0.5 h-4 w-4 flex-none text-[#7c8ba3]" aria-hidden="true" />
-          <p className="text-[11px] leading-relaxed text-[#7c8ba3]">
-            Demi keamanan, kami tidak menampilkan apakah sebuah akun terdaftar.
-          </p>
-        </div>
+        <p className="mt-3 text-[12px] leading-[18px] text-[#6b7280]">
+          Demi keamanan, kami tidak menampilkan apakah akun terdaftar.
+        </p>
         {sent ? (
-          <div className="mt-4 rounded-[13px] border border-[#bfe6d6] bg-[#f0fdf7] px-3.5 py-3 text-[12px] font-medium text-[#067647]">
+          <p className="mt-5 text-[13px] leading-5 text-[#24663f]">
             Kode verifikasi dikirim ke kontak terdaftar.
-          </div>
+          </p>
         ) : null}
         <PrimaryButton
           type="submit"
-          className="mt-5"
+          className="mt-7"
           loading={loading}
           loadingLabel="Mengirim kode…"
-          icon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
         >
           Kirim kode verifikasi
         </PrimaryButton>
       </form>
+
       <button
         type="button"
         onClick={onBack}
-        className="ghost-button mx-auto mt-3 block text-[12px]"
+        className="mx-auto mt-6 text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
       >
         Kembali masuk
       </button>
-    </SecondaryHeader>
+      <div className="flex-1" />
+      <PageFooter />
+    </div>
   );
 }
 
@@ -345,12 +264,14 @@ export function OtpScreen({
   }
 
   return (
-    <SecondaryHeader eyebrow="Pemulihan akun" title="Masukkan kode verifikasi" onBack={onBack}>
-      <p className="text-[12.5px] leading-relaxed text-[#5b6b85]">
-        Kode 6 angka dikirim ke{" "}
-        <span className="font-semibold text-[#344054]">{DEMO.maskedEmail}</span>.
-      </p>
-      <div className="mt-5">
+    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
+      <PageHeader
+        title="Masukkan kode verifikasi"
+        description={`Kode 6 angka dikirim ke ${DEMO.maskedEmail}.`}
+        onBack={onBack}
+      />
+
+      <div className="mt-8">
         <PinInput
           value={code}
           onChange={(value) => {
@@ -362,32 +283,35 @@ export function OtpScreen({
           autoFocus
           onComplete={verify}
         />
-        <p className="mt-3 text-center text-[11.5px] text-[#7c8ba3]">
-          Kode demo <span className="font-bold text-[#475467]">123456</span>
+        <p className="mt-4 text-center text-[12px] leading-[18px] text-[#6b7280]">
+          Kode demo <span className="font-semibold text-[#151b2b]">123456</span>
         </p>
       </div>
-      {error ? <InlineAlert className="mt-4">{error}</InlineAlert> : null}
+
+      {error ? <InlineAlert className="mt-5">{error}</InlineAlert> : null}
+
       <PrimaryButton
         type="button"
-        className="mt-5"
+        className="mt-7"
         onClick={verify}
         loading={loading}
         loadingLabel="Memeriksa kode…"
       >
         Verifikasi kode
       </PrimaryButton>
-      <div className="mt-4 text-center text-[11.5px] text-[#7c8ba3]">
+
+      <div className="mt-5 text-center text-[13px] leading-5 text-[#6b7280]">
         {seconds > 0 ? (
           <>
             Kirim ulang kode dalam{" "}
-            <span className="font-semibold tabular-nums text-[#475467]">
+            <span className="font-medium tabular-nums text-[#151b2b]">
               00:{String(seconds).padStart(2, "0")}
             </span>
           </>
         ) : (
           <button
             type="button"
-            className="font-semibold text-[#2852a3] hover:underline"
+            className="font-medium text-[#151b2b] underline underline-offset-2"
             onClick={() => {
               setSeconds(30);
               setCode("");
@@ -398,7 +322,9 @@ export function OtpScreen({
           </button>
         )}
       </div>
-    </SecondaryHeader>
+      <div className="flex-1" />
+      <PageFooter />
+    </div>
   );
 }
 
@@ -435,23 +361,23 @@ export function ResetPasswordScreen({
   }
 
   return (
-    <SecondaryHeader
-      eyebrow={forceChange ? "Keamanan akun" : "Pemulihan akun"}
-      title={forceChange ? "Ganti kata sandi default" : "Buat kata sandi baru"}
-      onBack={onBack}
-    >
+    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
+      <PageHeader
+        title={forceChange ? "Ganti kata sandi default" : "Buat kata sandi baru"}
+        description="Gunakan kata sandi yang kuat dan belum pernah dipakai di MITRA."
+        onBack={onBack}
+      />
+
       {defaultPassword ? (
-        <div className="mb-4 rounded-[13px] border border-[#f5d9a8] bg-[#fffaf0] px-3.5 py-3 text-[11.5px] leading-relaxed text-[#8a4b08]">
+        <div className="mt-6 border-l-2 border-[#f9a11f] bg-[#fffaf0] px-3.5 py-3 text-[12px] leading-[18px] text-[#8a4b08]">
           Kata sandi akun ini baru direset oleh admin. Buat kata sandi pribadi sebelum
           melanjutkan.
         </div>
       ) : null}
-      <p className="text-[12.5px] leading-relaxed text-[#5b6b85]">
-        Gunakan kata sandi yang kuat dan belum pernah dipakai di MITRA.
-      </p>
-      <form onSubmit={submit} className="mt-5" noValidate>
+
+      <form onSubmit={submit} className="mt-7" noValidate>
         <PasswordField
-          label="Kata sandi baru"
+          label="Kata Sandi Baru"
           value={password}
           onChange={(value) => {
             setPassword(value);
@@ -461,9 +387,9 @@ export function ResetPasswordScreen({
           autoComplete="new-password"
           placeholder="Minimal 8 karakter"
         />
-        <div className="mt-4">
+        <div className="mt-5">
           <PasswordField
-            label="Ulangi kata sandi baru"
+            label="Ulangi Kata Sandi Baru"
             value={confirmation}
             onChange={(value) => {
               setConfirmation(value);
@@ -478,57 +404,37 @@ export function ResetPasswordScreen({
         <PasswordRules password={password} confirmation={confirmation} />
         <PrimaryButton
           type="submit"
-          className="mt-5"
+          className="mt-7"
           loading={loading}
           loadingLabel="Menyimpan…"
         >
           {forceChange ? "Simpan dan lanjutkan" : "Simpan kata sandi"}
         </PrimaryButton>
       </form>
-    </SecondaryHeader>
+      <div className="flex-1" />
+      <PageFooter />
+    </div>
   );
 }
 
 export function ForgotDoneScreen({ onLogin }: { onLogin: () => void }) {
   return (
-    <div className="min-h-full bg-[#f5f7fb] px-5 pb-8 pt-14">
-      <div className="flex justify-center">
-        <BrandLockup compact />
-      </div>
-      <div className="mt-12 text-center">
-        <div className="success-ring mx-auto">
-          <svg width="42" height="42" viewBox="0 0 42 42" fill="none" aria-hidden="true">
-            <path
-              className="check-path"
-              d="M11 21.5L18 28.5L31 14.5"
-              stroke="white"
-              strokeWidth="3.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <h1 className="mt-7 text-[24px] font-extrabold tracking-[-0.02em] text-[#101a2e]">
+    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-16">
+      <div className="flex flex-1 flex-col items-center justify-center pb-10 text-center">
+        <span className="grid h-16 w-16 place-items-center rounded-full bg-[#eaf7f0] text-[#24663f]">
+          <Check className="h-7 w-7" strokeWidth={2.4} aria-hidden="true" />
+        </span>
+        <h1 className="mt-7 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
           Kata sandi diperbarui
         </h1>
-        <p className="mx-auto mt-2 max-w-[270px] text-[12.5px] leading-relaxed text-[#667085]">
+        <p className="mt-2 max-w-[290px] text-[14px] leading-6 text-[#6b7280]">
           Masuk kembali dengan kata sandi baru Anda. Sesi di perangkat lain tidak berubah.
         </p>
+        <PrimaryButton type="button" className="mt-8" onClick={onLogin}>
+          Kembali masuk
+        </PrimaryButton>
       </div>
-      <div className="mt-8 rounded-[16px] border border-[#e8ecf3] bg-white p-4">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-[#ecfdf3] text-[#067647]">
-            <Check className="h-4 w-4" aria-hidden="true" />
-          </span>
-          <div>
-            <p className="text-[12px] font-semibold text-[#344054]">Keamanan akun</p>
-            <p className="text-[11px] text-[#7c8ba3]">Kata sandi baru aktif.</p>
-          </div>
-        </div>
-      </div>
-      <PrimaryButton type="button" className="mt-6" onClick={onLogin}>
-        Kembali masuk
-      </PrimaryButton>
+      <PageFooter />
     </div>
   );
 }
@@ -538,7 +444,7 @@ export function ForceChangeHeader({ onLogout }: { onLogout: () => void }) {
     <button
       type="button"
       onClick={onLogout}
-      className="ghost-button mx-auto mt-3 block text-[12px] text-[#7c8ba3]"
+      className="mx-auto mt-5 flex items-center gap-1.5 text-[13px] leading-5 text-[#6b7280]"
     >
       <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
       Keluar dari akun

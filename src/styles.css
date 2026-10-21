@@ -87,7 +87,7 @@ button {
 
 ::selection {
   background: #d8e3fb;
-  color: #122b5c;
+  color: #151b2b;
 }
 
 :focus-visible {
@@ -111,11 +111,7 @@ button {
 
 .page-canvas {
   min-height: 100dvh;
-  background:
-    radial-gradient(900px 520px at 8% -10%, rgb(40 82 163 / 0.18), transparent 60%),
-    radial-gradient(700px 420px at 96% 4%, rgb(249 161 31 / 0.12), transparent 62%),
-    radial-gradient(800px 500px at 60% 110%, rgb(40 82 163 / 0.1), transparent 65%),
-    #e9eef7;
+  background: #f5f6f8;
 }
 
 .dot-grid {
@@ -128,19 +124,20 @@ button {
   position: relative;
   width: 390px;
   height: 812px;
-  border-radius: 54px;
-  background: #0c1322;
-  padding: 10px;
-  box-shadow: var(--shadow-phone);
+  border-radius: 46px;
+  border: 1px solid #e3e6eb;
+  background: #fff;
+  padding: 9px;
+  box-shadow: 0 24px 70px -36px rgb(15 23 42 / 0.28);
   flex: none;
 }
 
 .phone-frame::before {
   content: "";
   position: absolute;
-  inset: 4px;
-  border-radius: 50px;
-  border: 1px solid rgb(255 255 255 / 0.14);
+  inset: 3px;
+  border-radius: 42px;
+  border: 1px solid #eef0f3;
   pointer-events: none;
   z-index: 30;
 }
@@ -149,8 +146,8 @@ button {
   position: relative;
   height: 100%;
   overflow: hidden;
-  border-radius: 45px;
-  background: #f7f8fb;
+  border-radius: 37px;
+  background: #fff;
 }
 
 .phone-scroll {
@@ -642,11 +639,8 @@ button {
   width: 96px;
   height: 96px;
   border-radius: 999px;
-  background: radial-gradient(circle at 50% 30%, #43d6a4 0%, #0e9f6e 72%);
-  color: #fff;
-  box-shadow:
-    0 0 0 10px rgb(14 159 110 / 0.1),
-    0 24px 50px -20px rgb(14 159 110 / 0.55);
+  background: #eaf7f0;
+  color: #24663f;
 }
 
 .success-ring::before {
@@ -734,7 +728,7 @@ button {
 
 .segment button[aria-pressed="true"] {
   background: #fff;
-  color: #122b5c;
+  color: #151b2b;
   box-shadow: 0 1px 2px rgb(16 24 40 / 0.08);
 }
 
@@ -890,7 +884,13 @@ button {
 }
 
 .screen-enter {
+  display: flex;
+  flex-direction: column;
   animation: screen-in 400ms var(--ease-out) both;
+}
+
+.screen-enter > * {
+  flex: 1 0 auto;
 }
 
 .screen-enter-fast {
@@ -935,7 +935,6 @@ button {
   background-size: 220% 100%;
   animation: shimmer 1.4s linear infinite;
 }
-
 }
 
 @keyframes screen-in {

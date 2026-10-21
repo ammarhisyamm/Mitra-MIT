@@ -30,58 +30,78 @@ export function MitraMark({
   onDark?: boolean;
   className?: string;
 }) {
-  if (onDark) {
-    return (
-      <span
-        className={cn(
-          "inline-flex items-center justify-center rounded-[13px] bg-white shadow-[0_10px_24px_-12px_rgba(0,0,0,0.55)]",
-          className,
-        )}
-        style={{ width: size, height: size, padding: size * 0.16 }}
-      >
-        <img src="/mit-logo.png" alt="" className="h-full w-full object-contain" />
-      </span>
-    );
-  }
   return (
-    <img
-      src="/mit-logo.png"
-      alt=""
-      className={cn("object-contain", className)}
+    <span
+      className={cn(
+        "inline-grid flex-none place-items-center overflow-hidden rounded-full",
+        onDark && "ring-1 ring-white/20",
+        className,
+      )}
       style={{ width: size, height: size }}
-    />
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 48 48" width={size} height={size}>
+        <circle cx="24" cy="24" r="24" fill="#2f4f9e" />
+        <path
+          d="M11.5 35.5V14.8c0-1.2 1.5-1.8 2.3-.8l6.3 8.4c.6.8 1.8.8 2.3 0l6.2-8.4c.8-1 2.4-.4 2.4.8v20.7h-5.4V24.3l-4.5 6.1c-.5.7-1.5.7-2.1 0l-4.4-6v11.1z"
+          fill="#fff"
+        />
+      </svg>
+    </span>
   );
 }
 
 export function BrandLockup({
   onDark = false,
   compact = false,
+  size,
 }: {
   onDark?: boolean;
   compact?: boolean;
+  size?: number;
 }) {
+  const markSize = size ?? (compact ? 30 : 40);
   return (
     <div className="flex items-center gap-2.5">
-      <MitraMark size={compact ? 32 : 38} onDark={onDark} />
-      <div className="leading-none">
-        <div
-          className={cn(
-            "flex items-center gap-1.5 text-[17px] font-extrabold tracking-[0.16em]",
-            onDark ? "text-white" : "text-[#122b5c]",
-          )}
-        >
+      <MitraMark size={markSize} onDark={onDark} />
+      <span
+        className={cn(
+          "font-extrabold italic leading-none tracking-[-0.01em]",
+          compact ? "text-[20px]" : "text-[26px]",
+          onDark ? "text-white" : "text-[#151b2b]",
+        )}
+      >
+        MITRA
+      </span>
+    </div>
+  );
+}
+
+export function MitraLogo({
+  tagline = false,
+  poweredBy = false,
+  className,
+}: {
+  tagline?: boolean;
+  poweredBy?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-col items-center text-center", className)}>
+      <div className="flex items-center gap-3">
+        <MitraMark size={52} />
+        <span className="text-[34px] font-extrabold italic leading-none tracking-[-0.02em] text-[#151b2b]">
           MITRA
-          <span className="mb-[7px] inline-block h-1.5 w-1.5 rounded-[1px] bg-[#f9a11f]" />
-        </div>
-        <div
-          className={cn(
-            "mt-1 text-[8.5px] font-semibold uppercase tracking-[0.13em]",
-            onDark ? "text-white/55" : "text-[#7c8ba3]",
-          )}
-        >
-          Mulia Informasi Teknologi
-        </div>
+        </span>
       </div>
+      {tagline ? (
+        <p className="mt-2.5 text-[13px] leading-5 text-[#4b5563]">
+          MIT Relationship &amp; Activity Tracker
+        </p>
+      ) : null}
+      {poweredBy ? (
+        <p className="mt-1 text-[12px] italic leading-5 text-[#4b5563]">Powered by MIT</p>
+      ) : null}
     </div>
   );
 }
@@ -303,23 +323,19 @@ export function StepHeader({
           <button
             type="button"
             onClick={onBack}
-            className="-ml-2 grid h-10 w-10 place-items-center rounded-full text-[#475467] transition hover:bg-[#eef2f8]"
+            className="-ml-2 grid h-9 w-9 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
             aria-label={backLabel}
           >
             <ChevronLeft className="h-5 w-5" aria-hidden="true" />
           </button>
         ) : (
-          <span className="h-10 w-10" />
+          <span className="h-9 w-9" />
         )}
-        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#7c8ba3]">
-          Langkah {step} dari {total}
+        <span className="text-[12px] leading-5 text-[#6b7280]">
+          {step} / {total}
         </span>
-        <span className="h-10 w-10" />
       </div>
-      <div className="progress-track mt-3" aria-hidden="true">
-        <div className="progress-fill" style={{ width: `${(step / total) * 100}%` }} />
-      </div>
-      <h1 className="mt-6 text-[25px] font-extrabold leading-[1.2] tracking-[-0.02em] text-[#101a2e]">
+      <h1 className="mt-6 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
         {title}
       </h1>
     </div>
