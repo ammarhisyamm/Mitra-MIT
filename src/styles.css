@@ -369,6 +369,7 @@ button {
 }
 
 .secondary-button:active {
+  background: #f0f5fe;
   transform: scale(0.99);
 }
 
