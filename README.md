@@ -1,6 +1,6 @@
 # Mitra-MIT
 
-Prototype alur first login MITRA: verifikasi wajah, pembuatan PIN, pemulihan kata sandi, dan routing unit kerja.
+Prototype alur first login dan operasional aktivitas MITRA: verifikasi wajah, pembuatan PIN, pemulihan kata sandi, routing unit kerja, serta aktivitas dari pembuatan sampai checkout.
 
 ## Menjalankan
 
@@ -25,7 +25,7 @@ bun run preview
 - Kata sandi: `mitra2026`
 - Unit: `GMN` (default), `SMA`, `GMS`
 
-Gunakan tombol **Prototype** di kanan bawah untuk mengubah skenario, unit kerja, dan melompat antar layar.
+Gunakan panel **Prototype** di sisi kanan pada desktop, atau tombol **Prototype** di kanan atas pada mobile untuk mengubah skenario, unit kerja, dan melompat antar layar.
 
 ## Stack
 
