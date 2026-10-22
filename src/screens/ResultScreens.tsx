@@ -18,7 +18,13 @@ import {
   PrimaryButton,
   StepHeader,
 } from "@/components/primitives";
-import { DEMO, getUnit, type BusinessUnit, type UnitDefinition } from "@/lib/demo";
+import {
+  DEMO,
+  getUnit,
+  type ActivityDraft,
+  type BusinessUnit,
+  type UnitDefinition,
+} from "@/lib/demo";
 
 function PageFooter() {
   return (
@@ -415,10 +421,18 @@ function greeting() {
 
 export function UnitHomeScreen({
   unit,
+  activity,
+  activityCompleted,
+  activityLeadCount,
   onLogout,
+  onActivity,
 }: {
   unit: BusinessUnit;
+  activity: ActivityDraft;
+  activityCompleted: boolean;
+  activityLeadCount: number;
   onLogout: () => void;
+  onActivity: () => void;
 }) {
   const selected = getUnit(unit);
   const stats = [
@@ -470,35 +484,48 @@ export function UnitHomeScreen({
       </p>
 
       <div className="mt-7 flex items-baseline justify-between">
-        <p className="text-[13px] font-medium leading-5 text-[#151b2b]">Kunjungan berikutnya</p>
+        <p className="text-[13px] font-medium leading-5 text-[#151b2b]">
+          {activityCompleted ? "Aktivitas terakhir" : "Aktivitas berikutnya"}
+        </p>
         <p className="text-[12px] leading-[18px] text-[#667085]">{today}</p>
       </div>
 
       <div className="mt-2 overflow-hidden rounded-[16px] border border-[#e5e7eb]">
-        <div className="px-4 py-4" style={{ background: selected.soft }}>
+        <div
+          className="px-4 py-4"
+          style={{ background: activityCompleted ? "#f3fbf7" : selected.soft }}
+        >
           <div className="flex items-center justify-between">
             <span
               className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              style={{ color: selected.ink }}
+              style={{ color: activityCompleted ? "#24663f" : selected.ink }}
             >
-              Berikutnya
+              {activityCompleted ? "Selesai" : "Berikutnya"}
             </span>
-            <span className="tabular text-[13px] font-semibold" style={{ color: selected.ink }}>
-              10.30
+            <span
+              className="tabular text-[13px] font-semibold"
+              style={{ color: activityCompleted ? "#24663f" : selected.ink }}
+            >
+              {activity.time.replace(":", ".")}
             </span>
           </div>
           <p className="mt-2 text-[15px] font-semibold leading-5 text-[#151b2b]">
-            Kunjungan mitra binaan
+            {activity.name}
           </p>
           <p className="mt-0.5 text-[12px] leading-[18px] text-[#151b2b]/70">
-            Rute {selected.short} · 2,4 km dari lokasi Anda
+            {activityCompleted
+              ? `${activityLeadCount} lead · Checkout tercatat`
+              : `Rute ${selected.short} · 2,4 km dari lokasi Anda`}
           </p>
         </div>
         <button
           type="button"
+          onClick={onActivity}
           className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left"
         >
-          <span className="text-[13px] font-medium text-[#2852a3]">Lihat detail kunjungan</span>
+          <span className="text-[13px] font-medium text-[#2852a3]">
+            {activityCompleted ? "Lihat aktivitas" : "Buka aktivitas"}
+          </span>
           <ChevronRight className="h-4 w-4 text-[#667085]" aria-hidden="true" />
         </button>
       </div>
@@ -522,13 +549,19 @@ export function UnitHomeScreen({
       <p className="mt-7 text-[12px] leading-[18px] text-[#667085]">Akses cepat</p>
       <div className="mt-2 border-b border-[#e5e7eb]">
         {[
-          { icon: Users, label: "Leads", detail: "12 perlu ditindaklanjuti" },
-          { icon: CalendarCheck, label: "Aktivitas", detail: "3 kunjungan hari ini" },
-          { icon: TrendingUp, label: "Target", detail: "68% dari target bulan ini" },
+          { icon: Users, label: "Leads", detail: "12 perlu ditindaklanjuti", onClick: undefined },
+          {
+            icon: CalendarCheck,
+            label: "Aktivitas",
+            detail: "Buat, check-in, dan catat lead",
+            onClick: onActivity,
+          },
+          { icon: TrendingUp, label: "Target", detail: "68% dari target bulan ini", onClick: undefined },
         ].map((item) => (
           <button
             key={item.label}
             type="button"
+            onClick={item.onClick}
             className="flex min-h-12 w-full items-center gap-3 border-t border-[#e5e7eb] py-3 text-left first:border-t-0"
           >
             <item.icon className="h-[18px] w-[18px] flex-none text-[#151b2b]" aria-hidden="true" />

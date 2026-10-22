@@ -31,11 +31,25 @@ import {
   VerifyChoiceScreen,
   VerifyPinScreen,
 } from "@/screens/ResultScreens";
+import {
+  ActivityCheckinScreen,
+  ActivityCheckoutScreen,
+  ActivityCreatedScreen,
+  ActivityDoneScreen,
+  ActivityLeadsScreen,
+  ActivityListScreen,
+  ActivityScheduleScreen,
+  ActivityTypeScreen,
+} from "@/screens/ActivityScreens";
 import { PrototypePanel } from "@/components/PrototypePanel";
 import { MitraLogo, StatusBar } from "@/components/primitives";
 import {
+  defaultActivityName,
+  defaultActivityTime,
   getUnit,
   screenLabel,
+  type ActivityDraft,
+  type ActivityLead,
   type BusinessUnit,
   type Mode,
   type Scenario,
@@ -56,6 +70,16 @@ export default function App() {
   const [runId, setRunId] = useState(0);
   const [notice, setNotice] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
+  const [activityDraft, setActivityDraft] = useState<ActivityDraft>({
+    kind: "kunjungan",
+    area: "inside",
+    name: defaultActivityName("kunjungan"),
+    location: "Jl. Fatmawati No. 12, Jakarta Selatan",
+    time: defaultActivityTime(),
+  });
+  const [activityCheckin, setActivityCheckin] = useState("09.42");
+  const [activityLeads, setActivityLeads] = useState<ActivityLead[]>([]);
+  const [activityCompleted, setActivityCompleted] = useState(false);
   const startConfig = useRef({ mode: "first" as Mode, sessionActive: true });
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -108,6 +132,10 @@ export default function App() {
     setScreen("checking");
     setFaceImage(null);
     setFirstAccess(nextMode === "first");
+    setActivityLeads([]);
+    setActivityCheckin("09.42");
+    setActivityCompleted(false);
+    setActivityDraft((current) => ({ ...current, time: defaultActivityTime() }));
     setRunId((current) => current + 1);
   }
 
@@ -291,7 +319,120 @@ export default function App() {
           />
         );
       case "home":
-        return <UnitHomeScreen unit={unit} onLogout={logout} />;
+        return (
+          <UnitHomeScreen
+            unit={unit}
+            activity={activityDraft}
+            activityCompleted={activityCompleted}
+            activityLeadCount={activityLeads.length}
+            onLogout={logout}
+            onActivity={() => setScreen("activity")}
+          />
+        );
+      case "activity":
+        return (
+          <ActivityListScreen
+            unit={unit}
+            activity={activityDraft}
+            completed={activityCompleted}
+            leadCount={activityLeads.length}
+            onBack={() => setScreen("home")}
+            onCreate={() => setScreen("activity-type")}
+            onOpen={() =>
+              setScreen(activityCompleted ? "activity-done" : "activity-checkin")
+            }
+          />
+        );
+      case "activity-type":
+        return (
+          <ActivityTypeScreen
+            initialKind={activityDraft.kind}
+            initialArea={activityDraft.area}
+            onBack={() => setScreen("activity")}
+            onContinue={(kind, area) => {
+              setActivityDraft((current) => ({
+                ...current,
+                kind,
+                area,
+                name:
+                  current.name === defaultActivityName(current.kind)
+                    ? defaultActivityName(kind)
+                    : current.name,
+              }));
+              setActivityLeads([]);
+              setActivityCheckin("09.42");
+              setActivityCompleted(false);
+              setScreen("activity-schedule");
+            }}
+          />
+        );
+      case "activity-schedule":
+        return (
+          <ActivityScheduleScreen
+            kind={activityDraft.kind}
+            area={activityDraft.area}
+            initialName={activityDraft.name}
+            initialLocation={activityDraft.location}
+            initialTime={activityDraft.time}
+            onBack={() => setScreen("activity-type")}
+            onCreated={(draft) => {
+              setActivityDraft(draft);
+              setScreen("activity-created");
+            }}
+          />
+        );
+      case "activity-created":
+        return (
+          <ActivityCreatedScreen
+            draft={activityDraft}
+            onBack={() => setScreen("activity")}
+            onCheckin={() => setScreen("activity-checkin")}
+          />
+        );
+      case "activity-checkin":
+        return (
+          <ActivityCheckinScreen
+            draft={activityDraft}
+            onBack={() => setScreen("activity-schedule")}
+            onCheckedIn={(time) => {
+              setActivityCheckin(time);
+              setScreen("activity-leads");
+            }}
+          />
+        );
+      case "activity-leads":
+        return (
+          <ActivityLeadsScreen
+            draft={activityDraft}
+            checkinTime={activityCheckin}
+            leads={activityLeads}
+            onAddLead={(lead) => setActivityLeads((current) => [...current, lead])}
+            onBack={() => setScreen("activity")}
+            onFinish={() => setScreen("activity-checkout")}
+          />
+        );
+      case "activity-checkout":
+        return (
+          <ActivityCheckoutScreen
+            draft={activityDraft}
+            checkinTime={activityCheckin}
+            leadCount={activityLeads.length}
+            onBack={() => setScreen("activity-leads")}
+            onDone={() => {
+              setActivityCompleted(true);
+              setScreen("activity-done");
+            }}
+          />
+        );
+      case "activity-done":
+        return (
+          <ActivityDoneScreen
+            leadCount={activityLeads.length}
+            checkinTime={activityCheckin}
+            onHome={() => setScreen("home")}
+            onActivity={() => setScreen("activity")}
+          />
+        );
       case "forgot":
         return (
           <ForgotScreen

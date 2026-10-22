@@ -13,6 +13,19 @@ const firstGroups = [
   { label: "Akun siap", screens: ["success"] },
   { label: "Unit kerja", screens: ["unit"] },
   { label: "Beranda unit", screens: ["home"] },
+  {
+    label: "Aktivitas",
+    screens: [
+      "activity",
+      "activity-type",
+      "activity-schedule",
+      "activity-created",
+      "activity-checkin",
+      "activity-leads",
+      "activity-checkout",
+      "activity-done",
+    ],
+  },
 ] as const;
 
 const returningGroups = [
@@ -22,6 +35,19 @@ const returningGroups = [
     screens: ["verify-pin", "face-intro", "face-camera", "face-review", "face-check", "face-failed"],
   },
   { label: "Beranda unit", screens: ["success", "unit", "home"] },
+  {
+    label: "Aktivitas",
+    screens: [
+      "activity",
+      "activity-type",
+      "activity-schedule",
+      "activity-created",
+      "activity-checkin",
+      "activity-leads",
+      "activity-checkout",
+      "activity-done",
+    ],
+  },
 ] as const;
 
 const jumpScreens: { value: Screen; label: string; mode?: Mode }[] = [
@@ -35,6 +61,14 @@ const jumpScreens: { value: Screen; label: string; mode?: Mode }[] = [
   { value: "success", label: "Akun siap" },
   { value: "unit", label: "Unit kerja" },
   { value: "home", label: "Beranda unit" },
+  { value: "activity", label: "Daftar aktivitas" },
+  { value: "activity-type", label: "Buat aktivitas" },
+  { value: "activity-schedule", label: "Detail aktivitas" },
+  { value: "activity-created", label: "Aktivitas dibuat" },
+  { value: "activity-checkin", label: "Check-in" },
+  { value: "activity-leads", label: "Input leads" },
+  { value: "activity-checkout", label: "Checkout" },
+  { value: "activity-done", label: "Aktivitas selesai" },
   { value: "forgot", label: "Lupa kata sandi" },
   { value: "forgot-otp", label: "Kode verifikasi" },
   { value: "forgot-reset", label: "Kata sandi baru" },

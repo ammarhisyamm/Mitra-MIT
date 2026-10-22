@@ -711,8 +711,8 @@ h2 {
 .mobile-prototype-button {
   position: fixed;
   z-index: 60;
-  right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  right: 12px;
+  top: calc(8px + env(safe-area-inset-top));
   display: inline-flex;
   align-items: center;
   gap: 7px;
