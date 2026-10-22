@@ -52,17 +52,19 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>("checking");
   const [firstAccess, setFirstAccess] = useState(true);
   const [faceImage, setFaceImage] = useState<string | null>(null);
+  const [lastMethod, setLastMethod] = useState<"face" | "pin">("face");
   const [runId, setRunId] = useState(0);
   const [notice, setNotice] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
   const startConfig = useRef({ mode: "first" as Mode, sessionActive: true });
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const config = startConfig.current;
     const timer = window.setTimeout(() => {
       setFirstAccess(config.mode === "first");
       if (config.mode === "returning" && config.sessionActive) {
-        setScreen("verify-choice");
+        setScreen("home");
       } else {
         setScreen("login");
       }
@@ -78,6 +80,13 @@ export default function App() {
 
   useEffect(() => {
     document.title = `MITRA · ${screenLabel(screen)}`;
+    const timer = window.setTimeout(() => {
+      const heading = scrollRef.current?.querySelector<HTMLElement>("h1");
+      if (!heading) return;
+      heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    }, 30);
+    return () => window.clearTimeout(timer);
   }, [screen]);
 
   useEffect(() => {
@@ -122,6 +131,9 @@ export default function App() {
       setFirstAccess(nextMode === "first");
       if (nextMode === "returning") setSessionActive(true);
     }
+    if (next === "verify-choice" || next === "verify-pin" || next === "login") {
+      setSessionActive(false);
+    }
     setFaceImage(null);
     setScreen(next);
   }
@@ -135,6 +147,7 @@ export default function App() {
   }
 
   function faceDone() {
+    setLastMethod("face");
     setScreen(firstAccess ? "pin-create" : "success");
   }
 
@@ -158,8 +171,6 @@ export default function App() {
       case "verify-choice":
         return (
           <VerifyChoiceScreen
-            mode={mode}
-            sessionActive={sessionActive}
             onFace={() => {
               setFaceImage(null);
               setScreen("face-intro");
@@ -171,13 +182,19 @@ export default function App() {
       case "verify-pin":
         return (
           <VerifyPinScreen
-            onSuccess={() => setScreen("success")}
+            onSuccess={() => {
+              setLastMethod("pin");
+              setScreen("success");
+            }}
             onBack={() => setScreen("verify-choice")}
             onUseFace={() => {
               setFaceImage(null);
               setScreen("face-intro");
             }}
-            onForgotPin={logout}
+            onForgotPin={() => {
+              setSessionActive(false);
+              setScreen("login");
+            }}
           />
         );
       case "face-intro":
@@ -189,10 +206,12 @@ export default function App() {
             }}
             onBack={() => setScreen(firstAccess ? "login" : "verify-choice")}
             allowPin={!firstAccess}
+            enroll={firstAccess}
             onUsePin={() => setScreen("verify-pin")}
             onHelp={() =>
               setNotice("Hubungi admin unit untuk bantuan verifikasi wajah.")
             }
+            onSwitchAccount={logout}
           />
         );
       case "face-camera":
@@ -203,6 +222,7 @@ export default function App() {
               setScreen("face-review");
             }}
             onBack={() => setScreen("face-intro")}
+            onboarding={firstAccess}
           />
         );
       case "face-review":
@@ -215,6 +235,7 @@ export default function App() {
               setScreen("face-camera");
             }}
             onBack={() => setScreen("face-camera")}
+            onboarding={firstAccess}
           />
         );
       case "face-check":
@@ -236,13 +257,16 @@ export default function App() {
             }}
             onUsePin={() => setScreen("verify-pin")}
             onBack={() => setScreen("login")}
+            onHelp={() =>
+              setNotice("Hubungi Admin Unit melalui kanal resmi MITRA untuk bantuan verifikasi.")
+            }
           />
         );
       case "pin-create":
         return (
           <PinCreateScreen
             onComplete={() => {
-              setScreen("success");
+              setScreen("unit");
             }}
             onBack={() => setScreen("face-intro")}
           />
@@ -252,18 +276,17 @@ export default function App() {
           <SuccessScreen
             returning={!firstAccess}
             unit={getUnit(unit)}
-            onContinue={() => setScreen(firstAccess ? "unit" : "home")}
+            method={firstAccess ? "face-pin" : lastMethod}
+            onContinue={() => setScreen("home")}
           />
         );
       case "unit":
         return (
           <UnitScreen
             unit={unit}
-            returning={!firstAccess}
-            onSelect={setUnit}
-            onContinue={() => setScreen("home")}
+            onContinue={() => setScreen("success")}
             onHelp={() =>
-              setNotice("Hubungi admin unit untuk mengubah unit kerja Anda.")
+              setNotice("Perubahan unit diproses Admin Unit. Prototype ini tidak mengirim permintaan.")
             }
           />
         );
@@ -317,10 +340,13 @@ export default function App() {
     <div className="phone-frame">
       <div className="phone-screen">
         <StatusBar />
-        <div className="phone-scroll">
+        <div className="phone-scroll" ref={scrollRef}>
           <div key={screen} className="screen-enter min-h-full">
             {renderScreen()}
           </div>
+        </div>
+        <div className="sr-only" aria-live="polite">
+          {screenLabel(screen)}
         </div>
         {notice ? (
           <div className="toast" role="status">
@@ -357,7 +383,7 @@ export default function App() {
       <header className="relative z-10 mx-auto hidden w-full max-w-[1260px] items-center justify-between gap-4 px-5 pb-3 pt-6 lg:flex lg:px-10">
         <div>
           <MitraLogo />
-          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9ca3af]">
+          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
             Prototype · First login
           </p>
         </div>
@@ -426,7 +452,7 @@ export default function App() {
                 >
                   <item.icon className="h-4 w-4 text-[#2852a3]" aria-hidden="true" />
                   <p className="mt-2 text-[11px] font-bold text-[#344054]">{item.title}</p>
-                  <p className="mt-0.5 text-[10px] leading-snug text-[#7c8ba3]">
+                  <p className="mt-0.5 text-[10px] leading-snug text-[#667085]">
                     {item.detail}
                   </p>
                 </div>

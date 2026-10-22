@@ -30,7 +30,7 @@ export const DEMO = {
   email: "rani.prameswari@mitra.co.id",
   maskedEmail: "r•••@mitra.co.id",
   phone: "0812 •••• 8842",
-  pin: "240812",
+  pin: "731904",
   otp: "123456",
   password: "mitra2026",
 };

@@ -192,7 +192,7 @@ export function PrototypePanel({
         {mode === "returning" ? (
           <ToggleRow
             title="Sesi 30 hari masih aktif"
-            description="Jika aktif, alur langsung ke verifikasi tanpa kata sandi."
+            description="Jika aktif, alur langsung ke beranda. Matikan untuk menguji verifikasi ulang."
             checked={sessionActive}
             onChange={onSession}
           />

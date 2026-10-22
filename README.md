@@ -19,7 +19,7 @@ bun run preview
 ## Data demo
 
 - NIP: `240812`
-- PIN: `240812`
+- PIN: `731904`
 - OTP: `123456`
 - Kata sandi: `mitra2026`
 - Unit: `GMN` (default), `SMA`, `GMS`

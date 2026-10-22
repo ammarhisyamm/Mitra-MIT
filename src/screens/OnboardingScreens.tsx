@@ -23,14 +23,6 @@ import {
 import { DEMO, type Mode } from "@/lib/demo";
 import { cn } from "@/lib/cn";
 
-function PageFooter() {
-  return (
-    <p className="pt-8 text-center text-[13px] leading-5 text-[#6b7280]">
-      V1. Mitra powered by MIT
-    </p>
-  );
-}
-
 export function SplashScreen({
   mode,
   sessionActive,
@@ -47,7 +39,7 @@ export function SplashScreen({
           <span className="spinner spinner-dark" aria-hidden="true" />
           <span>{resumed ? "Memulihkan sesi aman Anda…" : "Memeriksa sesi…"}</span>
         </div>
-        <p className="mt-2 max-w-[260px] text-[12px] leading-[18px] text-[#9ca3af]">
+        <p className="mt-2 max-w-[260px] text-[12px] leading-[18px] text-[#6b7280]">
           {resumed
             ? "Sesi 30 hari masih aktif di perangkat ini."
             : "Menyiapkan akses aman untuk Anda."}
@@ -66,12 +58,16 @@ export function FaceIntroScreen({
   allowPin,
   onUsePin,
   onHelp,
+  enroll,
+  onSwitchAccount,
 }: {
   onStart: () => void;
   onBack: () => void;
   allowPin: boolean;
   onUsePin: () => void;
   onHelp: () => void;
+  enroll: boolean;
+  onSwitchAccount: () => void;
 }) {
   const tips = [
     { icon: Sun, title: "Cahaya cukup", detail: "Hadap ke arah cahaya, hindari cahaya di belakang." },
@@ -79,22 +75,50 @@ export function FaceIntroScreen({
     { icon: ScanFace, title: "Posisi kamera", detail: "Sejajarkan wajah di dalam bingkai." },
   ];
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-24 pt-12">
-      <StepHeader step={1} total={3} title="Verifikasi wajah" onBack={onBack} />
+    <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-12">
+      <StepHeader
+        step={enroll ? 1 : undefined}
+        total={enroll ? 3 : undefined}
+        title={enroll ? "Daftarkan wajah" : "Verifikasi wajah"}
+        onBack={onBack}
+      />
       <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
-        Kami mencocokkan wajah Anda dengan foto yang terdaftar.
+        {enroll
+          ? "Wajah ini akan menjadi cara masuk Anda ke MITRA."
+          : "Kami mencocokkan wajah Anda dengan foto yang terdaftar."}
       </p>
 
-      <div className="mt-8 flex flex-col items-center">
-        <span className="grid h-24 w-24 place-items-center rounded-full bg-[#f3f6fb] text-[#2852a3]">
-          <ScanFace className="h-11 w-11" strokeWidth={1.5} aria-hidden="true" />
-        </span>
-        <p className="mt-4 text-center text-[13px] leading-5 text-[#4b5563]">
-          Sekali verifikasi, akses berikutnya lebih cepat.
-        </p>
+      <div className="mt-6 rounded-[12px] border border-[#e5e7eb] bg-[#f8fafc] p-3">
+        <div className="flex items-center gap-3">
+          <span
+            className="grid h-10 w-10 flex-none place-items-center rounded-full bg-white text-[12px] font-semibold text-[#2852a3] ring-1 ring-[#e5e7eb]"
+            aria-hidden="true"
+          >
+            {DEMO.name
+              .split(" ")
+              .map((part) => part[0])
+              .slice(0, 2)
+              .join("")}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[14px] font-medium leading-5 text-[#151b2b]">
+              {DEMO.name}
+            </p>
+            <p className="text-[12px] leading-[18px] text-[#667085]">
+              NIP {DEMO.nip}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onSwitchAccount}
+            className="-my-2 inline-flex min-h-11 flex-none items-center px-1 text-[12px] leading-[18px] text-[#2852a3] underline underline-offset-2"
+          >
+            Ganti akun
+          </button>
+        </div>
       </div>
 
-      <ul className="mt-9 space-y-4">
+      <ul className="mt-7 space-y-4">
         {tips.map((tip) => (
           <li key={tip.title} className="flex items-start gap-3">
             <tip.icon className="mt-0.5 h-[18px] w-[18px] flex-none text-[#151b2b]" aria-hidden="true" />
@@ -108,19 +132,20 @@ export function FaceIntroScreen({
         ))}
       </ul>
 
-      <p className="mt-7 flex items-start gap-2 text-[12px] leading-[18px] text-[#6b7280]">
+      <p className="mt-6 flex items-start gap-2 text-[12px] leading-[18px] text-[#667085]">
         <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
         Foto hanya dipakai untuk verifikasi dan tidak ditampilkan ke pengguna lain.
       </p>
 
+      <div className="flex-1" />
       <PrimaryButton type="button" className="mt-7" onClick={onStart}>
-        Mulai verifikasi wajah
+        {enroll ? "Mulai daftarkan wajah" : "Mulai verifikasi wajah"}
       </PrimaryButton>
       {allowPin ? (
         <button
           type="button"
           onClick={onUsePin}
-          className="mx-auto mt-5 text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
+          className="mx-auto mt-2 inline-flex min-h-11 items-center text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
         >
           Gunakan PIN
         </button>
@@ -128,7 +153,7 @@ export function FaceIntroScreen({
         <button
           type="button"
           onClick={onHelp}
-          className="mx-auto mt-5 text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
+          className="mx-auto mt-2 inline-flex min-h-11 items-center text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
         >
           Wajah tidak bisa diverifikasi?
         </button>
@@ -142,9 +167,11 @@ type CameraState = "demo" | "starting" | "live" | "denied";
 export function FaceCameraScreen({
   onCaptured,
   onBack,
+  onboarding,
 }: {
   onCaptured: (image: string | null) => void;
   onBack: () => void;
+  onboarding: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -221,14 +248,19 @@ export function FaceCameraScreen({
           setCountdown(null);
           captureNow();
         }
-      }, offset * 750);
+      }, offset * 1000);
       timers.current.push(timer);
     });
   }
 
   return (
     <div className="min-h-full bg-white px-6 pb-8 pt-12">
-      <StepHeader step={1} total={3} title="Ambil foto wajah" onBack={onBack} />
+      <StepHeader
+        step={onboarding ? 1 : undefined}
+        total={onboarding ? 3 : undefined}
+        title="Ambil foto wajah"
+        onBack={onBack}
+      />
       <div className="mt-1 flex items-center justify-between gap-3">
         <p className="text-[12px] leading-relaxed text-[#667085]">
           Posisikan wajah di dalam bingkai.
@@ -292,7 +324,7 @@ export function FaceCameraScreen({
         {flash ? <div className="absolute inset-0 z-30 bg-white" /> : null}
       </div>
 
-      <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-[#7c8ba3]">
+      <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-[#667085]">
         <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
         Foto tidak disimpan di galeri perangkat.
       </p>
@@ -309,6 +341,7 @@ export function FaceCameraScreen({
         className="mt-5"
         onClick={beginCapture}
         icon={<Camera className="h-4 w-4" aria-hidden="true" />}
+        iconPosition="leading"
       >
         Ambil foto
       </PrimaryButton>
@@ -338,19 +371,26 @@ export function FaceReviewScreen({
   onUse,
   onRetake,
   onBack,
+  onboarding,
 }: {
   image: string | null;
   onUse: () => void;
   onRetake: () => void;
   onBack: () => void;
+  onboarding: boolean;
 }) {
   return (
     <div className="min-h-full bg-white px-6 pb-8 pt-12">
-      <StepHeader step={1} total={3} title="Periksa foto Anda" onBack={onBack} />
-      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
+      <StepHeader
+        step={onboarding ? 1 : undefined}
+        total={onboarding ? 3 : undefined}
+        title="Periksa foto Anda"
+        onBack={onBack}
+      />
+      <p className="mt-2 text-[14px] leading-6 text-[#667085]">
         Pastikan wajah terlihat jelas, tidak buram, dan tidak terpotong.
       </p>
-      <div className="relative mt-6 overflow-hidden rounded-[14px] bg-[#18243c]">
+      <div className="relative mt-6 overflow-hidden rounded-[16px] bg-[#18243c]">
         <div className="relative h-[330px]">
           {image ? (
             <img src={image} alt="Hasil foto wajah" className="h-full w-full object-cover" />
@@ -363,23 +403,19 @@ export function FaceReviewScreen({
             </>
           )}
           <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(8,16,32,0.55),transparent_45%)]" />
-          <div className="absolute left-3 top-3 flex flex-col gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#ecfdf3] px-2.5 py-1 text-[10.5px] font-bold text-[#067647]">
-              <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
-              Wajah terdeteksi
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[10.5px] font-bold text-[#344054] backdrop-blur">
-              Kualitas foto baik
+          <div className="absolute left-3 top-3">
+            <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[#344054] backdrop-blur">
+              {image ? "Pratinjau foto" : "Mode demo"}
             </span>
           </div>
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-[12px] bg-black/30 px-3 py-2 backdrop-blur">
-            <span className="text-[10.5px] font-medium text-white/85">
-              {image ? "Foto dari kamera" : "Foto demo"}
+            <span className="text-[11px] font-medium text-white/90">
+              {image ? "Foto dari kamera" : "Contoh foto"}
             </span>
             <button
               type="button"
               onClick={onRetake}
-              className="inline-flex items-center gap-1 text-[10.5px] font-bold text-white"
+              className="-my-2 inline-flex min-h-11 items-center gap-1 px-1 text-[12px] font-semibold text-white"
             >
               <RotateCcw className="h-3 w-3" aria-hidden="true" />
               Ambil ulang
@@ -387,7 +423,7 @@ export function FaceReviewScreen({
           </div>
         </div>
       </div>
-      <p className="mt-4 flex items-start gap-2 text-[12px] leading-[18px] text-[#6b7280]">
+      <p className="mt-4 flex items-start gap-2 text-[12px] leading-[18px] text-[#667085]">
         <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
         Foto ini hanya dipakai untuk mencocokkan identitas Anda.
       </p>
@@ -501,7 +537,7 @@ export function FaceCheckScreen({
                     ? "border-[#bfe6d6] bg-[#ecfdf3] text-[#067647]"
                     : failed
                       ? "border-[#f5c2be] bg-[#fff6f5] text-[#b42318]"
-                      : "border-[#dfe5ee] bg-white text-[#98a2b3]",
+                      : "border-[#dfe5ee] bg-white text-[#667085]",
                 )}
               >
                 {failed ? (
@@ -521,7 +557,7 @@ export function FaceCheckScreen({
                     ? "font-semibold text-[#b42318]"
                     : complete
                       ? "text-[#475467]"
-                      : "text-[#7c8ba3]",
+                      : "text-[#667085]",
                 )}
               >
                 {failed ? "Wajah belum cocok dengan data akun" : step}
@@ -539,11 +575,13 @@ export function FaceFailedScreen({
   onRetry,
   onUsePin,
   onBack,
+  onHelp,
 }: {
   allowPin: boolean;
   onRetry: () => void;
   onUsePin: () => void;
   onBack: () => void;
+  onHelp: () => void;
 }) {
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-16">
@@ -552,15 +590,15 @@ export function FaceFailedScreen({
           <CameraOff className="h-8 w-8" strokeWidth={1.8} aria-hidden="true" />
         </div>
         <h1 className="mt-6 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-          Wajah belum cocok
+          Wajah belum terbaca
         </h1>
-        <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#6b7280]">
-          Pastikan pencahayaan cukup dan wajah tidak tertutup, lalu coba lagi.
+        <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#667085]">
+          Cahaya atau posisi wajah membuat foto sulit dicocokkan.
         </p>
       </div>
       <div className="mt-8">
-        <p className="text-[14px] font-medium leading-5 text-[#151b2b]">Sebelum mencoba lagi</p>
-        <ul className="mt-3 space-y-2 text-[13px] leading-5 text-[#6b7280]">
+        <p className="text-[14px] font-medium leading-5 text-[#151b2b]">Coba perbaiki ini</p>
+        <ul className="mt-3 space-y-2 text-[13px] leading-5 text-[#667085]">
           <li>Hadapkan wajah langsung ke kamera.</li>
           <li>Lepas masker, topi, dan kacamata gelap.</li>
           <li>Hindari posisi dengan cahaya di belakang.</li>
@@ -571,6 +609,7 @@ export function FaceFailedScreen({
         className="mt-6"
         onClick={onRetry}
         icon={<RotateCcw className="h-4 w-4" aria-hidden="true" />}
+        iconPosition="leading"
       >
         Coba lagi
       </PrimaryButton>
@@ -582,6 +621,14 @@ export function FaceFailedScreen({
       ) : null}
       <button type="button" onClick={onBack} className="ghost-button mx-auto mt-3 flex">
         Kembali masuk
+      </button>
+      <div className="flex-1" />
+      <button
+        type="button"
+        onClick={onHelp}
+        className="mx-auto inline-flex min-h-11 items-center text-[12px] leading-[18px] text-[#667085] underline underline-offset-2"
+      >
+        Butuh bantuan? Hubungi Admin Unit
       </button>
     </div>
   );
@@ -599,38 +646,59 @@ export function PinCreateScreen({
   const [firstPin, setFirstPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [focusRequest, setFocusRequest] = useState(0);
 
-  function next() {
-    if (pin.length < 6) {
+  function weakPin(code: string) {
+    if (code === DEMO.nip) return "PIN tidak boleh sama dengan NIP Anda.";
+    if (/^(\d)\1{5}$/.test(code)) return "Hindari angka yang sama berulang.";
+    if ("0123456789".includes(code) || "9876543210".includes(code))
+      return "Hindari urutan angka seperti 123456.";
+    return "";
+  }
+
+  function next(code = pin) {
+    if (code.length < 6) {
       setError("Masukkan 6 angka PIN.");
       return;
     }
     if (stage === "create") {
-      setFirstPin(pin);
+      const weak = weakPin(code);
+      if (weak) {
+        setError(weak);
+        setPin("");
+        setFocusRequest((value) => value + 1);
+        return;
+      }
+      setFirstPin(code);
       setPin("");
       setError("");
       setStage("confirm");
+      setFocusRequest((value) => value + 1);
       return;
     }
-    if (pin !== firstPin) {
+    if (code !== firstPin) {
+      setStage("create");
       setPin("");
-      setError("PIN belum sama. Masukkan ulang PIN yang sama.");
+      setFirstPin("");
+      setError("PIN belum sama. Buat PIN baru dari awal.");
+      setFocusRequest((value) => value + 1);
       return;
     }
     setError("");
     setLoading(true);
     window.setTimeout(() => {
       setLoading(false);
-      onComplete(pin);
+      onComplete(code);
     }, 800);
   }
 
   function back() {
     if (stage === "confirm") {
       setStage("create");
-      setPin(firstPin);
+      setPin("");
       setFirstPin("");
       setError("");
+      setFocusRequest((value) => value + 1);
       return;
     }
     onBack();
@@ -650,7 +718,7 @@ export function PinCreateScreen({
           : "Masukkan kembali PIN yang baru Anda buat."}
       </p>
 
-      <div className="mt-8">
+      <div className="mt-7">
         <PinInput
           value={pin}
           onChange={(value) => {
@@ -660,19 +728,28 @@ export function PinCreateScreen({
           label={stage === "create" ? "PIN baru" : "Ulangi PIN"}
           invalid={Boolean(error)}
           autoFocus
+          autoComplete="new-password"
+          errorId="pin-error"
+          focusRequest={focusRequest}
           onComplete={next}
         />
-        <p className="mt-3 text-center text-[11px] text-[#7c8ba3]">
-          {stage === "create" ? "Angka akan disembunyikan setelah diketik." : "Pastikan angka sama."}
+        <p className="mt-3 text-center text-[12px] leading-[18px] text-[#667085]">
+          {stage === "create"
+            ? "Jangan gunakan NIP, tanggal lahir, atau angka berurutan."
+            : "Pastikan angka sama dengan PIN yang baru dibuat."}
         </p>
       </div>
 
-      {error ? <InlineAlert className="mt-4">{error}</InlineAlert> : null}
+      {error ? (
+        <InlineAlert id="pin-error" className="mt-4">
+          {error}
+        </InlineAlert>
+      ) : null}
 
       <PrimaryButton
         type="button"
         className="mt-6"
-        onClick={next}
+        onClick={() => next()}
         disabled={pin.length < 6}
         loading={loading}
         loadingLabel="Menyimpan PIN…"
@@ -680,14 +757,12 @@ export function PinCreateScreen({
         {stage === "create" ? "Lanjut" : "Buat PIN"}
       </PrimaryButton>
 
-      <p className="mt-6 flex items-start gap-2 text-[12px] leading-[18px] text-[#6b7280]">
+      <div className="flex-1" />
+      <p className="mt-6 flex items-start gap-2 text-[12px] leading-[18px] text-[#667085]">
         <LockKeyhole className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
         Jangan bagikan PIN kepada siapa pun. MITRA tidak pernah meminta PIN melalui chat
         atau telepon.
       </p>
-
-      <div className="flex-1" />
-      <PageFooter />
     </div>
   );
 }

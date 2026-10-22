@@ -41,7 +41,7 @@ export function MitraMark({
       aria-hidden="true"
     >
       <svg viewBox="0 0 48 48" width={size} height={size}>
-        <circle cx="24" cy="24" r="24" fill="#2f4f9e" />
+        <circle cx="24" cy="24" r="24" fill="#2852a3" />
         <path
           d="M11.5 35.5V14.8c0-1.2 1.5-1.8 2.3-.8l6.3 8.4c.6.8 1.8.8 2.3 0l6.2-8.4c.8-1 2.4-.4 2.4.8v20.7h-5.4V24.3l-4.5 6.1c-.5.7-1.5.7-2.1 0l-4.4-6v11.1z"
           fill="#fff"
@@ -140,32 +140,32 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <label htmlFor={fieldId} className="text-[14px] font-medium leading-5 text-[#16191c]">
+        <label htmlFor={fieldId} className="text-[14px] font-medium leading-5 text-[#151b2b]">
           {label}
         </label>
         {optional ? (
-          <span className="text-[12px] font-normal leading-[18px] text-[#71808e]">Opsional</span>
+          <span className="text-[12px] font-normal leading-[18px] text-[#667085]">Opsional</span>
         ) : labelAction ? (
           labelAction
         ) : null}
       </div>
       <div className="relative">
         {icon ? (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#71808e]">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#667085]">
             {icon}
           </span>
         ) : null}
         <input
           ref={ref}
           id={fieldId}
-          className={cn("field", icon && "pl-10", trailing && "pr-10", className)}
+          className={cn("field", icon && "pl-11", trailing && "pr-11", className)}
           aria-invalid={error ? true : undefined}
           aria-describedby={error || hint ? messageId : undefined}
           data-invalid={error ? "true" : undefined}
           {...props}
         />
         {trailing ? (
-          <span className="absolute right-1 top-1/2 -translate-y-1/2">{trailing}</span>
+          <span className="absolute right-0 top-1/2 -translate-y-1/2">{trailing}</span>
         ) : null}
       </div>
       {error ? (
@@ -177,7 +177,7 @@ export const Field = forwardRef<HTMLInputElement, FieldProps>(function Field(
           {error}
         </p>
       ) : hint ? (
-        <p id={messageId} className="mt-1 text-[12px] leading-[18px] text-[#71808e]">
+        <p id={messageId} className="mt-1 text-[12px] leading-[18px] text-[#667085]">
           {hint}
         </p>
       ) : null}
@@ -225,7 +225,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          className="grid h-8 w-8 place-items-center rounded-[6px] text-[#71808e] transition hover:bg-[#f1f1f1] hover:text-[#16191c]"
+          className="grid h-11 w-11 place-items-center rounded-[8px] text-[#667085] transition hover:bg-[#f3f4f6] hover:text-[#151b2b]"
           aria-label={visible ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
         >
           {visible ? (
@@ -243,6 +243,7 @@ type PrimaryButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean;
   loadingLabel?: string;
   icon?: ReactNode;
+  iconPosition?: "leading" | "trailing";
 };
 
 export function PrimaryButton({
@@ -250,6 +251,7 @@ export function PrimaryButton({
   loading,
   loadingLabel,
   icon,
+  iconPosition = "trailing",
   className,
   disabled,
   ...props
@@ -267,8 +269,9 @@ export function PrimaryButton({
         </>
       ) : (
         <>
+          {iconPosition === "leading" ? icon ?? null : null}
           {children}
-          {icon ?? null}
+          {iconPosition === "trailing" ? icon ?? null : null}
         </>
       )}
     </button>
@@ -283,20 +286,22 @@ export function InlineAlert({
   children,
   tone = "error",
   className,
+  id,
 }: {
   children: ReactNode;
   tone?: "error" | "info";
   className?: string;
+  id?: string;
 }) {
   if (tone === "info") {
     return (
-      <div className={cn("info-box", className)} role="status">
+      <div id={id} className={cn("info-box", className)} role="status">
         {children}
       </div>
     );
   }
   return (
-    <div className={cn("alert-error", className)} role="alert">
+    <div id={id} className={cn("alert-error", className)} role="alert">
       <AlertCircle className="mt-0.5 h-4 w-4 flex-none" aria-hidden="true" />
       <div>{children}</div>
     </div>
@@ -310,8 +315,8 @@ export function StepHeader({
   onBack,
   backLabel = "Kembali",
 }: {
-  step: number;
-  total: number;
+  step?: number;
+  total?: number;
   title: string;
   onBack?: () => void;
   backLabel?: string;
@@ -323,17 +328,19 @@ export function StepHeader({
           <button
             type="button"
             onClick={onBack}
-            className="-ml-2 grid h-9 w-9 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
+            className="-ml-2.5 grid h-11 w-11 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
             aria-label={backLabel}
           >
             <ChevronLeft className="h-5 w-5" aria-hidden="true" />
           </button>
         ) : (
-          <span className="h-9 w-9" />
+          <span className="h-11 w-11" />
         )}
-        <span className="text-[12px] leading-5 text-[#6b7280]">
-          {step} / {total}
-        </span>
+        {step && total ? (
+          <span className="text-[12px] leading-5 text-[#6b7280]">
+            {step} / {total}
+          </span>
+        ) : null}
       </div>
       <h1 className="mt-6 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
         {title}
@@ -350,6 +357,10 @@ export function PinInput({
   autoFocus = false,
   label = "PIN",
   onComplete,
+  autoComplete = "off",
+  revealMs = 0,
+  errorId,
+  focusRequest = 0,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -357,7 +368,11 @@ export function PinInput({
   invalid?: boolean;
   autoFocus?: boolean;
   label?: string;
-  onComplete?: () => void;
+  onComplete?: (value: string) => void;
+  autoComplete?: "off" | "one-time-code" | "new-password";
+  revealMs?: number;
+  errorId?: string;
+  focusRequest?: number;
 }) {
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
   const [reveal, setReveal] = useState(false);
@@ -370,10 +385,15 @@ export function PinInput({
     };
   }, [autoFocus]);
 
+  useEffect(() => {
+    if (focusRequest > 0) inputs.current[0]?.focus();
+  }, [focusRequest]);
+
   function flashReveal() {
+    if (!revealMs) return;
     setReveal(true);
     if (timeout.current) window.clearTimeout(timeout.current);
-    timeout.current = window.setTimeout(() => setReveal(false), 900);
+    timeout.current = window.setTimeout(() => setReveal(false), revealMs);
   }
 
   function setDigit(index: number, digit: string) {
@@ -395,11 +415,11 @@ export function PinInput({
     onChange(digits);
     flashReveal();
     inputs.current[Math.min(digits.length, length - 1)]?.focus();
-    if (digits.length === length) onComplete?.();
+    if (digits.length === length) onComplete?.(digits);
   }
 
   return (
-    <div className="flex justify-between gap-2" role="group" aria-label={label}>
+    <div className="pin-row" role="group" aria-label={label}>
       {Array.from({ length }).map((_, index) => {
         const digit = value[index] ?? "";
         return (
@@ -411,8 +431,10 @@ export function PinInput({
             value={digit}
             type={reveal ? "text" : "password"}
             inputMode="numeric"
-            autoComplete={index === 0 ? "one-time-code" : "off"}
+            autoComplete={index === 0 ? autoComplete : "off"}
             aria-label={`${label}, angka ${index + 1}`}
+            aria-invalid={invalid ? true : undefined}
+            aria-describedby={invalid ? errorId : undefined}
             data-filled={digit ? "true" : undefined}
             data-invalid={invalid ? "true" : undefined}
             className="pin-cell"
@@ -440,7 +462,7 @@ export function PinInput({
               if (event.key === "ArrowLeft" && index > 0) inputs.current[index - 1]?.focus();
               if (event.key === "ArrowRight" && index < length - 1)
                 inputs.current[index + 1]?.focus();
-              if (event.key === "Enter" && value.length === length) onComplete?.();
+              if (event.key === "Enter" && value.length === length) onComplete?.(value);
             }}
             onPaste={handlePaste}
             onFocus={(event) => event.target.select()}
@@ -448,14 +470,6 @@ export function PinInput({
         );
       })}
     </div>
-  );
-}
-
-export function PinDemoHint({ label = "PIN demo" }: { label?: string }) {
-  return (
-    <p className="mt-3 text-center text-[12px] leading-[18px] text-[#71808e]">
-      {label} <span className="font-semibold text-[#16191c]">240812</span>
-    </p>
   );
 }
 
@@ -481,7 +495,7 @@ export function PasswordRules({
           key={rule.label}
           className={cn(
             "flex items-center gap-1.5 text-[12px] leading-[18px] transition-colors",
-            rule.met ? "text-[#24663f]" : "text-[#71808e]",
+            rule.met ? "text-[#24663f]" : "text-[#667085]",
           )}
         >
           <span

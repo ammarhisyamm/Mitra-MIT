@@ -14,12 +14,11 @@ import {
 import {
   BrandLockup,
   InlineAlert,
-  PinDemoHint,
   PinInput,
   PrimaryButton,
   StepHeader,
 } from "@/components/primitives";
-import { DEMO, UNITS, getUnit, type BusinessUnit, type Mode, type UnitDefinition } from "@/lib/demo";
+import { DEMO, getUnit, type BusinessUnit, type UnitDefinition } from "@/lib/demo";
 
 function PageFooter() {
   return (
@@ -49,8 +48,8 @@ function UnitGlyph({ unit, size = 40 }: { unit: UnitDefinition; size?: number })
 function Initials({ size = 40 }: { size?: number }) {
   return (
     <span
-      className="grid flex-none place-items-center rounded-full bg-[#f3f6fb] text-[12px] font-semibold text-[#2852a3]"
-      style={{ width: size, height: size }}
+      className="grid flex-none place-items-center rounded-full bg-[#f3f6fb] font-semibold text-[#2852a3]"
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
       aria-hidden="true"
     >
       {DEMO.name
@@ -63,19 +62,14 @@ function Initials({ size = 40 }: { size?: number }) {
 }
 
 export function VerifyChoiceScreen({
-  mode,
-  sessionActive,
   onFace,
   onPin,
   onLogout,
 }: {
-  mode: Mode;
-  sessionActive: boolean;
   onFace: () => void;
   onPin: () => void;
   onLogout: () => void;
 }) {
-  const resumed = mode === "returning" && sessionActive;
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
       <div className="flex items-center gap-3">
@@ -93,10 +87,8 @@ export function VerifyChoiceScreen({
       <h1 className="mt-8 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
         Verifikasi identitas
       </h1>
-      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
-        {resumed
-          ? "Sesi 30 hari Anda masih aktif di perangkat ini. Pilih cara verifikasi untuk melanjutkan."
-          : "Akun Anda dilindungi wajah dan PIN. Pilih salah satu cara untuk melanjutkan."}
+      <p className="mt-2 text-[14px] leading-6 text-[#667085]">
+        Akun Anda dilindungi wajah dan PIN. Pilih salah satu cara untuk melanjutkan.
       </p>
 
       <div className="mt-8 border-y border-[#e5e7eb]">
@@ -114,7 +106,7 @@ export function VerifyChoiceScreen({
               Cocokkan wajah dengan foto terdaftar.
             </p>
           </div>
-          <ChevronRight className="h-4 w-4 flex-none text-[#9ca3af]" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 flex-none text-[#6b7280]" aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -128,21 +120,19 @@ export function VerifyChoiceScreen({
               Masukkan 6 angka PIN akun Anda.
             </p>
           </div>
-          <ChevronRight className="h-4 w-4 flex-none text-[#9ca3af]" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 flex-none text-[#6b7280]" aria-hidden="true" />
         </button>
       </div>
 
-      <p className="mt-4 flex items-start gap-2 text-[12px] leading-[18px] text-[#6b7280]">
+      <p className="mt-4 flex items-start gap-2 text-[12px] leading-[18px] text-[#667085]">
         <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
-        {resumed
-          ? "Verifikasi hanya diperlukan sekali per perangkat dalam 30 hari."
-          : "Verifikasi melindungi data dan aktivitas penjualan Anda."}
+        Setelah verifikasi, perangkat ini dipercaya selama 30 hari.
       </p>
 
       <button
         type="button"
         onClick={onLogout}
-        className="mt-8 flex items-center gap-1.5 text-[13px] leading-5 text-[#6b7280]"
+        className="mt-6 inline-flex min-h-11 items-center gap-1.5 text-[13px] leading-5 text-[#667085]"
       >
         <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
         Bukan Anda? Keluar
@@ -168,9 +158,10 @@ export function VerifyPinScreen({
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [focusRequest, setFocusRequest] = useState(0);
 
-  function verify() {
-    if (pin.length < 6) {
+  function verify(code = pin) {
+    if (code.length < 6) {
       setError("Masukkan 6 angka PIN.");
       return;
     }
@@ -178,9 +169,10 @@ export function VerifyPinScreen({
     setLoading(true);
     window.setTimeout(() => {
       setLoading(false);
-      if (pin !== DEMO.pin) {
+      if (code !== DEMO.pin) {
         setPin("");
         setError("PIN tidak sesuai. Periksa kembali.");
+        setFocusRequest((value) => value + 1);
         return;
       }
       onSuccess();
@@ -189,12 +181,12 @@ export function VerifyPinScreen({
 
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-12">
-      <StepHeader step={1} total={2} title="Verifikasi PIN" onBack={onBack} />
-      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
+      <StepHeader title="Verifikasi PIN" onBack={onBack} />
+      <p className="mt-2 text-[14px] leading-6 text-[#667085]">
         Masukkan 6 angka PIN untuk melanjutkan ke akun Anda.
       </p>
 
-      <div className="mt-9">
+      <div className="mt-8">
         <PinInput
           value={pin}
           onChange={(value) => {
@@ -204,17 +196,23 @@ export function VerifyPinScreen({
           label="PIN"
           invalid={Boolean(error)}
           autoFocus
+          autoComplete="off"
+          errorId="pin-error"
+          focusRequest={focusRequest}
           onComplete={verify}
         />
-        <PinDemoHint />
       </div>
 
-      {error ? <InlineAlert className="mt-5">{error}</InlineAlert> : null}
+      {error ? (
+        <InlineAlert id="pin-error" className="mt-5">
+          {error}
+        </InlineAlert>
+      ) : null}
 
       <PrimaryButton
         type="button"
-        className="mt-8"
-        onClick={verify}
+        className="mt-7"
+        onClick={() => verify()}
         disabled={pin.length < 6}
         loading={loading}
         loadingLabel="Memverifikasi PIN…"
@@ -225,14 +223,14 @@ export function VerifyPinScreen({
       <button
         type="button"
         onClick={onUseFace}
-        className="mx-auto mt-5 text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
+        className="mx-auto mt-2 inline-flex min-h-11 items-center text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
       >
         Gunakan verifikasi wajah
       </button>
       <button
         type="button"
         onClick={onForgotPin}
-        className="mx-auto mt-3 text-[13px] leading-5 text-[#6b7280] underline underline-offset-2"
+        className="mx-auto inline-flex min-h-11 items-center text-[13px] leading-5 text-[#667085] underline underline-offset-2"
       >
         Lupa PIN? Masuk dengan kata sandi
       </button>
@@ -246,154 +244,163 @@ export function VerifyPinScreen({
 export function SuccessScreen({
   returning,
   unit,
+  method,
   onContinue,
 }: {
   returning: boolean;
   unit: UnitDefinition;
+  method: "face" | "pin" | "face-pin";
   onContinue: () => void;
 }) {
+  const methodLabel =
+    method === "face-pin" ? "Wajah + PIN" : method === "pin" ? "PIN" : "Wajah";
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-16">
-      <div className="flex flex-1 flex-col items-center pb-6 text-center">
-        <BrandLockup compact />
-        <span className="mt-9 grid h-16 w-16 place-items-center rounded-full bg-[#eaf7f0] text-[#24663f]">
-          <Check className="h-7 w-7" strokeWidth={2.4} aria-hidden="true" />
-        </span>
-        <h1 className="mt-6 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-          {returning ? `Selamat datang kembali, ${DEMO.firstName}` : "Akun Anda siap"}
-        </h1>
-        <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#6b7280]">
-          {returning
-            ? "Identitas Anda terverifikasi. Sesi aman aktif di perangkat ini."
-            : "Wajah dan PIN sudah terdaftar. Mulai sekarang, masuk ke MITRA lebih cepat."}
-        </p>
+    <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-14">
+      <div className="flex flex-1 flex-col">
+        <div className="flex justify-center">
+          <BrandLockup compact />
+        </div>
 
-        <div className="mt-7 w-full border-y border-[#e5e7eb] py-4 text-left">
-          <div className="flex items-center gap-3">
-            <Initials />
+        <div className="mt-9 text-center">
+          <div className="relative mx-auto w-fit">
+            <Initials size={72} />
+            <span className="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full bg-[#24663f] text-white ring-[3px] ring-white">
+              <Check className="h-4 w-4" strokeWidth={2.8} aria-hidden="true" />
+            </span>
+          </div>
+          <h1 className="mt-5 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
+            {returning ? `Selamat datang kembali, ${DEMO.firstName}` : "Akun Anda siap"}
+          </h1>
+          <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#667085]">
+            {returning
+              ? "Identitas Anda terverifikasi. Sesi aman diperpanjang 30 hari di perangkat ini."
+              : "Wajah dan PIN sudah terdaftar. Akses MITRA Anda siap dipakai."}
+          </p>
+        </div>
+
+        <div className="mt-7 overflow-hidden rounded-[16px] border border-[#e5e7eb]">
+          <div className="flex items-center gap-3 px-4 py-4" style={{ background: unit.soft }}>
+            <UnitGlyph unit={unit} size={38} />
             <div className="min-w-0">
-              <p className="truncate text-[14px] font-medium leading-5 text-[#151b2b]">
-                {DEMO.name}
+              <p className="truncate text-[14px] font-semibold leading-5" style={{ color: unit.ink }}>
+                {unit.name}
               </p>
-              <p className="truncate text-[12px] leading-[18px] text-[#6b7280]">
-                {DEMO.role} · NIP {DEMO.nip}
+              <p className="truncate text-[12px] leading-[18px]" style={{ color: unit.ink }}>
+                {unit.short} · {unit.description}
               </p>
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between text-[12px] leading-[18px]">
-            <span className="text-[#6b7280]">Metode masuk</span>
-            <span className="font-medium text-[#151b2b]">Wajah + PIN</span>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[12px] leading-[18px]">
-            <span className="text-[#6b7280]">Unit kerja</span>
-            <span className="flex items-center gap-1.5 font-medium text-[#151b2b]">
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ background: unit.color }}
-                aria-hidden="true"
-              />
-              {unit.short}
-            </span>
-          </div>
+          <dl className="divide-y divide-[#e5e7eb] px-4">
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt className="text-[12px] leading-[18px] text-[#667085]">NIP</dt>
+              <dd className="tabular text-[13px] font-medium leading-5 text-[#151b2b]">
+                {DEMO.nip}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt className="text-[12px] leading-[18px] text-[#667085]">Metode masuk</dt>
+              <dd className="text-[13px] font-medium leading-5 text-[#151b2b]">
+                {methodLabel}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 py-3">
+              <dt className="text-[12px] leading-[18px] text-[#667085]">Sesi perangkat</dt>
+              <dd className="text-[13px] font-medium leading-5 text-[#24663f]">Aktif 30 hari</dd>
+            </div>
+          </dl>
         </div>
 
-        <p className="mt-4 text-[12px] leading-[18px] text-[#6b7280]">
+        <p className="mt-4 flex items-start gap-2 text-[12px] leading-[18px] text-[#667085]">
+          <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
           {returning
-            ? "Anda tidak perlu memverifikasi ulang di perangkat ini selama 30 hari."
-            : "Lain kali, cukup verifikasi wajah atau masukkan PIN."}
+            ? "Verifikasi ulang hanya diminta setelah sesi berakhir."
+            : "Pengaturan PIN bisa diubah dari menu Keamanan setelah masuk."}
         </p>
 
-        <PrimaryButton type="button" className="mt-6" onClick={onContinue}>
-          {returning ? "Lanjut ke beranda" : "Lanjut ke unit kerja"}
+        <div className="flex-1" />
+        <PrimaryButton type="button" className="mt-7" onClick={onContinue}>
+          {returning ? "Lanjut ke beranda" : `Mulai di ${unit.short}`}
         </PrimaryButton>
       </div>
-      <PageFooter />
     </div>
   );
 }
 
 export function UnitScreen({
   unit,
-  returning,
-  onSelect,
   onContinue,
   onHelp,
 }: {
   unit: BusinessUnit;
-  returning: boolean;
-  onSelect: (unit: BusinessUnit) => void;
   onContinue: () => void;
   onHelp: () => void;
 }) {
   const selected = getUnit(unit);
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-12">
-      <StepHeader
-        step={3}
-        total={3}
-        title={returning ? "Unit kerja Anda" : "Periksa unit kerja"}
-      />
-      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
-        Akses Anda terhubung ke satu unit. Unit menentukan tampilan dan data yang bisa Anda
-        akses.
+    <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-12">
+      <StepHeader step={3} total={3} title="Unit kerja Anda" />
+      <p className="mt-2 text-[14px] leading-6 text-[#667085]">
+        Unit ini ditetapkan Admin Unit dan menentukan data yang bisa Anda akses.
       </p>
 
-      <div className="mt-7 flex items-center gap-3 border-y border-[#e5e7eb] py-4">
-        <UnitGlyph unit={selected} size={44} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="text-[15px] font-medium leading-6 text-[#151b2b]">
-              {selected.name}
-            </p>
-            <span
-              className="rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
-              style={{ background: selected.soft, color: selected.ink }}
-            >
-              Terdeteksi
-            </span>
-          </div>
-          <p className="text-[12px] leading-[18px] text-[#6b7280]">{selected.description}</p>
-        </div>
-      </div>
-
-      <p className="mt-6 text-[12px] leading-[18px] text-[#6b7280]">Ganti unit</p>
-      <div className="mt-2 border-b border-[#e5e7eb]">
-        {UNITS.filter((item) => item.id !== unit).map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onSelect(item.id)}
-            className="flex w-full items-center gap-3 border-t border-[#e5e7eb] py-4 text-left first:border-t-0"
-          >
-            <UnitGlyph unit={item} />
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-medium leading-5 text-[#151b2b]">{item.name}</p>
-              <p className="mt-0.5 text-[12px] leading-[18px] text-[#6b7280]">
-                {item.description}
+      <div className="mt-7 overflow-hidden rounded-[16px] border border-[#e5e7eb]">
+        <div className="px-4 py-5" style={{ background: selected.soft }}>
+          <div className="flex items-center gap-3">
+            <UnitGlyph unit={selected} size={48} />
+            <div className="min-w-0">
+              <p
+                className="text-[16px] font-semibold leading-6"
+                style={{ color: selected.ink }}
+              >
+                {selected.name}
+              </p>
+              <p className="text-[12px] leading-[18px]" style={{ color: selected.ink }}>
+                {selected.short} · {selected.description}
               </p>
             </div>
-            <ChevronRight className="h-4 w-4 flex-none text-[#9ca3af]" aria-hidden="true" />
-          </button>
-        ))}
+          </div>
+        </div>
+        <dl className="divide-y divide-[#e5e7eb] bg-white px-4">
+          <div className="flex items-center justify-between gap-4 py-3">
+            <dt className="text-[12px] leading-[18px] text-[#667085]">Ditetapkan oleh</dt>
+            <dd className="flex items-center gap-1.5 text-[13px] font-medium leading-5 text-[#151b2b]">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#24663f]" aria-hidden="true" />
+              Admin Unit
+            </dd>
+          </div>
+          <div className="flex items-center justify-between gap-4 py-3">
+            <dt className="text-[12px] leading-[18px] text-[#667085]">Akses data</dt>
+            <dd className="text-[13px] font-medium leading-5 text-[#151b2b]">
+              Leads, kunjungan, target
+            </dd>
+          </div>
+          <div className="flex items-center justify-between gap-4 py-3">
+            <dt className="text-[12px] leading-[18px] text-[#667085]">NIP</dt>
+            <dd className="tabular text-[13px] font-medium leading-5 text-[#151b2b]">
+              {DEMO.nip}
+            </dd>
+          </div>
+        </dl>
       </div>
 
-      <p className="mt-4 text-[12px] leading-[18px] text-[#6b7280]">
-        Unit yang salah?{" "}
+      <p className="mt-4 text-[12px] leading-[18px] text-[#667085]">
+        Bukan unit Anda?{" "}
         <button
           type="button"
           onClick={onHelp}
-          className="text-[#151b2b] underline underline-offset-2"
+          className="inline-flex min-h-11 items-center text-[12px] text-[#2852a3] underline underline-offset-2"
         >
-          Hubungi admin unit
+          Ajukan perubahan
         </button>
-        .
       </p>
 
-      <PrimaryButton type="button" className="mt-7" onClick={onContinue}>
-        Masuk ke {selected.short}
-      </PrimaryButton>
       <div className="flex-1" />
-      <PageFooter />
+      <PrimaryButton type="button" className="mt-7" onClick={onContinue}>
+        Lanjut
+      </PrimaryButton>
+      <p className="mt-3 text-center text-[12px] leading-[18px] text-[#667085]">
+        Perubahan unit diproses oleh Admin Unit, bukan dari perangkat ini.
+      </p>
     </div>
   );
 }
@@ -419,8 +426,13 @@ export function UnitHomeScreen({
     { icon: Users, value: "12", label: "Leads baru" },
     { icon: TrendingUp, value: "68%", label: "Target" },
   ];
+  const today = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+  }).format(new Date());
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
+    <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-14">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <UnitGlyph unit={selected} size={38} />
@@ -428,13 +440,13 @@ export function UnitHomeScreen({
             <p className="text-[13px] font-semibold leading-5 text-[#151b2b]">
               {selected.short} MITRA
             </p>
-            <p className="text-[11px] leading-4 text-[#6b7280]">Beranda unit</p>
+            <p className="text-[11px] leading-4 text-[#667085]">Beranda unit</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="relative grid h-9 w-9 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
+            className="relative grid h-11 w-11 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
             aria-label="Notifikasi"
           >
             <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
@@ -444,70 +456,110 @@ export function UnitHomeScreen({
         </div>
       </div>
 
-      <p className="mt-9 text-[13px] leading-5 text-[#6b7280]">{greeting()},</p>
+      <div className="mt-8 flex items-center gap-2">
+        <p className="text-[13px] leading-5 text-[#667085]">{greeting()},</p>
+        <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[10px] font-medium text-[#667085]">
+          Data contoh
+        </span>
+      </div>
       <h1 className="mt-0.5 text-[24px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
         {DEMO.name}
       </h1>
-      <p className="mt-1 text-[12px] leading-[18px] text-[#6b7280]">
+      <p className="mt-1 text-[12px] leading-[18px] text-[#667085]">
         {DEMO.role} · NIP {DEMO.nip}
       </p>
 
-      <div className="mt-7 grid grid-cols-3 border-y border-[#e5e7eb] py-4">
+      <div className="mt-7 flex items-baseline justify-between">
+        <p className="text-[13px] font-medium leading-5 text-[#151b2b]">Kunjungan berikutnya</p>
+        <p className="text-[12px] leading-[18px] text-[#667085]">{today}</p>
+      </div>
+
+      <div className="mt-2 overflow-hidden rounded-[16px] border border-[#e5e7eb]">
+        <div className="px-4 py-4" style={{ background: selected.soft }}>
+          <div className="flex items-center justify-between">
+            <span
+              className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+              style={{ color: selected.ink }}
+            >
+              Berikutnya
+            </span>
+            <span className="tabular text-[13px] font-semibold" style={{ color: selected.ink }}>
+              10.30
+            </span>
+          </div>
+          <p className="mt-2 text-[15px] font-semibold leading-5 text-[#151b2b]">
+            Kunjungan mitra binaan
+          </p>
+          <p className="mt-0.5 text-[12px] leading-[18px] text-[#151b2b]/70">
+            Rute {selected.short} · 2,4 km dari lokasi Anda
+          </p>
+        </div>
+        <button
+          type="button"
+          className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left"
+        >
+          <span className="text-[13px] font-medium text-[#2852a3]">Lihat detail kunjungan</span>
+          <ChevronRight className="h-4 w-4 text-[#667085]" aria-hidden="true" />
+        </button>
+      </div>
+
+      <p className="mt-6 text-[12px] leading-[18px] text-[#667085]">Minggu ini</p>
+      <div className="mt-2 grid grid-cols-3 border-y border-[#e5e7eb] py-4">
         {stats.map((item, index) => (
           <div
             key={item.label}
             className={index > 0 ? "border-l border-[#e5e7eb] text-center" : "text-center"}
           >
-            <item.icon className="mx-auto h-4 w-4 text-[#6b7280]" aria-hidden="true" />
-            <p className="mt-1.5 text-[18px] font-semibold leading-6 text-[#151b2b]">
+            <item.icon className="mx-auto h-4 w-4 text-[#667085]" aria-hidden="true" />
+            <p className="tabular mt-1.5 text-[18px] font-semibold leading-6 text-[#151b2b]">
               {item.value}
             </p>
-            <p className="text-[11px] leading-4 text-[#6b7280]">{item.label}</p>
+            <p className="text-[11px] leading-4 text-[#667085]">{item.label}</p>
           </div>
         ))}
       </div>
-      <p className="mt-2 text-[11px] leading-4 text-[#9ca3af]">Data contoh</p>
 
-      <p className="mt-7 text-[12px] leading-[18px] text-[#6b7280]">Akses cepat</p>
+      <p className="mt-7 text-[12px] leading-[18px] text-[#667085]">Akses cepat</p>
       <div className="mt-2 border-b border-[#e5e7eb]">
         {[
-          { icon: Users, label: "Leads" },
-          { icon: CalendarCheck, label: "Aktivitas" },
-          { icon: TrendingUp, label: "Target" },
+          { icon: Users, label: "Leads", detail: "12 perlu ditindaklanjuti" },
+          { icon: CalendarCheck, label: "Aktivitas", detail: "3 kunjungan hari ini" },
+          { icon: TrendingUp, label: "Target", detail: "68% dari target bulan ini" },
         ].map((item) => (
           <button
             key={item.label}
             type="button"
-            className="flex w-full items-center gap-3 border-t border-[#e5e7eb] py-4 text-left first:border-t-0"
+            className="flex min-h-12 w-full items-center gap-3 border-t border-[#e5e7eb] py-3 text-left first:border-t-0"
           >
-            <item.icon className="h-[18px] w-[18px] text-[#151b2b]" aria-hidden="true" />
-            <span className="flex-1 text-[14px] leading-5 text-[#151b2b]">{item.label}</span>
-            <ChevronRight className="h-4 w-4 text-[#9ca3af]" aria-hidden="true" />
+            <item.icon className="h-[18px] w-[18px] flex-none text-[#151b2b]" aria-hidden="true" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] leading-5 text-[#151b2b]">{item.label}</span>
+              <span className="block text-[11px] leading-4 text-[#667085]">{item.detail}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 flex-none text-[#667085]" aria-hidden="true" />
           </button>
         ))}
       </div>
 
-      <div className="mt-6 flex items-center justify-between">
-        <span className="flex items-center gap-2 text-[12px] leading-[18px] text-[#6b7280]">
-          <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
-          Sesi aktif · berakhir 30 hari setelah login
+      <div className="mt-6 flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2 text-[12px] leading-[18px] text-[#667085]">
+          <LockKeyhole className="h-3.5 w-3.5 flex-none" aria-hidden="true" />
+          Sesi aktif 30 hari di perangkat ini
         </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#24663f]">
+        <span className="flex-none text-[10px] font-semibold uppercase tracking-wide text-[#24663f]">
           Aktif
         </span>
       </div>
 
+      <div className="flex-1" />
       <button
         type="button"
         onClick={onLogout}
-        className="mt-7 flex items-center gap-1.5 text-[13px] leading-5 text-[#6b7280]"
+        className="mt-7 inline-flex min-h-11 items-center gap-1.5 text-[13px] leading-5 text-[#667085]"
       >
         <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
         Keluar dan ulangi prototype
       </button>
-
-      <div className="flex-1" />
-      <PageFooter />
     </div>
   );
 }

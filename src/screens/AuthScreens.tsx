@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Check, ChevronLeft, LockKeyhole } from "lucide-react";
+import { Check, ChevronLeft, LogOut } from "lucide-react";
 import {
   Field,
   InlineAlert,
@@ -24,7 +24,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="-ml-2 grid h-9 w-9 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
+      className="-ml-2.5 grid h-11 w-11 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
       aria-label="Kembali"
     >
       <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -39,11 +39,11 @@ function PageHeader({
 }: {
   title: string;
   description: string;
-  onBack: () => void;
+  onBack?: () => void;
 }) {
   return (
     <div>
-      <BackButton onClick={onBack} />
+      {onBack ? <BackButton onClick={onBack} /> : <div className="h-11" />}
       <h1 className="mt-7 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
         {title}
       </h1>
@@ -127,7 +127,7 @@ export function LoginScreen({
           <button
             type="button"
             onClick={onForgot}
-            className="mt-2 text-left text-[13px] leading-5 text-[#151b2b] underline decoration-[#151b2b] underline-offset-2"
+            className="mt-0 inline-flex min-h-11 items-center text-left text-[13px] leading-5 text-[#151b2b] underline decoration-[#151b2b] underline-offset-2"
           >
             Lupa Kata Sandi?
           </button>
@@ -218,7 +218,7 @@ export function ForgotScreen({
       <button
         type="button"
         onClick={onBack}
-        className="mx-auto mt-6 text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
+        className="mx-auto mt-2 inline-flex min-h-11 items-center text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
       >
         Kembali masuk
       </button>
@@ -239,6 +239,7 @@ export function OtpScreen({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [seconds, setSeconds] = useState(30);
+  const [focusRequest, setFocusRequest] = useState(0);
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -246,8 +247,8 @@ export function OtpScreen({
     return () => window.clearInterval(timer);
   }, [seconds]);
 
-  function verify() {
-    if (code.length < 6) {
+  function verify(value = code) {
+    if (value.length < 6) {
       setError("Masukkan 6 angka kode verifikasi.");
       return;
     }
@@ -255,8 +256,10 @@ export function OtpScreen({
     setLoading(true);
     window.setTimeout(() => {
       setLoading(false);
-      if (code !== DEMO.otp) {
+      if (value !== DEMO.otp) {
+        setCode("");
         setError("Kode verifikasi tidak sesuai. Periksa kembali.");
+        setFocusRequest((current) => current + 1);
         return;
       }
       onVerified();
@@ -267,7 +270,7 @@ export function OtpScreen({
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
       <PageHeader
         title="Masukkan kode verifikasi"
-        description={`Kode 6 angka dikirim ke ${DEMO.maskedEmail}.`}
+        description={`Kode 6 angka dikirim ke ${DEMO.maskedEmail} dan SMS ${DEMO.phone}.`}
         onBack={onBack}
       />
 
@@ -281,6 +284,9 @@ export function OtpScreen({
           label="Kode verifikasi"
           invalid={Boolean(error)}
           autoFocus
+          autoComplete="one-time-code"
+          errorId="otp-error"
+          focusRequest={focusRequest}
           onComplete={verify}
         />
         <p className="mt-4 text-center text-[12px] leading-[18px] text-[#6b7280]">
@@ -288,12 +294,16 @@ export function OtpScreen({
         </p>
       </div>
 
-      {error ? <InlineAlert className="mt-5">{error}</InlineAlert> : null}
+      {error ? (
+        <InlineAlert id="otp-error" className="mt-5">
+          {error}
+        </InlineAlert>
+      ) : null}
 
       <PrimaryButton
         type="button"
         className="mt-7"
-        onClick={verify}
+        onClick={() => verify()}
         loading={loading}
         loadingLabel="Memeriksa kode…"
       >
@@ -311,11 +321,12 @@ export function OtpScreen({
         ) : (
           <button
             type="button"
-            className="font-medium text-[#151b2b] underline underline-offset-2"
+            className="inline-flex min-h-11 items-center font-medium text-[#151b2b] underline underline-offset-2"
             onClick={() => {
               setSeconds(30);
               setCode("");
               setError("");
+              setFocusRequest((current) => current + 1);
             }}
           >
             Kirim ulang kode
@@ -365,7 +376,7 @@ export function ResetPasswordScreen({
       <PageHeader
         title={forceChange ? "Ganti kata sandi default" : "Buat kata sandi baru"}
         description="Gunakan kata sandi yang kuat dan belum pernah dipakai di MITRA."
-        onBack={onBack}
+        onBack={forceChange ? undefined : onBack}
       />
 
       {defaultPassword ? (
@@ -412,7 +423,7 @@ export function ResetPasswordScreen({
         </PrimaryButton>
       </form>
       <div className="flex-1" />
-      <PageFooter />
+      {forceChange ? <ForceChangeHeader onLogout={onBack} /> : <PageFooter />}
     </div>
   );
 }
@@ -427,8 +438,8 @@ export function ForgotDoneScreen({ onLogin }: { onLogin: () => void }) {
         <h1 className="mt-7 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
           Kata sandi diperbarui
         </h1>
-        <p className="mt-2 max-w-[290px] text-[14px] leading-6 text-[#6b7280]">
-          Masuk kembali dengan kata sandi baru Anda. Sesi di perangkat lain tidak berubah.
+        <p className="mt-2 max-w-[290px] text-[14px] leading-6 text-[#667085]">
+          Masuk kembali dengan kata sandi baru Anda.
         </p>
         <PrimaryButton type="button" className="mt-8" onClick={onLogin}>
           Kembali masuk
@@ -440,14 +451,40 @@ export function ForgotDoneScreen({ onLogin }: { onLogin: () => void }) {
 }
 
 export function ForceChangeHeader({ onLogout }: { onLogout: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="mx-auto flex min-h-11 items-center gap-1.5 text-[13px] leading-5 text-[#667085]"
+      >
+        <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
+        Keluar dari akun
+      </button>
+    );
+  }
   return (
-    <button
-      type="button"
-      onClick={onLogout}
-      className="mx-auto mt-5 flex items-center gap-1.5 text-[13px] leading-5 text-[#6b7280]"
-    >
-      <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
-      Keluar dari akun
-    </button>
+    <div className="rounded-[12px] border border-[#e5e7eb] bg-[#f8fafc] p-3 text-center">
+      <p className="text-[12px] leading-[18px] text-[#151b2b]">
+        Keluar sekarang? Anda harus masuk lagi untuk membuat kata sandi baru.
+      </p>
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          className="min-h-11 flex-1 rounded-[8px] border border-[#dfe4ea] bg-white text-[13px] font-medium text-[#151b2b]"
+        >
+          Batal
+        </button>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="min-h-11 flex-1 rounded-[8px] bg-[#2852a3] text-[13px] font-medium text-white"
+        >
+          Ya, keluar
+        </button>
+      </div>
+    </div>
   );
 }
