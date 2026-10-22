@@ -71,9 +71,9 @@ export function LoginScreen({
     event?.preventDefault();
     if (loading) return;
     const next: typeof errors = {};
-    if (!nip.trim()) next.nip = "Masukkan NIP atau email.";
-    else if (!nip.includes("@") && !/^\d{4,}$/.test(nip.trim()))
-      next.nip = "Masukkan NIP 4–12 angka atau alamat email.";
+    if (!nip.trim()) next.nip = "Masukkan NIP atau nomor telepon.";
+    else if (!/^\+?[\d\s-]{4,20}$/.test(nip.trim()))
+      next.nip = "Masukkan NIP atau nomor telepon yang valid.";
     if (!password) next.password = "Masukkan kata sandi.";
     else if (password.length < 6) next.password = "Kata sandi minimal 6 karakter.";
     setErrors(next);
@@ -83,7 +83,7 @@ export function LoginScreen({
     window.setTimeout(() => {
       setLoading(false);
       if (forceFail) {
-        setFormError("NIP atau kata sandi tidak sesuai. Periksa kembali.");
+        setFormError("NIP/nomor telepon atau kata sandi tidak sesuai. Periksa kembali.");
         return;
       }
       onSuccess();
@@ -97,7 +97,7 @@ export function LoginScreen({
 
         <form onSubmit={submit} className="mt-10" noValidate>
           <Field
-            label="NIP / Email"
+            label="NIP / Nomor telepon"
             value={nip}
             onChange={(event) => {
               setNip(event.target.value);
@@ -105,9 +105,9 @@ export function LoginScreen({
               setFormError("");
             }}
             error={errors.nip}
-            inputMode="email"
+            inputMode="tel"
             autoComplete="username"
-            placeholder="Masukkan NIP / Email"
+            placeholder="Masukkan NIP / Nomor telepon"
           />
           <div className="mt-5">
             <PasswordField
@@ -165,7 +165,11 @@ export function ForgotScreen({
   function submit(event: FormEvent) {
     event.preventDefault();
     if (!identifier.trim()) {
-      setError("Masukkan NIP atau email.");
+      setError("Masukkan NIP atau nomor telepon.");
+      return;
+    }
+    if (!/^\+?[\d\s-]{4,20}$/.test(identifier.trim())) {
+      setError("Masukkan NIP atau nomor telepon yang valid.");
       return;
     }
     setError("");
@@ -181,28 +185,29 @@ export function ForgotScreen({
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
       <PageHeader
         title="Lupa kata sandi"
-        description="Masukkan NIP atau email terdaftar. Kami akan mengirim kode verifikasi."
+        description="Masukkan NIP atau nomor telepon terdaftar. Kode verifikasi dikirim lewat SMS."
         onBack={onBack}
       />
 
       <form onSubmit={submit} className="mt-8" noValidate>
         <Field
-          label="NIP / Email"
+          label="NIP / Nomor telepon"
           value={identifier}
           onChange={(event) => {
             setIdentifier(event.target.value);
             setError("");
           }}
           error={error}
+          inputMode="tel"
           autoComplete="username"
-          placeholder="Masukkan NIP / Email"
+          placeholder="Masukkan NIP / Nomor telepon"
         />
         <p className="mt-3 text-[12px] leading-[18px] text-[#6b7280]">
           Demi keamanan, kami tidak menampilkan apakah akun terdaftar.
         </p>
         {sent ? (
           <p className="mt-5 text-[13px] leading-5 text-[#24663f]">
-            Kode verifikasi dikirim ke kontak terdaftar.
+            Kode verifikasi dikirim melalui SMS ke nomor terdaftar.
           </p>
         ) : null}
         <PrimaryButton
@@ -270,7 +275,7 @@ export function OtpScreen({
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
       <PageHeader
         title="Masukkan kode verifikasi"
-        description={`Kode 6 angka dikirim ke ${DEMO.maskedEmail} dan SMS ${DEMO.phone}.`}
+        description={`Kode 6 angka dikirim melalui SMS ke ${DEMO.maskedPhone}.`}
         onBack={onBack}
       />
 

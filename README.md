@@ -19,6 +19,7 @@ bun run preview
 ## Data demo
 
 - NIP: `240812`
+- Nomor telepon: `0812-8842-9901`
 - PIN: `731904`
 - OTP: `123456`
 - Kata sandi: `mitra2026`
