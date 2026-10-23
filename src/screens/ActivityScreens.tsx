@@ -148,6 +148,11 @@ export function ActivityListScreen({
   onOpen: () => void;
 }) {
   const selected = getUnit(unit);
+  const FeaturedIcon = completed ? CircleCheck : kindMeta(activity.kind).icon;
+  const featuredMeta = completed
+    ? `${leadCount} lead · Checkout tercatat`
+    : `${selected.short} · ${areaLabel(activity.area)} · 2,4 km`;
+
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-12">
       <StepHeader title="Aktivitas" onBack={onBack} />
@@ -156,72 +161,105 @@ export function ActivityListScreen({
       </p>
 
       <div className="mt-6 flex items-center justify-between gap-3">
-        <p className="text-[12px] font-medium leading-[18px] text-[#151b2b]">Hari ini</p>
+        <p className="text-[13px] font-semibold leading-5 text-[#151b2b]">Hari ini</p>
         <p className="flex items-center gap-1.5 text-[12px] leading-[18px] text-[#667085]">
           <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
           {todayLabel()}
         </p>
       </div>
 
-      <div className="mt-2 overflow-hidden rounded-[16px] border border-[#e5e7eb]">
-        <div className="px-4 py-4" style={{ background: completed ? "#f3fbf7" : selected.soft }}>
-          <div className="flex items-center justify-between gap-3">
-            <span
-              className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-              style={{ color: completed ? "#24663f" : selected.ink }}
-            >
-              {completed ? "Selesai" : "Berikutnya"}
-            </span>
-            <span
-              className="tabular text-[13px] font-semibold"
-              style={{ color: completed ? "#24663f" : selected.ink }}
-            >
-              {timeLabel(activity.time)}
-            </span>
+      <div className="mt-3 overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white">
+        <div
+          className="flex gap-3.5 border-l-[3px] p-4"
+          style={{ borderColor: completed ? "#12b76a" : selected.color }}
+        >
+          <span
+            className={cn(
+              "mt-0.5 grid h-10 w-10 flex-none place-items-center rounded-full",
+              completed && "bg-[#ecfdf3] text-[#067647]",
+            )}
+            style={completed ? undefined : { background: selected.soft, color: selected.ink }}
+          >
+            <FeaturedIcon
+              className="h-[18px] w-[18px]"
+              strokeWidth={2}
+              aria-hidden="true"
+            />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span
+                className="inline-flex items-center gap-1.5 text-[11px] font-semibold leading-4"
+                style={{ color: completed ? "#067647" : selected.ink }}
+              >
+                {completed ? null : (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ background: selected.color }}
+                    aria-hidden="true"
+                  />
+                )}
+                {completed ? "Selesai" : "Berikutnya"}
+              </span>
+              <span className="tabular text-[13px] font-semibold leading-5 text-[#151b2b]">
+                {timeLabel(activity.time)}
+              </span>
+            </div>
+            <p className="mt-1 text-[15px] font-semibold leading-5 text-[#151b2b]">
+              {activity.name}
+            </p>
+            <p className="mt-1 text-[12px] leading-[18px] text-[#667085]">{featuredMeta}</p>
           </div>
-          <p className="mt-2 text-[15px] font-semibold leading-5 text-[#151b2b]">
-            {activity.name}
-          </p>
-          <p className="mt-0.5 text-[12px] leading-[18px] text-[#151b2b]/70">
-            {completed
-              ? `${leadCount} lead · Checkout tercatat`
-              : `${selected.short} · ${areaLabel(activity.area)} · 2,4 km`}
-          </p>
         </div>
         <button
           type="button"
           onClick={onOpen}
-          className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left"
+          className="flex min-h-11 w-full items-center justify-between gap-3 border-t border-[#eef2f6] bg-[#fbfcfe] px-4 text-left transition hover:bg-[#f5f8fc]"
         >
           <span className="text-[13px] font-medium text-[#2852a3]">
             {completed ? "Lihat ringkasan" : "Buka aktivitas"}
           </span>
-          <ChevronRight className="h-4 w-4 text-[#667085]" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4 text-[#98a2b3]" aria-hidden="true" />
         </button>
       </div>
 
-      <p className="mt-6 text-[12px] leading-[18px] text-[#667085]">Aktivitas lain</p>
-      <div className="mt-2 divide-y divide-[#e5e7eb] border-y border-[#e5e7eb]">
-        <div className="flex items-center gap-3 py-3">
-          <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[#f3f4f6] text-[#667085]">
+      <div className="mt-7 flex items-center justify-between gap-3">
+        <h2 className="text-[13px] font-semibold leading-5 text-[#151b2b]">Aktivitas lain</h2>
+        <span className="text-[11px] leading-4 text-[#98a2b3]">2 aktivitas</span>
+      </div>
+      <div className="mt-3 overflow-hidden rounded-[14px] border border-[#e5e7eb] bg-white">
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[#fffaeb] text-[#b54708]">
             <Clock3 className="h-4 w-4" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium leading-5 text-[#151b2b]">
-              Follow-up prospek
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="truncate text-[13px] font-medium leading-5 text-[#151b2b]">
+                Follow-up prospek
+              </p>
+              <span className="tabular flex-none text-[11px] font-medium leading-4 text-[#667085]">
+                16.00
+              </span>
+            </div>
+            <p className="mt-0.5 text-[11px] leading-4 text-[#667085]">
+              Hari ini · Terjadwal
             </p>
-            <p className="text-[11px] leading-4 text-[#667085]">Sore ini · Terjadwal</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 py-3">
-          <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[#ecfdf3] text-[#24663f]">
+        <div className="flex items-center gap-3 border-t border-[#eef2f6] px-4 py-3.5">
+          <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[#ecfdf3] text-[#067647]">
             <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium leading-5 text-[#151b2b]">
-              Kunjungan mitra binaan
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="truncate text-[13px] font-medium leading-5 text-[#151b2b]">
+                Kunjungan mitra binaan
+              </p>
+              <span className="flex-none text-[11px] leading-4 text-[#98a2b3]">Kemarin</span>
+            </div>
+            <p className="mt-0.5 text-[11px] leading-4 text-[#667085]">
+              Selesai · 2 lead
             </p>
-            <p className="text-[11px] leading-4 text-[#667085]">Kemarin · Selesai · 2 lead</p>
           </div>
         </div>
       </div>
