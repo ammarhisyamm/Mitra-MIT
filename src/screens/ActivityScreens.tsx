@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronRight,
   CircleCheck,
   Clock3,
@@ -56,6 +57,29 @@ const AREA_OPTIONS: { id: ActivityArea; label: string; detail: string }[] = [
   { id: "inside", label: "Dalam area unit", detail: "Sesuai wilayah kerja Anda." },
   { id: "outside", label: "Luar area unit", detail: "Ditandai untuk persetujuan Admin Unit." },
 ];
+
+const VILLAGE_OPTIONS = [
+  {
+    label: "Cilandak Barat",
+    region: "Kec. Cilandak, Jakarta Selatan, DKI Jakarta 12430",
+  },
+  {
+    label: "Pondok Labu",
+    region: "Kec. Cilandak, Jakarta Selatan, DKI Jakarta 12450",
+  },
+  {
+    label: "Cipete Selatan",
+    region: "Kec. Cilandak, Jakarta Selatan, DKI Jakarta 12410",
+  },
+  {
+    label: "Sukamaju",
+    region: "Kec. Cilodong, Kota Depok, Jawa Barat 16415",
+  },
+];
+
+function fullAddress(value: Pick<ActivityDraft, "address" | "village" | "region">) {
+  return [value.address, value.village, value.region].filter(Boolean).join(", ");
+}
 
 function kindMeta(kind: ActivityKind) {
   return KIND_OPTIONS.find((item) => item.id === kind) ?? KIND_OPTIONS[0];
@@ -390,7 +414,10 @@ export function ActivityScheduleScreen({
   kind,
   area,
   initialName,
-  initialLocation,
+  initialLocationName,
+  initialAddress,
+  initialVillage,
+  initialRegion,
   initialTime,
   onBack,
   onCreated,
@@ -398,13 +425,19 @@ export function ActivityScheduleScreen({
   kind: ActivityKind;
   area: ActivityArea;
   initialName: string;
-  initialLocation: string;
+  initialLocationName: string;
+  initialAddress: string;
+  initialVillage: string;
+  initialRegion: string;
   initialTime: string;
   onBack: () => void;
   onCreated: (draft: ActivityDraft) => void;
 }) {
   const [name, setName] = useState(initialName);
-  const [location, setLocation] = useState(initialLocation);
+  const [locationName, setLocationName] = useState(initialLocationName);
+  const [address, setAddress] = useState(initialAddress);
+  const [village, setVillage] = useState(initialVillage);
+  const [region, setRegion] = useState(initialRegion);
   const [time, setTime] = useState(initialTime);
   const [error, setError] = useState("");
 
@@ -413,8 +446,16 @@ export function ActivityScheduleScreen({
       setError("Nama aktivitas wajib diisi.");
       return;
     }
-    if (!location.trim()) {
-      setError("Tentukan titik lokasi aktivitas.");
+    if (!locationName.trim()) {
+      setError("Nama lokasi wajib diisi.");
+      return;
+    }
+    if (!address.trim()) {
+      setError("Alamat aktivitas wajib diisi.");
+      return;
+    }
+    if (!village) {
+      setError("Pilih kelurahan aktivitas.");
       return;
     }
     if (!time) {
@@ -426,7 +467,16 @@ export function ActivityScheduleScreen({
       return;
     }
     setError("");
-    onCreated({ kind, area, name: name.trim(), location: location.trim(), time });
+    onCreated({
+      kind,
+      area,
+      name: name.trim(),
+      locationName: locationName.trim(),
+      address: address.trim(),
+      village,
+      region,
+      time,
+    });
   }
 
   return (
@@ -452,34 +502,97 @@ export function ActivityScheduleScreen({
         />
       </label>
 
+      <label className="mt-4 block">
+        <span className="mb-1.5 block text-[12px] font-medium leading-[18px] text-[#344054]">
+          Nama lokasi
+        </span>
+        <input
+          value={locationName}
+          onChange={(event) => {
+            setLocationName(event.target.value);
+            setError("");
+          }}
+          className="field"
+          placeholder="Masukkan nama lokasi"
+          autoComplete="off"
+        />
+      </label>
+
+      <label className="mt-4 block">
+        <span className="mb-1.5 block text-[12px] font-medium leading-[18px] text-[#344054]">
+          Alamat
+        </span>
+        <input
+          value={address}
+          onChange={(event) => {
+            setAddress(event.target.value);
+            setError("");
+          }}
+          className="field"
+          placeholder="Masukkan alamat aktivitas"
+          autoComplete="street-address"
+        />
+      </label>
+
+      <label className="mt-4 block">
+        <span className="mb-1.5 block text-[12px] font-medium leading-[18px] text-[#344054]">
+          Kelurahan
+        </span>
+        <span className="relative block">
+          <select
+            value={village}
+            onChange={(event) => {
+              const nextVillage = event.target.value;
+              setVillage(nextVillage);
+              setRegion(
+                VILLAGE_OPTIONS.find((item) => item.label === nextVillage)?.region ?? "",
+              );
+              setError("");
+            }}
+            className={cn(
+              "field appearance-none pr-10",
+              !village && "text-[#667085]",
+            )}
+          >
+            <option value="" disabled>
+              Pilih Kelurahan
+            </option>
+            {VILLAGE_OPTIONS.map((item) => (
+              <option key={item.label} value={item.label}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#667085]"
+            aria-hidden="true"
+          />
+        </span>
+      </label>
+
       <div className="mt-4">
-        <label className="block">
-          <span className="mb-1.5 block text-[12px] font-medium leading-[18px] text-[#344054]">
-            Lokasi
-          </span>
-          <span className="flex items-center gap-2">
-            <input
-              value={location}
-              onChange={(event) => {
-                setLocation(event.target.value);
-                setError("");
-              }}
-              className="field"
-              placeholder="Cari alamat atau titik maps"
-              autoComplete="off"
-            />
-            <button
-              type="button"
-              onClick={() => setLocation("Jl. Fatmawati No. 12, Jakarta Selatan")}
-              className="grid h-11 w-11 flex-none place-items-center rounded-[8px] border border-[#dfe4ea] text-[#2852a3] transition hover:bg-[#f8fafc]"
-              aria-label="Gunakan lokasi saat ini"
-            >
-              <LocateFixed className="h-[18px] w-[18px]" aria-hidden="true" />
-            </button>
-          </span>
-        </label>
+        <p className="mb-1.5 text-[12px] font-medium leading-[18px] text-[#344054]">
+          Kecamatan, kabupaten, provinsi, kode pos
+        </p>
+        <div
+          aria-live="polite"
+          className="flex min-h-11 items-center rounded-[8px] border border-[#dfe4ea] bg-[#f1f1f1] px-3 py-2 text-[12px] leading-[18px] text-[#667085]"
+        >
+          {region || "-"}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <p className="text-[12px] font-medium leading-[18px] text-[#344054]">
+          Titik lokasi
+        </p>
         <div className="mt-2">
-          <ActivityMap address={location || "Titik lokasi belum dipilih"} height="h-[128px]" />
+          <ActivityMap
+            address={
+              fullAddress({ address, village, region }) || "Titik lokasi belum dipilih"
+            }
+            height="h-[128px]"
+          />
         </div>
       </div>
 
@@ -570,8 +683,13 @@ export function ActivityCreatedScreen({
               <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
               Lokasi
             </dt>
-            <dd className="line-clamp-2 max-w-[190px] text-right text-[12px] font-medium leading-[18px] text-[#151b2b]">
-              {draft.location}
+            <dd className="max-w-[190px] text-right">
+              <span className="block text-[12px] font-medium leading-[18px] text-[#151b2b]">
+                {draft.locationName}
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-4 text-[#667085]">
+                {fullAddress(draft)}
+              </span>
             </dd>
           </div>
           <div className="flex items-center justify-between gap-4 py-3">
@@ -636,7 +754,7 @@ export function ActivityCheckinScreen({
       </p>
 
       <div className="mt-6">
-        <ActivityMap address={draft.location} height="h-[176px]" />
+        <ActivityMap address={fullAddress(draft)} height="h-[176px]" />
       </div>
 
       <div className="mt-4 rounded-[12px] border border-[#e5e7eb] px-4">
@@ -726,7 +844,7 @@ export function ActivityLeadsScreen({
           <p className="text-[13px] font-medium leading-5 text-[#151b2b]">
             Check-in tercatat pukul {checkinTime}
           </p>
-          <p className="truncate text-[11px] leading-4 text-[#667085]">{draft.location}</p>
+          <p className="truncate text-[11px] leading-4 text-[#667085]">{draft.locationName}</p>
         </div>
       </div>
 
@@ -856,8 +974,13 @@ export function ActivityCheckoutScreen({
           </div>
           <div className="flex items-start justify-between gap-4 py-3">
             <dt className="flex-none text-[12px] leading-[18px] text-[#667085]">Lokasi</dt>
-            <dd className="max-w-[210px] text-right text-[12px] font-medium leading-[18px] text-[#151b2b]">
-              {draft.location}
+            <dd className="max-w-[210px] text-right">
+              <span className="block text-[12px] font-medium leading-[18px] text-[#151b2b]">
+                {draft.locationName}
+              </span>
+              <span className="mt-0.5 block line-clamp-2 text-[11px] leading-4 text-[#667085]">
+                {fullAddress(draft)}
+              </span>
             </dd>
           </div>
         </dl>

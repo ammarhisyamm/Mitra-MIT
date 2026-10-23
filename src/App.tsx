@@ -75,7 +75,10 @@ export default function App() {
     kind: "kunjungan",
     area: "inside",
     name: defaultActivityName("kunjungan"),
-    location: "Jl. Fatmawati No. 12, Jakarta Selatan",
+    locationName: "Koperasi Mitra Binaan",
+    address: "Jl. Fatmawati No. 12",
+    village: "Cilandak Barat",
+    region: "Kec. Cilandak, Jakarta Selatan, DKI Jakarta 12430",
     time: defaultActivityTime(),
   });
   const [activityCheckin, setActivityCheckin] = useState("09.42");
@@ -379,7 +382,10 @@ export default function App() {
             kind={activityDraft.kind}
             area={activityDraft.area}
             initialName={activityDraft.name}
-            initialLocation={activityDraft.location}
+            initialLocationName={activityDraft.locationName}
+            initialAddress={activityDraft.address}
+            initialVillage={activityDraft.village}
+            initialRegion={activityDraft.region}
             initialTime={activityDraft.time}
             onBack={() => setScreen("activity-type")}
             onCreated={(draft) => {

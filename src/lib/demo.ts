@@ -50,7 +50,10 @@ export type ActivityDraft = {
   kind: ActivityKind;
   area: ActivityArea;
   name: string;
-  location: string;
+  locationName: string;
+  address: string;
+  village: string;
+  region: string;
   time: string;
 };
 
