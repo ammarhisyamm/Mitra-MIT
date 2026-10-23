@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
-  ArrowRight,
   Camera,
   CameraOff,
   Check,
@@ -9,9 +8,9 @@ import {
   LockKeyhole,
   RotateCcw,
   ScanFace,
-  ShieldCheck,
   Sun,
-  UserRound,
+  SwitchCamera,
+  X,
 } from "lucide-react";
 import {
   InlineAlert,
@@ -59,7 +58,6 @@ export function FaceIntroScreen({
   onUsePin,
   onHelp,
   enroll,
-  onSwitchAccount,
 }: {
   onStart: () => void;
   onBack: () => void;
@@ -67,7 +65,6 @@ export function FaceIntroScreen({
   onUsePin: () => void;
   onHelp: () => void;
   enroll: boolean;
-  onSwitchAccount: () => void;
 }) {
   const tips = [
     { icon: Sun, title: "Cahaya cukup", detail: "Hadap ke arah cahaya, hindari cahaya di belakang." },
@@ -79,67 +76,71 @@ export function FaceIntroScreen({
       <StepHeader
         step={enroll ? 1 : undefined}
         total={enroll ? 3 : undefined}
-        title={enroll ? "Daftarkan wajah" : "Verifikasi wajah"}
+        title={enroll ? "Daftarkan Wajah" : "Verifikasi Wajah"}
         onBack={onBack}
       />
       <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">
         {enroll
-          ? "Wajah ini akan menjadi cara masuk Anda ke MITRA."
+          ? "Ambil foto wajah untuk digunakan saat masuk ke MITRA."
           : "Kami mencocokkan wajah Anda dengan foto yang terdaftar."}
       </p>
 
-      <div className="mt-6 rounded-[12px] border border-[#e5e7eb] bg-[#f8fafc] p-3">
-        <div className="flex items-center gap-3">
-          <span
-            className="grid h-10 w-10 flex-none place-items-center rounded-full bg-white text-[12px] font-semibold text-[#2852a3] ring-1 ring-[#e5e7eb]"
-            aria-hidden="true"
-          >
-            {DEMO.name
-              .split(" ")
-              .map((part) => part[0])
-              .slice(0, 2)
-              .join("")}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-medium leading-5 text-[#151b2b]">
-              {DEMO.name}
-            </p>
-            <p className="text-[12px] leading-[18px] text-[#667085]">
-              NIP {DEMO.nip}
-            </p>
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        <figure className="overflow-hidden rounded-[12px] border-2 border-[#b7e4cd] bg-[#eaf8f1]">
+          <figcaption className="flex items-center gap-1.5 px-3 py-2.5 text-[12px] font-semibold leading-4 text-[#067647]">
+            <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" />
+            Benar
+          </figcaption>
+          <div className="h-[120px] overflow-hidden bg-[#d9efe4]">
+            <img
+              src="/face-demo.jpg"
+              alt="Contoh foto wajah yang benar, menghadap kamera dan seluruh wajah terlihat"
+              className="h-full w-full object-cover object-[50%_28%]"
+            />
           </div>
-          <button
-            type="button"
-            onClick={onSwitchAccount}
-            className="-my-2 inline-flex min-h-11 flex-none items-center px-1 text-[12px] leading-[18px] text-[#2852a3] underline underline-offset-2"
-          >
-            Ganti akun
-          </button>
-        </div>
+        </figure>
+        <figure className="overflow-hidden rounded-[12px] border-2 border-[#f3b7b5] bg-[#fff1f0]">
+          <figcaption className="flex items-center gap-1.5 px-3 py-2.5 text-[12px] font-semibold leading-4 text-[#d92d20]">
+            <X className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" />
+            Salah
+          </figcaption>
+          <div className="h-[120px] overflow-hidden bg-[#f5dedd]">
+            <img
+              src="/face-demo.jpg"
+              alt="Contoh foto wajah yang salah, wajah terpotong dan pencahayaan kurang"
+              className="h-full w-full scale-[1.55] object-cover object-[54%_8%] brightness-[.72] saturate-[.8]"
+            />
+          </div>
+        </figure>
       </div>
 
-      <ul className="mt-7 space-y-4">
-        {tips.map((tip) => (
-          <li key={tip.title} className="flex items-start gap-3">
-            <tip.icon className="mt-0.5 h-[18px] w-[18px] flex-none text-[#151b2b]" aria-hidden="true" />
-            <div>
-              <p className="text-[14px] font-medium leading-5 text-[#151b2b]">{tip.title}</p>
-              <p className="mt-0.5 text-[12px] leading-[18px] text-[#6b7280]">
-                {tip.detail}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <p className="mt-6 flex items-start gap-2 text-[12px] leading-[18px] text-[#667085]">
-        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
-        Foto hanya dipakai untuk verifikasi dan tidak ditampilkan ke pengguna lain.
+      <p className="mt-6 text-[14px] font-medium leading-5 text-[#151b2b]">
+        Panduan Singkat
       </p>
+      <div className="mt-2 rounded-[12px] border border-[#e5e7eb]">
+        <ul className="divide-y divide-[#e5e7eb]">
+          {tips.map((tip) => (
+            <li key={tip.title} className="flex items-start gap-3 px-4 py-3">
+              <tip.icon
+                className="mt-0.5 h-[18px] w-[18px] flex-none text-[#151b2b]"
+                aria-hidden="true"
+              />
+              <div>
+                <p className="text-[14px] font-medium leading-5 text-[#151b2b]">
+                  {tip.title}
+                </p>
+                <p className="mt-0.5 text-[12px] leading-[18px] text-[#6b7280]">
+                  {tip.detail}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <div className="flex-1" />
       <PrimaryButton type="button" className="mt-7" onClick={onStart}>
-        {enroll ? "Mulai daftarkan wajah" : "Mulai verifikasi wajah"}
+        {enroll ? "Mulai Daftar Wajah" : "Mulai Foto Wajah"}
       </PrimaryButton>
       {allowPin ? (
         <button
@@ -163,6 +164,7 @@ export function FaceIntroScreen({
 }
 
 type CameraState = "demo" | "starting" | "live" | "denied";
+type CameraFacing = "user" | "environment";
 
 export function FaceCameraScreen({
   onCaptured,
@@ -177,6 +179,7 @@ export function FaceCameraScreen({
   const streamRef = useRef<MediaStream | null>(null);
   const timers = useRef<number[]>([]);
   const [camera, setCamera] = useState<CameraState>("demo");
+  const [facing, setFacing] = useState<CameraFacing>("user");
   const [countdown, setCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
 
@@ -195,12 +198,12 @@ export function FaceCameraScreen({
     };
   }, []);
 
-  async function startCamera() {
+  async function startCamera(nextFacing: CameraFacing = facing) {
     setCamera("starting");
     try {
       if (!navigator.mediaDevices?.getUserMedia) throw new Error("unsupported");
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 960 } },
+        video: { facingMode: nextFacing, width: { ideal: 720 }, height: { ideal: 960 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -212,6 +215,17 @@ export function FaceCameraScreen({
     } catch {
       setCamera("denied");
     }
+  }
+
+  function handleCameraControl() {
+    if (camera === "live") {
+      const next = facing === "user" ? "environment" : "user";
+      setFacing(next);
+      stopCamera();
+      void startCamera(next);
+      return;
+    }
+    void startCamera(facing);
   }
 
   function captureNow() {
@@ -226,6 +240,10 @@ export function FaceCameraScreen({
         canvas.height = video.videoHeight;
         const context = canvas.getContext("2d");
         if (context) {
+          if (facing === "user") {
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1);
+          }
           context.drawImage(video, 0, 0, canvas.width, canvas.height);
           image = canvas.toDataURL("image/jpeg", 0.86);
         }
@@ -233,7 +251,7 @@ export function FaceCameraScreen({
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
       onCaptured(image);
-    }, 380);
+    }, 260);
     timers.current.push(timer);
   }
 
@@ -253,115 +271,186 @@ export function FaceCameraScreen({
     });
   }
 
+  const statusLabel =
+    camera === "live"
+      ? "Wajah terdeteksi"
+      : camera === "starting"
+        ? "Menyiapkan kamera…"
+        : camera === "denied"
+          ? "Kamera tidak tersedia · coba lagi"
+          : "Mode demo · aktifkan kamera";
+
   return (
-    <div className="min-h-full bg-white px-6 pb-8 pt-12">
-      <StepHeader
-        step={onboarding ? 1 : undefined}
-        total={onboarding ? 3 : undefined}
-        title="Ambil foto wajah"
-        onBack={onBack}
-      />
-      <div className="mt-1 flex items-center justify-between gap-3">
-        <p className="text-[12px] leading-relaxed text-[#667085]">
-          Posisikan wajah di dalam bingkai.
-        </p>
-        <span
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
-            camera === "live"
-              ? "bg-[#ecfdf3] text-[#067647]"
-              : "bg-[#eef2f8] text-[#5b6b85]",
-          )}
-        >
-          <span
-            className={cn(
-              "h-1.5 w-1.5 rounded-full",
-              camera === "live" ? "bg-[#0e9f6e]" : "bg-[#98a2b3]",
-            )}
-          />
-          {camera === "live" ? "Kamera aktif" : "Mode demo"}
-        </span>
-      </div>
-
-      <div className="camera-stage mt-4 h-[352px]">
+    <div className="relative flex min-h-full flex-col overflow-hidden bg-[#0b111b] text-white">
+      <div className="absolute inset-0">
         {camera === "live" ? (
-          <video ref={videoRef} playsInline muted aria-label="Pratinjau kamera depan" />
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            aria-label="Pratinjau kamera depan"
+            className="h-full w-full object-cover"
+            style={{ transform: facing === "user" ? "scaleX(-1)" : "none" }}
+          />
         ) : (
-          <>
-            <div className="camera-grain" />
-            <div className="camera-silhouette">
-              <div className="avatar-demo" />
-            </div>
-          </>
+          <img
+            src="/face-demo.jpg"
+            alt=""
+            className="h-full w-full object-cover object-[50%_30%] brightness-[.82]"
+          />
         )}
-        <div className="face-oval" aria-hidden="true" />
-        {camera === "live" ? <div className="scan-line" aria-hidden="true" /> : null}
-
-        <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-black/35 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
-          <UserRound className="h-3 w-3" aria-hidden="true" />
-          Kamera depan
-        </div>
-
-        <div className="absolute bottom-3 left-0 right-0 px-3">
-          <div className="rounded-[12px] bg-black/30 px-3 py-2 text-center text-[10.5px] font-medium text-white/85 backdrop-blur">
-            {camera === "starting"
-              ? "Menyiapkan kamera…"
-              : camera === "denied"
-                ? "Kamera tidak dapat diakses. Menggunakan mode demo."
-                : camera === "live"
-                  ? "Wajah terdeteksi. Tahan posisi Anda."
-                  : "Mode demo aktif. Tekan ambil foto untuk melanjutkan."}
-          </div>
-        </div>
-
-        {countdown !== null ? (
-          <div className="absolute inset-0 z-20 grid place-items-center bg-[#081020]/55 backdrop-blur-[2px]">
-            <div className="grid h-24 w-24 place-items-center rounded-full border border-white/25 bg-white/10 text-[44px] font-extrabold text-white">
-              {countdown}
-            </div>
-          </div>
-        ) : null}
-        {flash ? <div className="absolute inset-0 z-30 bg-white" /> : null}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(5,10,18,0.8),rgba(5,10,18,0.12)_28%,rgba(5,10,18,0.08)_55%,rgba(5,10,18,0.82))]" />
+        <div className="camera-grain" />
       </div>
-
-      <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] text-[#667085]">
-        <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
-        Foto tidak disimpan di galeri perangkat.
-      </p>
-
-      {camera === "denied" ? (
-        <InlineAlert className="mt-3">
-          Kamera tidak dapat diakses. Periksa izin kamera di pengaturan perangkat, lalu coba
-          lagi.
-        </InlineAlert>
+      <div className="face-guide" aria-hidden="true" />
+      {countdown !== null ? (
+        <div
+          className="absolute inset-0 z-30 grid place-items-center bg-[#081020]/45 backdrop-blur-[2px]"
+          role="status"
+          aria-live="assertive"
+        >
+          <div className="text-center">
+            <span className="mx-auto grid h-24 w-24 place-items-center rounded-full border border-white/25 bg-white/10 text-[44px] font-extrabold text-white">
+              {countdown}
+            </span>
+            <p className="mt-3 text-[12px] font-medium text-white/75">Tahan posisi</p>
+          </div>
+        </div>
       ) : null}
 
-      <PrimaryButton
-        type="button"
-        className="mt-5"
-        onClick={beginCapture}
-        icon={<Camera className="h-4 w-4" aria-hidden="true" />}
-        iconPosition="leading"
+      <div className="relative z-10 flex flex-1 flex-col px-6 pb-8 pt-16">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="-ml-2.5 grid h-11 w-11 place-items-center rounded-full text-white/90 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            aria-label="Tutup kamera"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+          {onboarding ? (
+            <span className="text-[12px] leading-5 text-white/65">1 / 3</span>
+          ) : null}
+        </div>
+
+        <h1 className="mt-3 text-[24px] font-semibold leading-8 tracking-[-0.02em]">
+          Ambil Foto Wajah
+        </h1>
+        <p className="mt-1 max-w-[320px] text-[13px] leading-5 text-white/75">
+          Pastikan foto dalam pencahayaan baik dan seluruh bagian wajah masuk dalam bingkai.
+        </p>
+
+        <div className="relative flex-1" />
+
+        <div className="relative z-10 mt-3">
+          <div className="mb-4 flex justify-center">
+            {camera === "live" ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-black/35 px-3 py-1.5 text-[11px] font-medium text-white/85 backdrop-blur">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#38d39f]" aria-hidden="true" />
+                {statusLabel}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCameraControl}
+                disabled={camera === "starting" || countdown !== null}
+                className="inline-flex min-h-8 items-center gap-2 rounded-full bg-black/35 px-3 py-1.5 text-[11px] font-medium text-white/85 backdrop-blur transition hover:bg-black/50 disabled:cursor-wait"
+              >
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    camera === "starting" ? "bg-[#f9a11f]" : "bg-white/60",
+                  )}
+                  aria-hidden="true"
+                />
+                {statusLabel}
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="h-12 w-12" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={beginCapture}
+              disabled={countdown !== null || camera === "starting"}
+              className="grid h-[68px] w-[68px] place-items-center rounded-full border-[3px] border-white/90 bg-white/15 transition active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b111b]"
+              aria-label={countdown !== null ? "Menghitung mundur" : "Ambil foto"}
+            >
+              <span className="grid h-[54px] w-[54px] place-items-center rounded-full bg-white text-[#122b5c]">
+                <Camera className="h-6 w-6" strokeWidth={1.9} aria-hidden="true" />
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={handleCameraControl}
+              disabled={countdown !== null || camera === "starting"}
+              className="grid h-12 w-12 place-items-center rounded-full border border-white/25 bg-black/35 text-white backdrop-blur transition hover:bg-black/50 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+              aria-label={camera === "live" ? "Ganti kamera" : "Aktifkan kamera"}
+            >
+              <SwitchCamera className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+          <p className="mt-4 text-center text-[11px] leading-4 text-white/60">
+            {facing === "user" ? "Kamera depan" : "Kamera belakang"} · Foto tidak disimpan di galeri
+          </p>
+        </div>
+      </div>
+
+      {flash ? <div className="absolute inset-0 z-40 bg-white" /> : null}
+    </div>
+  );
+}
+
+export function FaceProcessingScreen({
+  image,
+  onDone,
+}: {
+  image: string | null;
+  onDone: () => void;
+}) {
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => doneRef.current(), 1400);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="relative flex min-h-full flex-col overflow-hidden bg-[#0b111b] text-white">
+      <div className="absolute inset-0">
+        <img
+          src={image ?? "/face-demo.jpg"}
+          alt=""
+          className="h-full w-full scale-105 object-cover object-[50%_30%] opacity-30 blur-[3px]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(5,10,18,0.82),rgba(5,10,18,0.45)_45%,rgba(5,10,18,0.9))]" />
+      </div>
+
+      <div
+        className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-10 pt-16 text-center"
+        role="status"
+        aria-live="polite"
       >
-        Ambil foto
-      </PrimaryButton>
-      <button
-        type="button"
-        onClick={() => (camera === "live" ? stopCamera() : void startCamera())}
-        className="secondary-button mt-2.5 w-full"
-        disabled={camera === "starting"}
-      >
-        {camera === "live" ? (
-          <CameraOff className="h-4 w-4" aria-hidden="true" />
-        ) : (
-          <Camera className="h-4 w-4" aria-hidden="true" />
-        )}
-        {camera === "starting"
-          ? "Mengaktifkan kamera…"
-          : camera === "live"
-            ? "Matikan kamera"
-            : "Aktifkan kamera asli"}
-      </button>
+        <div className="relative h-[236px] w-[186px] overflow-hidden rounded-[48%_48%_44%_44%/38%_38%_62%_62%] border-2 border-white/80 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.8)]">
+          <img
+            src={image ?? "/face-demo.jpg"}
+            alt=""
+            className="h-full w-full object-cover object-[50%_28%]"
+          />
+          <div className="scan-line" aria-hidden="true" />
+        </div>
+        <h1 className="mt-7 text-[24px] font-semibold leading-8 tracking-[-0.02em]">
+          Menganalisis foto…
+        </h1>
+        <p className="mt-2 max-w-[280px] text-[13px] leading-5 text-white/70">
+          Kami memeriksa kualitas foto sebelum Anda meninjaunya.
+        </p>
+        <div className="mt-6 h-1 w-[190px] overflow-hidden rounded-full bg-white/20">
+          <div className="processing-progress h-full w-full rounded-full bg-white" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -380,65 +469,61 @@ export function FaceReviewScreen({
   onboarding: boolean;
 }) {
   return (
-    <div className="min-h-full bg-white px-6 pb-8 pt-12">
-      <StepHeader
-        step={onboarding ? 1 : undefined}
-        total={onboarding ? 3 : undefined}
-        title="Periksa foto Anda"
-        onBack={onBack}
-      />
-      <p className="mt-2 text-[14px] leading-6 text-[#667085]">
-        Pastikan wajah terlihat jelas, tidak buram, dan tidak terpotong.
-      </p>
-      <div className="relative mt-6 overflow-hidden rounded-[16px] bg-[#18243c]">
-        <div className="relative h-[330px]">
-          {image ? (
-            <img src={image} alt="Hasil foto wajah" className="h-full w-full object-cover" />
-          ) : (
-            <>
-              <div className="camera-grain" />
-              <div className="camera-silhouette">
-                <div className="avatar-demo" />
-              </div>
-            </>
-          )}
-          <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(8,16,32,0.55),transparent_45%)]" />
-          <div className="absolute left-3 top-3">
-            <span className="inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[#344054] backdrop-blur">
-              {image ? "Pratinjau foto" : "Mode demo"}
-            </span>
-          </div>
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-[12px] bg-black/30 px-3 py-2 backdrop-blur">
-            <span className="text-[11px] font-medium text-white/90">
-              {image ? "Foto dari kamera" : "Contoh foto"}
-            </span>
-            <button
-              type="button"
-              onClick={onRetake}
-              className="-my-2 inline-flex min-h-11 items-center gap-1 px-1 text-[12px] font-semibold text-white"
-            >
-              <RotateCcw className="h-3 w-3" aria-hidden="true" />
-              Ambil ulang
-            </button>
-          </div>
-        </div>
+    <div className="relative flex min-h-full flex-col overflow-hidden bg-[#0b111b] text-white">
+      <div className="absolute inset-0">
+        <img
+          src={image ?? "/face-demo.jpg"}
+          alt="Hasil foto wajah"
+          className="h-full w-full object-cover object-[50%_30%] brightness-[.9]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(5,10,18,0.82),rgba(5,10,18,0.12)_30%,rgba(5,10,18,0.1)_52%,rgba(5,10,18,0.88))]" />
       </div>
-      <p className="mt-4 flex items-start gap-2 text-[12px] leading-[18px] text-[#667085]">
-        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none" aria-hidden="true" />
-        Foto ini hanya dipakai untuk mencocokkan identitas Anda.
-      </p>
-      <PrimaryButton
-        type="button"
-        className="mt-5"
-        onClick={onUse}
-        icon={<ArrowRight className="h-4 w-4" aria-hidden="true" />}
-      >
-        Gunakan foto
-      </PrimaryButton>
-      <button type="button" onClick={onRetake} className="secondary-button mt-2.5 w-full">
-        <RotateCcw className="h-4 w-4" aria-hidden="true" />
-        Ambil foto ulang
-      </button>
+      <div className="face-guide" aria-hidden="true" />
+
+      <div className="relative z-10 flex flex-1 flex-col px-6 pb-8 pt-16">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="-ml-2.5 grid h-11 w-11 place-items-center rounded-full text-white/90 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
+            aria-label="Tutup tinjau foto"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+          {onboarding ? (
+            <span className="text-[12px] leading-5 text-white/65">1 / 3</span>
+          ) : null}
+        </div>
+
+        <h1 className="mt-3 text-[24px] font-semibold leading-8 tracking-[-0.02em]">
+          Tinjau Hasil Foto
+        </h1>
+        <p className="mt-1 max-w-[320px] text-[13px] leading-5 text-white/75">
+          Pastikan foto dalam pencahayaan baik dan seluruh bagian wajah masuk dalam bingkai.
+        </p>
+
+        <div className="flex-1" />
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onRetake}
+            className="inline-flex min-h-12 items-center justify-center rounded-[8px] bg-white px-6 text-[14px] font-medium leading-5 text-[#151b2b] transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b111b]"
+          >
+            Ulangi
+          </button>
+          <PrimaryButton
+            type="button"
+            onClick={onUse}
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b111b]"
+          >
+            Lanjut
+          </PrimaryButton>
+        </div>
+        <p className="mt-3 text-center text-[11px] leading-4 text-white/60">
+          Foto hanya dipakai untuk verifikasi identitas.
+        </p>
+      </div>
     </div>
   );
 }
@@ -500,22 +585,17 @@ export function FaceCheckScreen({
 
       <div className="relative mx-auto mt-6 h-[268px] w-[210px]">
         <div className="absolute inset-0 overflow-hidden rounded-[46%_46%_42%_42%/40%_40%_60%_60%] border-2 border-white shadow-[0_24px_60px_-30px_rgba(18,43,92,0.6)]">
-          {image ? (
-            <img src={image} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <>
-              <div className="camera-grain" />
-              <div className="camera-silhouette">
-                <div className="avatar-demo scale-[0.82]" />
-              </div>
-            </>
-          )}
+          <img
+            src={image ?? "/face-demo.jpg"}
+            alt=""
+            className="h-full w-full object-cover object-[50%_28%]"
+          />
           {!fail ? <div className="scan-line" /> : null}
           {fail ? <div className="absolute inset-0 bg-[#d92d20]/15" /> : null}
         </div>
         <span
           className={cn(
-            "absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full px-3 py-1.5 text-[10px] font-bold shadow",
+            "absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[10px] font-bold shadow",
             fail ? "bg-[#fee4e2] text-[#b42318]" : "bg-white text-[#2852a3]",
           )}
         >

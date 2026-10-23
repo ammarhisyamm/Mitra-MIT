@@ -109,7 +109,7 @@ export function MitraLogo({
 export function StatusBar({ tone = "dark" }: { tone?: "dark" | "light" }) {
   const color = tone === "light" ? "text-white" : "text-[#122b5c]";
   return (
-    <div className={cn("status-bar", color)} aria-hidden="true">
+    <div className={cn("status-bar", color, tone === "light" && "status-bar-overlay")} aria-hidden="true">
       <span className="w-12">9.41</span>
       <div className="flex items-center gap-1.5">
         <Signal className="h-3.5 w-3.5" strokeWidth={2.6} />

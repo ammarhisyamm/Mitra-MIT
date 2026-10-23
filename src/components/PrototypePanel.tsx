@@ -7,7 +7,7 @@ const firstGroups = [
   { label: "Masuk", screens: ["login"] },
   {
     label: "Verifikasi wajah",
-    screens: ["face-intro", "face-camera", "face-review", "face-check", "face-failed"],
+    screens: ["face-intro", "face-camera", "face-processing", "face-review", "face-check", "face-failed"],
   },
   { label: "Buat PIN", screens: ["pin-create"] },
   { label: "Akun siap", screens: ["success"] },
@@ -32,7 +32,7 @@ const returningGroups = [
   { label: "Masuk dan sesi", screens: ["login", "verify-choice"] },
   {
     label: "Verifikasi identitas",
-    screens: ["verify-pin", "face-intro", "face-camera", "face-review", "face-check", "face-failed"],
+    screens: ["verify-pin", "face-intro", "face-camera", "face-processing", "face-review", "face-check", "face-failed"],
   },
   { label: "Beranda unit", screens: ["success", "unit", "home"] },
   {
@@ -56,7 +56,8 @@ const jumpScreens: { value: Screen; label: string; mode?: Mode }[] = [
   { value: "verify-pin", label: "Verifikasi PIN", mode: "returning" },
   { value: "face-intro", label: "Pengantar verifikasi wajah" },
   { value: "face-camera", label: "Ambil foto wajah" },
-  { value: "face-review", label: "Periksa foto" },
+  { value: "face-processing", label: "Menganalisis foto" },
+  { value: "face-review", label: "Tinjau foto" },
   { value: "pin-create", label: "Buat PIN" },
   { value: "success", label: "Akun siap" },
   { value: "unit", label: "Unit kerja" },

@@ -20,6 +20,7 @@ import {
   FaceCheckScreen,
   FaceFailedScreen,
   FaceIntroScreen,
+  FaceProcessingScreen,
   FaceReviewScreen,
   PinCreateScreen,
   SplashScreen,
@@ -239,7 +240,6 @@ export default function App() {
             onHelp={() =>
               setNotice("Hubungi admin unit untuk bantuan verifikasi wajah.")
             }
-            onSwitchAccount={logout}
           />
         );
       case "face-camera":
@@ -247,10 +247,17 @@ export default function App() {
           <FaceCameraScreen
             onCaptured={(image) => {
               setFaceImage(image);
-              setScreen("face-review");
+              setScreen("face-processing");
             }}
             onBack={() => setScreen("face-intro")}
             onboarding={firstAccess}
+          />
+        );
+      case "face-processing":
+        return (
+          <FaceProcessingScreen
+            image={faceImage}
+            onDone={() => setScreen("face-review")}
           />
         );
       case "face-review":
@@ -262,7 +269,7 @@ export default function App() {
               setFaceImage(null);
               setScreen("face-camera");
             }}
-            onBack={() => setScreen("face-camera")}
+            onBack={() => setScreen("face-intro")}
             onboarding={firstAccess}
           />
         );
@@ -477,10 +484,12 @@ export default function App() {
     }
   }
 
+  const darkStatus = ["face-camera", "face-processing", "face-review"].includes(screen);
+
   const phone = (
     <div className="phone-frame">
       <div className="phone-screen">
-        <StatusBar />
+        <StatusBar tone={darkStatus ? "light" : "dark"} />
         <div className="phone-scroll" ref={scrollRef}>
           <div key={screen} className="screen-enter min-h-full">
             {renderScreen()}

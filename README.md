@@ -24,6 +24,7 @@ bun run preview
 - OTP: `123456`
 - Kata sandi: `mitra2026`
 - Unit: `GMN` (default), `SMA`, `GMS`
+- Foto contoh verifikasi: Unsplash, hanya untuk ilustrasi prototype
 
 Gunakan panel **Prototype** di sisi kanan pada desktop, atau tombol **Prototype** di kanan atas pada mobile untuk mengubah skenario, unit kerja, dan melompat antar layar.
 

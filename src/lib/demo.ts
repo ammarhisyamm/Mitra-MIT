@@ -9,6 +9,7 @@ export type Screen =
   | "verify-pin"
   | "face-intro"
   | "face-camera"
+  | "face-processing"
   | "face-review"
   | "face-check"
   | "face-failed"
@@ -125,6 +126,7 @@ export function getUnit(id: BusinessUnit) {
 export const FACE_SCREENS: Screen[] = [
   "face-intro",
   "face-camera",
+  "face-processing",
   "face-review",
   "face-check",
   "face-failed",
@@ -150,7 +152,8 @@ export function screenLabel(screen: Screen) {
     "verify-pin": "Verifikasi PIN",
     "face-intro": "Pengantar wajah",
     "face-camera": "Ambil foto",
-    "face-review": "Periksa foto",
+    "face-processing": "Menganalisis foto",
+    "face-review": "Tinjau foto",
     "face-check": "Memverifikasi wajah",
     "face-failed": "Verifikasi gagal",
     "pin-create": "Buat PIN",
