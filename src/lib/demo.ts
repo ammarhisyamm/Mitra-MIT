@@ -23,13 +23,13 @@ export type Screen =
   | "forgot-done"
   | "force-change"
   | "activity"
-  | "activity-type"
-  | "activity-schedule"
-  | "activity-created"
-  | "activity-checkin"
-  | "activity-leads"
-  | "activity-checkout"
-  | "activity-done";
+  | "activity-create"
+  | "activity-map"
+  | "activity-camera"
+  | "activity-detail"
+  | "lead-add"
+  | "lead-verify"
+  | "lead-simulation";
 
 export const DEMO = {
   name: "Rani Prameswari",
@@ -42,45 +42,6 @@ export const DEMO = {
   otp: "123456",
   password: "mitra2026",
 };
-
-export type ActivityKind = "kunjungan" | "prospek" | "followup";
-export type ActivityArea = "inside" | "outside";
-
-export type ActivityDraft = {
-  kind: ActivityKind;
-  area: ActivityArea;
-  name: string;
-  locationName: string;
-  address: string;
-  village: string;
-  region: string;
-  time: string;
-};
-
-export type ActivityLead = {
-  name: string;
-  phone: string;
-  note: string;
-};
-
-export const ACTIVITY_LEADS: ActivityLead[] = [
-  { name: "Dewi Lestari", phone: "0812 7788 1020", note: "Tertarik gadai emas" },
-  { name: "Bambang Wijaya", phone: "0813 9021 4477", note: "Minta simulasi pembiayaan" },
-  { name: "Siti Rahmawati", phone: "0821 3344 8890", note: "Follow-up minggu depan" },
-];
-
-export function defaultActivityName(kind: ActivityKind) {
-  if (kind === "prospek") return "Pencarian prospek baru";
-  if (kind === "followup") return "Follow-up prospek";
-  return "Kunjungan mitra binaan";
-}
-
-export function defaultActivityTime() {
-  const date = new Date(Date.now() + 30 * 60 * 1000);
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
 
 export type UnitDefinition = {
   id: BusinessUnit;
@@ -169,13 +130,13 @@ export function screenLabel(screen: Screen) {
     "forgot-done": "Kata sandi diperbarui",
     "force-change": "Ganti kata sandi default",
     activity: "Aktivitas",
-    "activity-type": "Buat aktivitas",
-    "activity-schedule": "Detail aktivitas",
-    "activity-created": "Aktivitas dibuat",
-    "activity-checkin": "Check-in aktivitas",
-    "activity-leads": "Input leads",
-    "activity-checkout": "Checkout",
-    "activity-done": "Aktivitas selesai",
+    "activity-create": "Buat Aktivitas",
+    "activity-map": "Pilih Lokasi di Peta",
+    "activity-camera": "Foto Kegiatan",
+    "activity-detail": "Detail Aktivitas",
+    "lead-add": "Tambah Leads Baru",
+    "lead-verify": "Verifikasi Nomor WhatsApp",
+    "lead-simulation": "Simulasi Gadai",
   };
   return labels[screen];
 }

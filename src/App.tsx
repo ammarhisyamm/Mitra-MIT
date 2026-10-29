@@ -25,56 +25,55 @@ import {
   VerifyPinScreen,
 } from "@/screens/ResultScreens";
 import {
-  ActivityCheckinScreen,
-  ActivityCheckoutScreen,
-  ActivityCreatedScreen,
-  ActivityDoneScreen,
-  ActivityLeadsScreen,
+  ActivityCameraScreen,
+  ActivityCreateScreen,
+  ActivityDetailScreen,
   ActivityListScreen,
-  ActivityScheduleScreen,
-  ActivityTypeScreen,
+  ActivityMapScreen,
+  LeadAddScreen,
+  LeadVerifyScreen,
+  SimulationScreen,
 } from "@/screens/ActivityScreens";
 import { StatusBar } from "@/components/primitives";
+import { OverlayRoot } from "@/components/mobile";
 import {
-  defaultActivityName,
-  defaultActivityTime,
   getUnit,
   screenLabel,
-  type ActivityDraft,
-  type ActivityLead,
   type BusinessUnit,
   type Mode,
   type Scenario,
   type Screen,
 } from "@/lib/demo";
+import {
+  activityStatus,
+  emptyForm,
+  initialActivities,
+  uid,
+  type Activity,
+  type ActivityForm,
+  type Collateral,
+  type Lead,
+} from "@/lib/activity";
 
 export default function App() {
-  const [mode] = useState<Mode>("first");
+  const [mode, setMode] = useState<Mode>("returning");
   const [sessionActive, setSessionActive] = useState(true);
   const [scenario] = useState<Scenario>("normal");
   const [forceFaceFail] = useState(false);
   const [forceLoginFail] = useState(false);
   const [unit] = useState<BusinessUnit>("gmn");
   const [screen, setScreen] = useState<Screen>("checking");
-  const [firstAccess, setFirstAccess] = useState(true);
+  const [firstAccess, setFirstAccess] = useState(false);
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [lastMethod, setLastMethod] = useState<"face" | "pin">("face");
   const [runId, setRunId] = useState(0);
   const [notice, setNotice] = useState("");
-  const [activityDraft, setActivityDraft] = useState<ActivityDraft>({
-    kind: "kunjungan",
-    area: "inside",
-    name: defaultActivityName("kunjungan"),
-    locationName: "Koperasi Mitra Binaan",
-    address: "Jl. Fatmawati No. 12",
-    village: "Cilandak Barat",
-    region: "Kec. Cilandak, Jakarta Selatan, DKI Jakarta 12430",
-    time: defaultActivityTime(),
-  });
-  const [activityCheckin, setActivityCheckin] = useState("09.42");
-  const [activityLeads, setActivityLeads] = useState<ActivityLead[]>([]);
-  const [activityCompleted, setActivityCompleted] = useState(false);
-  const startConfig = useRef({ mode: "first" as Mode, sessionActive: true });
+  const [activities, setActivities] = useState<Activity[]>(initialActivities);
+  const [activityId, setActivityId] = useState("act-1");
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [leadName, setLeadName] = useState("");
+  const [createForm, setCreateForm] = useState<ActivityForm>(emptyForm);
+  const startConfig = useRef({ mode: "returning" as Mode, sessionActive: true });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,11 +81,11 @@ export default function App() {
     const timer = window.setTimeout(() => {
       setFirstAccess(config.mode === "first");
       if (config.mode === "returning" && config.sessionActive) {
-        setScreen("home");
+        setScreen("activity");
       } else {
         setScreen("login");
       }
-    }, 1500);
+    }, 2400);
     return () => window.clearTimeout(timer);
   }, [runId]);
 
@@ -98,6 +97,7 @@ export default function App() {
 
   useEffect(() => {
     document.title = `MITRA · ${screenLabel(screen)}`;
+    scrollRef.current?.scrollTo({ top: 0 });
     const timer = window.setTimeout(() => {
       const heading = scrollRef.current?.querySelector<HTMLElement>("h1");
       if (!heading) return;
@@ -112,10 +112,8 @@ export default function App() {
     setScreen("checking");
     setFaceImage(null);
     setFirstAccess(nextMode === "first");
-    setActivityLeads([]);
-    setActivityCheckin("09.42");
-    setActivityCompleted(false);
-    setActivityDraft((current) => ({ ...current, time: defaultActivityTime() }));
+    setActivities(initialActivities());
+    setCreateForm(emptyForm());
     setRunId((current) => current + 1);
   }
 
@@ -133,9 +131,71 @@ export default function App() {
   }
 
   function logout() {
-    startFlow(mode, false);
+    setMode("first");
+    startFlow("first", false);
     setSessionActive(false);
   }
+
+  const activity = activities.find((item) => item.id === activityId) ?? activities[0];
+  const lead = activity?.leads.find((item) => item.id === leadId) ?? null;
+
+  function updateActivity(id: string, update: (activity: Activity) => Activity) {
+    setActivities((current) => current.map((item) => (item.id === id ? update(item) : item)));
+  }
+
+  function updateLead(id: string, patch: Partial<Lead>) {
+    updateActivity(activityId, (current) => ({
+      ...current,
+      leads: current.leads.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    }));
+  }
+
+  function createActivity() {
+    const form = createForm;
+    const next: Activity = {
+      id: uid("act"),
+      kind: form.kind,
+      area: form.area ?? "inside",
+      name: form.name.trim(),
+      locationName: form.locationName,
+      locationAddress: form.locationAddress,
+      date: form.date,
+      start: form.start,
+      end: form.end,
+      checkinTime: null,
+      checkoutTime: null,
+      leads: [],
+    };
+    setActivities((current) => [next, ...current]);
+    setCreateForm(emptyForm());
+    setScreen("activity");
+  }
+
+  function saveLead(prospect: boolean) {
+    const existing = activity.leads.find((item) => item.id === leadId);
+    if (existing) {
+      if (prospect) updateLead(existing.id, { prospect: true, heat: "warm" });
+      return existing.id;
+    }
+    const next: Lead = {
+      id: uid("lead"),
+      name: leadName,
+      phone: `0812${Math.floor(10_000_000 + Math.random() * 89_999_999)}`,
+      prospect,
+      heat: prospect ? "warm" : "cold",
+      simulation: null,
+    };
+    updateActivity(activityId, (current) => ({ ...current, leads: [next, ...current.leads] }));
+    setLeadId(next.id);
+    return next.id;
+  }
+
+  const leadRegistered = activities.some((item) =>
+    item.leads.some(
+      (entry) => entry.id !== leadId && entry.name.toLowerCase() === leadName.toLowerCase(),
+    ),
+  );
+  const soon = (label: string) => setNotice(`Menu ${label} belum tersedia di prototype ini.`);
 
   function renderScreen() {
     switch (screen) {
@@ -277,124 +337,139 @@ export default function App() {
             }
           />
         );
-      case "home":
+      case "home": {
+        const next =
+          activities.find((item) => activityStatus(item) !== "ended") ?? activities[0];
         return (
           <UnitHomeScreen
             unit={unit}
-            activity={activityDraft}
-            activityCompleted={activityCompleted}
-            activityLeadCount={activityLeads.length}
+            activity={{ name: next?.name ?? "Belum ada aktivitas", time: next?.start ?? "--:--" }}
+            activityCompleted={next ? activityStatus(next) === "ended" : false}
+            activityLeadCount={next?.leads.length ?? 0}
             onLogout={logout}
             onActivity={() => setScreen("activity")}
           />
         );
+      }
       case "activity":
         return (
           <ActivityListScreen
-            unit={unit}
-            activity={activityDraft}
-            completed={activityCompleted}
-            leadCount={activityLeads.length}
-            onBack={() => setScreen("home")}
-            onCreate={() => setScreen("activity-type")}
-            onOpen={() =>
-              setScreen(activityCompleted ? "activity-done" : "activity-checkin")
-            }
-          />
-        );
-      case "activity-type":
-        return (
-          <ActivityTypeScreen
-            initialKind={activityDraft.kind}
-            initialArea={activityDraft.area}
-            onBack={() => setScreen("activity")}
-            onContinue={(kind, area) => {
-              setActivityDraft((current) => ({
-                ...current,
-                kind,
-                area,
-                name:
-                  current.name === defaultActivityName(current.kind)
-                    ? defaultActivityName(kind)
-                    : current.name,
-              }));
-              setActivityLeads([]);
-              setActivityCheckin("09.42");
-              setActivityCompleted(false);
-              setScreen("activity-schedule");
+            activities={activities}
+            onOpen={(id) => {
+              setActivityId(id);
+              setScreen("activity-detail");
             }}
-          />
-        );
-      case "activity-schedule":
-        return (
-          <ActivityScheduleScreen
-            kind={activityDraft.kind}
-            area={activityDraft.area}
-            initialName={activityDraft.name}
-            initialLocationName={activityDraft.locationName}
-            initialAddress={activityDraft.address}
-            initialVillage={activityDraft.village}
-            initialRegion={activityDraft.region}
-            initialTime={activityDraft.time}
-            onBack={() => setScreen("activity-type")}
-            onCreated={(draft) => {
-              setActivityDraft(draft);
-              setScreen("activity-created");
+            onCheckIn={(id) => {
+              setActivityId(id);
+              setScreen("activity-camera");
             }}
-          />
-        );
-      case "activity-created":
-        return (
-          <ActivityCreatedScreen
-            draft={activityDraft}
-            onBack={() => setScreen("activity")}
-            onCheckin={() => setScreen("activity-checkin")}
-          />
-        );
-      case "activity-checkin":
-        return (
-          <ActivityCheckinScreen
-            draft={activityDraft}
-            onBack={() => setScreen("activity-schedule")}
-            onCheckedIn={(time) => {
-              setActivityCheckin(time);
-              setScreen("activity-leads");
-            }}
-          />
-        );
-      case "activity-leads":
-        return (
-          <ActivityLeadsScreen
-            draft={activityDraft}
-            checkinTime={activityCheckin}
-            leads={activityLeads}
-            onAddLead={(lead) => setActivityLeads((current) => [...current, lead])}
-            onBack={() => setScreen("activity")}
-            onFinish={() => setScreen("activity-checkout")}
-          />
-        );
-      case "activity-checkout":
-        return (
-          <ActivityCheckoutScreen
-            draft={activityDraft}
-            checkinTime={activityCheckin}
-            leadCount={activityLeads.length}
-            onBack={() => setScreen("activity-leads")}
-            onDone={() => {
-              setActivityCompleted(true);
-              setScreen("activity-done");
-            }}
-          />
-        );
-      case "activity-done":
-        return (
-          <ActivityDoneScreen
-            leadCount={activityLeads.length}
-            checkinTime={activityCheckin}
+            onCreate={() => setScreen("activity-create")}
             onHome={() => setScreen("home")}
-            onActivity={() => setScreen("activity")}
+            onSoon={soon}
           />
         );
+      case "activity-create":
+        return (
+          <ActivityCreateScreen
+            form={createForm}
+            onChange={setCreateForm}
+            onBack={() => setScreen("activity")}
+            onPickMap={() => setScreen("activity-map")}
+            onCreated={createActivity}
+          />
+        );
+      case "activity-map":
+        return (
+          <ActivityMapScreen
+            onBack={() => setScreen("activity-create")}
+            onConfirm={(place) => {
+              setCreateForm((current) => ({
+                ...current,
+                locationName: place.name,
+                locationAddress: place.address,
+              }));
+              setScreen("activity-create");
+            }}
+          />
+        );
+      case "activity-camera":
+        return (
+          <ActivityCameraScreen
+            activity={activity}
+            onClose={() => setScreen("activity")}
+            onCheckedIn={(time) => {
+              updateActivity(activity.id, (current) => ({ ...current, checkinTime: time }));
+              setScreen("activity-detail");
+            }}
+          />
+        );
+      case "activity-detail":
+        return (
+          <ActivityDetailScreen
+            activity={activity}
+            onBack={() => setScreen("activity")}
+            onCheckIn={() => setScreen("activity-camera")}
+            onCheckOut={() => {
+              const now = new Date();
+              const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+              updateActivity(activity.id, (current) => ({ ...current, checkoutTime: time }));
+            }}
+            onAddLead={() => {
+              setLeadId(null);
+              setLeadName("");
+              setScreen("lead-add");
+            }}
+            onSimulate={(id) => {
+              setLeadId(id);
+              setScreen("lead-simulation");
+            }}
+            onVerify={(id) => {
+              const target = activity.leads.find((item) => item.id === id);
+              setLeadId(id);
+              setLeadName(target?.name ?? "");
+              setScreen("lead-verify");
+            }}
+          />
+        );
+      case "lead-add":
+        return (
+          <LeadAddScreen
+            onBack={() => setScreen("activity-detail")}
+            onSubmit={(name) => {
+              setLeadName(name);
+              setScreen("lead-verify");
+            }}
+          />
+        );
+      case "lead-verify":
+        return (
+          <LeadVerifyScreen
+            name={leadName}
+            registered={leadRegistered}
+            onNotice={setNotice}
+            onCancel={() => {
+              saveLead(false);
+              setScreen("activity-detail");
+            }}
+            onRegistered={() => setScreen("activity-detail")}
+            onVerified={(next) => {
+              saveLead(true);
+              setScreen(next === "simulate" ? "lead-simulation" : "activity-detail");
+            }}
+          />
+        );
+      case "lead-simulation":
+        return lead ? (
+          <SimulationScreen
+            lead={lead}
+            onNotice={setNotice}
+            onBack={() => setScreen("activity-detail")}
+            onSent={(items: Collateral[]) => {
+              updateLead(lead.id, { simulation: items });
+              setScreen("activity-detail");
+            }}
+          />
+        ) : null;
       case "forgot":
         return (
           <ForgotScreen
@@ -439,7 +514,7 @@ export default function App() {
     }
   }
 
-  const darkStatus = ["face-camera", "face-processing", "face-review"].includes(screen);
+  const darkStatus = ["face-camera", "face-processing", "face-review", "activity-camera"].includes(screen);
 
   const phone = (
     <div className="phone-frame">
@@ -450,6 +525,7 @@ export default function App() {
             {renderScreen()}
           </div>
         </div>
+        <OverlayRoot />
         <div className="sr-only" aria-live="polite">
           {screenLabel(screen)}
         </div>

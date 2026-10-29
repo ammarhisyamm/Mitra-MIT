@@ -21,7 +21,6 @@ import {
 import {
   DEMO,
   getUnit,
-  type ActivityDraft,
   type BusinessUnit,
   type UnitDefinition,
 } from "@/lib/demo";
@@ -91,7 +90,7 @@ export function VerifyChoiceScreen({
       </div>
 
       <h1 className="mt-8 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-        Verifikasi identitas
+        Verifikasi Identitas
       </h1>
       <p className="mt-2 text-[14px] leading-6 text-[#667085]">
         Akun Anda dilindungi wajah dan PIN. Pilih salah satu cara untuk melanjutkan.
@@ -275,7 +274,7 @@ export function SuccessScreen({
             </span>
           </div>
           <h1 className="mt-5 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-            {returning ? `Selamat datang kembali, ${DEMO.firstName}` : "Akun Anda siap"}
+            {returning ? `Selamat Datang Kembali, ${DEMO.firstName}` : "Akun Anda Siap"}
           </h1>
           <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#667085]">
             {returning
@@ -344,7 +343,7 @@ export function UnitScreen({
   const selected = getUnit(unit);
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-12">
-      <StepHeader step={3} total={3} title="Unit kerja Anda" />
+      <StepHeader step={3} total={3} title="Unit Kerja Anda" />
       <p className="mt-2 text-[14px] leading-6 text-[#667085]">
         Unit ini ditetapkan Admin Unit dan menentukan data yang bisa Anda akses.
       </p>
@@ -428,7 +427,7 @@ export function UnitHomeScreen({
   onActivity,
 }: {
   unit: BusinessUnit;
-  activity: ActivityDraft;
+  activity: { name: string; time: string };
   activityCompleted: boolean;
   activityLeadCount: number;
   onLogout: () => void;

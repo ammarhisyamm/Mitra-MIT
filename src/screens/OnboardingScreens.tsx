@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import {
   InlineAlert,
-  MitraLogo,
+  MitraMark,
   PinInput,
   PrimaryButton,
   StepHeader,
@@ -33,18 +33,20 @@ export function SplashScreen({
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-16">
       <div className="flex flex-1 flex-col items-center justify-center pb-12 text-center">
-        <MitraLogo poweredBy />
-        <div className="mt-12 flex items-center gap-2.5 text-[13px] leading-5 text-[#6b7280]">
-          <span className="spinner spinner-dark" aria-hidden="true" />
-          <span>{resumed ? "Memulihkan sesi aman Anda…" : "Memeriksa sesi…"}</span>
+        <div className="flex items-center gap-3">
+          <MitraMark size={52} className="splash-mark" />
+          <div className="text-left">
+            <span className="splash-word block text-[34px] font-extrabold italic leading-none tracking-[0.04em] text-[#151b2b]">
+              MITRA
+            </span>
+            <span className="splash-tag mt-1 block text-[13px] italic leading-4 text-[#2852a3]">
+              Powered by MIT
+            </span>
+          </div>
         </div>
-        <p className="mt-2 max-w-[260px] text-[12px] leading-[18px] text-[#6b7280]">
-          {resumed
-            ? "Sesi 30 hari masih aktif di perangkat ini."
-            : "Menyiapkan akses aman untuk Anda."}
-        </p>
+        <div className="splash-progress mt-10" role="progressbar" aria-label={resumed ? "Memulihkan sesi" : "Memeriksa sesi"} />
       </div>
-      <p className="text-center text-[13px] leading-5 text-[#6b7280]">
+      <p className="splash-tag text-center text-[13px] leading-5 text-[#6b7280]">
         V1. Mitra powered by MIT
       </p>
     </div>
@@ -442,7 +444,7 @@ export function FaceProcessingScreen({
           <div className="scan-line" aria-hidden="true" />
         </div>
         <h1 className="mt-7 text-[24px] font-semibold leading-8 tracking-[-0.02em]">
-          Menganalisis foto…
+          Menganalisis Foto…
         </h1>
         <p className="mt-2 max-w-[280px] text-[13px] leading-5 text-white/70">
           Kami memeriksa kualitas foto sebelum Anda meninjaunya.
@@ -576,7 +578,7 @@ export function FaceCheckScreen({
     <div className="flex min-h-full flex-col bg-white px-6 pb-8 pt-16">
       <div className="text-center">
         <h1 className="text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-          {fail ? "Verifikasi belum selesai" : "Memverifikasi wajah…"}
+          {fail ? "Verifikasi Belum Selesai" : "Memverifikasi Wajah…"}
         </h1>
         <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#6b7280]">
           Jangan tutup halaman ini. Proses biasanya kurang dari 5 detik.
@@ -670,7 +672,7 @@ export function FaceFailedScreen({
           <CameraOff className="h-8 w-8" strokeWidth={1.8} aria-hidden="true" />
         </div>
         <h1 className="mt-6 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-          Wajah belum terbaca
+          Wajah Belum Terbaca
         </h1>
         <p className="mx-auto mt-2 max-w-[290px] text-[14px] leading-6 text-[#667085]">
           Cahaya atau posisi wajah membuat foto sulit dicocokkan.

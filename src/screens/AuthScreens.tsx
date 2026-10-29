@@ -184,7 +184,7 @@ export function ForgotScreen({
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
       <PageHeader
-        title="Lupa kata sandi"
+        title="Lupa Kata Sandi"
         description="Masukkan NIP atau nomor telepon terdaftar. Kode verifikasi dikirim lewat SMS."
         onBack={onBack}
       />
@@ -274,7 +274,7 @@ export function OtpScreen({
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
       <PageHeader
-        title="Masukkan kode verifikasi"
+        title="Masukkan Kode Verifikasi"
         description={`Kode 6 angka dikirim melalui SMS ke ${DEMO.maskedPhone}.`}
         onBack={onBack}
       />
@@ -379,7 +379,7 @@ export function ResetPasswordScreen({
   return (
     <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
       <PageHeader
-        title={forceChange ? "Ganti kata sandi default" : "Buat kata sandi baru"}
+        title={forceChange ? "Ganti Kata Sandi Default" : "Buat Kata Sandi Baru"}
         description="Gunakan kata sandi yang kuat dan belum pernah dipakai di MITRA."
         onBack={forceChange ? undefined : onBack}
       />
@@ -441,7 +441,7 @@ export function ForgotDoneScreen({ onLogin }: { onLogin: () => void }) {
           <Check className="h-7 w-7" strokeWidth={2.4} aria-hidden="true" />
         </span>
         <h1 className="mt-7 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-          Kata sandi diperbarui
+          Kata Sandi Diperbarui
         </h1>
         <p className="mt-2 max-w-[290px] text-[14px] leading-6 text-[#667085]">
           Masuk kembali dengan kata sandi baru Anda.
