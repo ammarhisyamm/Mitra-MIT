@@ -26,7 +26,7 @@ bun run preview
 - Unit: `GMN` (default), `SMA`, `GMS`
 - Foto contoh verifikasi: Unsplash, hanya untuk ilustrasi prototype
 
-Gunakan panel **Prototype** di sisi kanan pada desktop, atau tombol **Prototype** di kanan atas pada mobile untuk mengubah skenario, unit kerja, dan melompat antar layar.
+Prototype tampil sebagai aplikasi mobile murni: di desktop berupa satu frame ponsel di tengah layar, di mobile tampil layar penuh.
 
 ## Stack
 

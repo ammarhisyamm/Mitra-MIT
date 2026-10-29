@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  ArrowUpRight,
-  Clock3,
-  Info,
-  KeyRound,
-  PanelRightOpen,
-  ShieldCheck,
-  Smartphone,
-} from "lucide-react";
+import { Info } from "lucide-react";
 import {
   ForgotDoneScreen,
   ForgotScreen,
@@ -42,8 +34,7 @@ import {
   ActivityScheduleScreen,
   ActivityTypeScreen,
 } from "@/screens/ActivityScreens";
-import { PrototypePanel } from "@/components/PrototypePanel";
-import { MitraLogo, StatusBar } from "@/components/primitives";
+import { StatusBar } from "@/components/primitives";
 import {
   defaultActivityName,
   defaultActivityTime,
@@ -58,19 +49,18 @@ import {
 } from "@/lib/demo";
 
 export default function App() {
-  const [mode, setMode] = useState<Mode>("first");
+  const [mode] = useState<Mode>("first");
   const [sessionActive, setSessionActive] = useState(true);
-  const [scenario, setScenario] = useState<Scenario>("normal");
-  const [forceFaceFail, setForceFaceFail] = useState(false);
-  const [forceLoginFail, setForceLoginFail] = useState(false);
-  const [unit, setUnit] = useState<BusinessUnit>("gmn");
+  const [scenario] = useState<Scenario>("normal");
+  const [forceFaceFail] = useState(false);
+  const [forceLoginFail] = useState(false);
+  const [unit] = useState<BusinessUnit>("gmn");
   const [screen, setScreen] = useState<Screen>("checking");
   const [firstAccess, setFirstAccess] = useState(true);
   const [faceImage, setFaceImage] = useState<string | null>(null);
   const [lastMethod, setLastMethod] = useState<"face" | "pin">("face");
   const [runId, setRunId] = useState(0);
   const [notice, setNotice] = useState("");
-  const [panelOpen, setPanelOpen] = useState(false);
   const [activityDraft, setActivityDraft] = useState<ActivityDraft>({
     kind: "kunjungan",
     area: "inside",
@@ -117,20 +107,6 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [screen]);
 
-  useEffect(() => {
-    if (!panelOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPanelOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [panelOpen]);
-
   function startFlow(nextMode: Mode, nextSession: boolean) {
     startConfig.current = { mode: nextMode, sessionActive: nextSession };
     setScreen("checking");
@@ -141,33 +117,6 @@ export default function App() {
     setActivityCompleted(false);
     setActivityDraft((current) => ({ ...current, time: defaultActivityTime() }));
     setRunId((current) => current + 1);
-  }
-
-  function restart() {
-    startFlow(mode, sessionActive);
-  }
-
-  function changeMode(nextMode: Mode) {
-    setMode(nextMode);
-    startFlow(nextMode, nextMode === "returning" ? sessionActive : false);
-  }
-
-  function changeSession(nextSession: boolean) {
-    setSessionActive(nextSession);
-    startFlow(mode, nextSession);
-  }
-
-  function jump(next: Screen, nextMode?: Mode) {
-    if (nextMode && nextMode !== mode) {
-      setMode(nextMode);
-      setFirstAccess(nextMode === "first");
-      if (nextMode === "returning") setSessionActive(true);
-    }
-    if (next === "verify-choice" || next === "verify-pin" || next === "login") {
-      setSessionActive(false);
-    }
-    setFaceImage(null);
-    setScreen(next);
   }
 
   function loginSuccess() {
@@ -514,175 +463,9 @@ export default function App() {
     </div>
   );
 
-  const panel = (
-    <PrototypePanel
-      mode={mode}
-      sessionActive={sessionActive}
-      scenario={scenario}
-      forceFaceFail={forceFaceFail}
-      forceLoginFail={forceLoginFail}
-      unit={unit}
-      screen={screen}
-      onMode={changeMode}
-      onSession={changeSession}
-      onScenario={setScenario}
-      onForceFaceFail={setForceFaceFail}
-      onForceLoginFail={setForceLoginFail}
-      onUnit={setUnit}
-      onRestart={restart}
-      onJump={jump}
-    />
-  );
-
   return (
-    <div className="page-canvas relative min-h-dvh overflow-x-hidden">
-      <header className="relative z-10 mx-auto hidden w-full max-w-[1260px] items-center justify-between gap-4 px-5 pb-3 pt-6 lg:flex lg:px-10">
-        <div>
-          <MitraLogo />
-          <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6b7280]">
-            Prototype · First login
-          </p>
-        </div>
-        <div className="hidden items-center gap-2 md:flex">
-          <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1.5 text-[10.5px] font-semibold text-[#5b6b85] backdrop-blur">
-            Brand MIT
-          </span>
-          <span className="rounded-full border border-white/70 bg-white/70 px-3 py-1.5 text-[10.5px] font-semibold text-[#5b6b85] backdrop-blur">
-            UX Writing · Draft
-          </span>
-          <a
-            href="https://mit-ds-git-design-syst-bc82ea-ammarhisyam151-gmailcoms-projects.vercel.app/"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#122b5c] px-3.5 py-1.5 text-[10.5px] font-semibold text-white transition hover:bg-[#0f234d]"
-          >
-            MIT DS guideline
-            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-          </a>
-        </div>
-      </header>
-
-      <main className="relative z-10 mx-auto grid w-full max-w-[1260px] items-start gap-8 px-0 pb-0 pt-0 lg:grid-cols-[minmax(0,1fr)_418px] lg:gap-12 lg:px-10 lg:pb-14 lg:pt-3">
-        <section className="hidden lg:block">
-          <div className="mx-auto max-w-[700px]">
-            <div className="float-in">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2852a3]">
-                Satu alur, tiga momen kepercayaan
-              </p>
-              <h1 className="mt-3 text-[42px] font-extrabold leading-[1.02] tracking-[-0.035em] text-[#101a2e]">
-                Masuk pertama,
-                <br />
-                <span className="text-[#2852a3]">tanpa friksi.</span>
-              </h1>
-              <p className="mt-3 max-w-[520px] text-[13px] leading-relaxed text-[#5b6b85]">
-                Prototype alur first login MITRA: verifikasi wajah, pembuatan PIN, dan routing
-                unit. Semua state penting bisa dicoba dari panel di samping.
-              </p>
-            </div>
-
-            <div className="float-in float-in-delay-1 mt-6 flex justify-center">
-              {phone}
-            </div>
-
-            <div className="float-in float-in-delay-2 mt-5 grid grid-cols-3 gap-2.5">
-              {[
-                {
-                  icon: ShieldCheck,
-                  title: "Verifikasi wajah",
-                  detail: "Foto + pencocokan identitas",
-                },
-                {
-                  icon: KeyRound,
-                  title: "PIN 6 angka",
-                  detail: "Masuk cepat di perangkat",
-                },
-                {
-                  icon: Clock3,
-                  title: "Sesi 30 hari",
-                  detail: "Verifikasi ulang terkendali",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-[14px] border border-white/80 bg-white/65 p-3 backdrop-blur"
-                >
-                  <item.icon className="h-4 w-4 text-[#2852a3]" aria-hidden="true" />
-                  <p className="mt-2 text-[11px] font-bold text-[#344054]">{item.title}</p>
-                  <p className="mt-0.5 text-[10px] leading-snug text-[#667085]">
-                    {item.detail}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="lg:hidden">{phone}</section>
-
-        <aside className="sticky top-6 hidden lg:block">
-          <div className="side-panel max-h-[calc(100dvh-48px)] overflow-y-auto p-5">{panel}</div>
-        </aside>
-      </main>
-
-      <footer className="relative z-10 mx-auto hidden w-full max-w-[1260px] items-center justify-between px-10 pb-7 text-[10px] text-[#8a98ad] lg:flex">
-        <p>MITRA × MIT DS · Prototype internal, bukan produk final.</p>
-        <p className="flex items-center gap-1.5">
-          <Smartphone className="h-3 w-3" aria-hidden="true" />
-          Dioptimalkan untuk 390 × 844 · tautan guideline mengarah ke MIT DS
-        </p>
-      </footer>
-
-      <button
-        type="button"
-        onClick={() => setPanelOpen(true)}
-        className="mobile-prototype-button lg:hidden"
-        aria-haspopup="dialog"
-      >
-        <PanelRightOpen className="h-3.5 w-3.5" aria-hidden="true" />
-        Prototype
-      </button>
-
-      {panelOpen ? (
-        <div className="lg:hidden">
-          <button
-            type="button"
-            className="sheet-backdrop"
-            aria-label="Tutup panel"
-            onClick={() => setPanelOpen(false)}
-          />
-          <div
-            className="sheet-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Kontrol prototype"
-          >
-            <PrototypePanel
-              mode={mode}
-              sessionActive={sessionActive}
-              scenario={scenario}
-              forceFaceFail={forceFaceFail}
-              forceLoginFail={forceLoginFail}
-              unit={unit}
-              screen={screen}
-              onMode={changeMode}
-              onSession={changeSession}
-              onScenario={setScenario}
-              onForceFaceFail={setForceFaceFail}
-              onForceLoginFail={setForceLoginFail}
-              onUnit={setUnit}
-              onRestart={() => {
-                restart();
-                setPanelOpen(false);
-              }}
-              onJump={(next, nextMode) => {
-                jump(next, nextMode);
-                setPanelOpen(false);
-              }}
-              onClose={() => setPanelOpen(false)}
-            />
-          </div>
-        </div>
-      ) : null}
+    <div className="page-canvas flex min-h-dvh items-center justify-center lg:py-8">
+      {phone}
     </div>
   );
 }
