@@ -26,7 +26,7 @@ bun run preview
 - Unit: `GMN` (default), `SMA`, `GMS`
 - Foto contoh verifikasi: Unsplash, hanya untuk ilustrasi prototype
 
-Prototype tampil sebagai web app mobile selebar 393px (tanpa frame ponsel). Login demo: `081288429901` (atau NIK `240812`) dengan kata sandi `Mitra@2026`; kode OTP lupa kata sandi `123456`.
+Prototype tampil sebagai web app mobile selebar 393px. Akun demo (kata sandi `Mitra@2026`): akun baru `081200000001` (login pertama: daftar wajah + buat PIN) dan akun lama `081288429901` (verifikasi wajah atau PIN `123456`). Sesi 30 hari disimpan di browser; OTP lupa kata sandi `123456`.
 
 ## Stack
 

@@ -11,7 +11,7 @@ import { CheckCircle, Circle, Eye, EyeSlash, Info, WarningCircle } from "@phosph
 import { MitraMark } from "@/components/primitives";
 import { AppBar, Button, FieldLabel, ResultDialog, TextField } from "@/components/mobile";
 import { cn } from "@/lib/cn";
-import { DEMO_ACCOUNT } from "@/lib/demo";
+import { DEMO_OTP, type Account } from "@/lib/demo";
 
 
 const digits = (value: string) => value.replace(/\D/g, "");
@@ -138,15 +138,16 @@ function LockIllustration() {
 export function LoginScreen({
   onLoggedIn,
   onForgot,
-  accountPassword,
-  initialId = "",
+  onResetDemo,
+  accounts,
 }: {
-  onLoggedIn: (target: "change" | "home") => void;
+  onLoggedIn: (account: Account, changePassword: boolean) => void;
   onForgot: () => void;
-  accountPassword: string;
-  initialId?: string;
+  onResetDemo: () => void;
+  accounts: Account[];
 }) {
-  const [userId, setUserId] = useState(initialId);
+  const [userId, setUserId] = useState("");
+  const [matched, setMatched] = useState<Account | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -161,12 +162,18 @@ export function LoginScreen({
     await wait(900);
     setLoading(false);
     const id = digits(userId);
-    const known = id === DEMO_ACCOUNT.nik || id === DEMO_ACCOUNT.phone;
-    if (!known || password !== accountPassword) {
+    const account = accounts.find((item) => item.nik === id || item.phone === id);
+    if (!account || password !== account.password) {
       setFailed(true);
       return;
     }
-    setAskChange(true);
+    // First login uses a default password, so suggest changing it.
+    if (!account.enrolled) {
+      setMatched(account);
+      setAskChange(true);
+      return;
+    }
+    onLoggedIn(account, false);
   }
 
   return (
@@ -212,7 +219,7 @@ export function LoginScreen({
             <button
               type="button"
               onClick={onForgot}
-              className="mt-2 text-[13px] font-medium leading-5 text-[#16191c] underline underline-offset-2 transition active:text-[#2852a3]"
+              className="mt-2 text-[13px] font-medium leading-5 text-[#16191c] underline underline-offset-2 transition active:text-[var(--brand-ink)]"
             >
               Lupa Kata Sandi?
             </button>
@@ -223,22 +230,43 @@ export function LoginScreen({
           Masuk
         </Button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setUserId(DEMO_ACCOUNT.phone);
-            setPassword(accountPassword);
-            setFailed(false);
-          }}
-          className="mt-6 flex items-start gap-2.5 rounded-[8px] border border-dashed border-[#bcd0f5] bg-[#f0f5fe] px-3 py-2.5 text-left transition active:bg-[#e3ecfd]"
-        >
-          <Info size={18} weight="fill" className="mt-px flex-none text-[#2852a3]" aria-hidden="true" />
-          <span className="text-[12px] leading-[1.5] text-[#2852a3]">
-            <span className="font-semibold">Akun demo</span> · {DEMO_ACCOUNT.phone} (atau NIK {DEMO_ACCOUNT.nik}) /{" "}
-            {accountPassword}
-            <span className="block text-[#45556c]">Ketuk untuk isi otomatis</span>
-          </span>
-        </button>
+        <div className="mt-6 rounded-[8px] border border-dashed border-[var(--brand-line)] bg-[var(--brand-soft)] p-3">
+          <p className="flex items-center gap-2 text-[12px] font-semibold leading-[1.4] text-[var(--brand-ink)]">
+            <Info size={16} weight="fill" aria-hidden="true" />
+            Akun demo · ketuk untuk isi otomatis
+          </p>
+          <div className="mt-2 flex flex-col gap-2">
+            {accounts.map((account) => (
+              <button
+                key={account.id}
+                type="button"
+                onClick={() => {
+                  setUserId(account.phone);
+                  setPassword(account.password);
+                  setFailed(false);
+                }}
+                className="rounded-[6px] bg-white px-3 py-2 text-left transition active:scale-[0.99]"
+              >
+                <span className="block text-[12px] font-medium leading-[1.4] text-[#16191c]">{account.label}</span>
+                <span className="block text-[12px] leading-[1.4] text-[#4f5963]">
+                  {account.phone} / {account.password}
+                </span>
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onResetDemo();
+              setUserId("");
+              setPassword("");
+              setFailed(false);
+            }}
+            className="mt-2 text-[12px] font-medium text-[var(--brand-ink)] underline underline-offset-2"
+          >
+            Reset akun demo (ulang dari login pertama)
+          </button>
+        </div>
       </form>
 
       <Footer />
@@ -249,10 +277,10 @@ export function LoginScreen({
         title="Ubah Kata Sandi?"
         message="Demi menjaga keamanan transaksi Anda. Segera ubah password Anda terlebih dahulu."
       >
-        <Button className="w-full" onClick={() => onLoggedIn("change")}>
+        <Button className="w-full" onClick={() => matched && onLoggedIn(matched, true)}>
           Ubah Sekarang
         </Button>
-        <Button variant="outline" className="w-full" onClick={() => onLoggedIn("home")}>
+        <Button variant="outline" className="w-full" onClick={() => matched && onLoggedIn(matched, false)}>
           Nanti Saja
         </Button>
       </ResultDialog>
@@ -263,9 +291,11 @@ export function LoginScreen({
 /* ----------------------------- Forgot: phone ------------------------------- */
 
 export function ForgotScreen({
+  accounts,
   onBack,
   onSent,
 }: {
+  accounts: Account[];
   onBack: () => void;
   onSent: (phone: string) => void;
 }) {
@@ -279,7 +309,7 @@ export function ForgotScreen({
     setLoading(true);
     await wait(800);
     setLoading(false);
-    if (digits(phone) !== DEMO_ACCOUNT.phone) {
+    if (!accounts.some((account) => account.phone === digits(phone))) {
       setError("Nomor tidak terdaftar");
       return;
     }
@@ -311,7 +341,7 @@ export function ForgotScreen({
           />
           {!error ? (
             <p className="mt-2 text-[12px] leading-[1.4] text-[#65737f]">
-              Nomor demo: <span className="font-medium text-[#2852a3]">{DEMO_ACCOUNT.phone}</span>
+              Nomor demo: <span className="font-medium text-[var(--brand-ink)]">{accounts[1].phone}</span>
             </p>
           ) : null}
         </div>
@@ -365,7 +395,7 @@ export function OtpScreen({
     setLoading(true);
     await wait(700);
     setLoading(false);
-    if (entered !== DEMO_ACCOUNT.otp) {
+    if (entered !== DEMO_OTP) {
       setError(true);
       return;
     }
@@ -468,7 +498,7 @@ export function OtpScreen({
           ) : (
             <button
               type="button"
-              className="font-semibold text-[#2852a3] underline underline-offset-2"
+              className="font-semibold text-[var(--brand-ink)] underline underline-offset-2"
               onClick={() => {
                 setSeconds(RESEND_SECONDS);
                 setCode(Array(OTP_LENGTH).fill(""));
@@ -482,7 +512,7 @@ export function OtpScreen({
           )}
         </p>
         <p className="mt-2 text-[12px] leading-[1.4] text-[#65737f]">
-          Kode demo: <span className="font-medium text-[#2852a3]">{DEMO_ACCOUNT.otp}</span>
+          Kode demo: <span className="font-medium text-[var(--brand-ink)]">{DEMO_OTP}</span>
         </p>
       </div>
       <StickyAction>
@@ -604,11 +634,11 @@ export function NewPasswordScreen({
         message={
           mode === "reset"
             ? "Masuk kembali dengan kata sandi baru Anda."
-            : "Kata sandi baru sudah aktif. Gunakan untuk login berikutnya."
+            : "Kata sandi baru sudah aktif. Lanjutkan dengan mendaftarkan wajah Anda."
         }
       >
         <Button className="w-full" onClick={() => onDone(password)}>
-          {mode === "reset" ? "Login Ulang" : "Lanjut ke Aktivitas"}
+          {mode === "reset" ? "Login Ulang" : "Lanjutkan"}
         </Button>
       </ResultDialog>
     </form>

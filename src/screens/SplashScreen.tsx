@@ -10,7 +10,7 @@ export function SplashScreen() {
             <span className="splash-word block text-[34px] font-extrabold italic leading-none tracking-[0.04em] text-[#151b2b]">
               MITRA
             </span>
-            <span className="splash-tag mt-1 block text-[13px] italic leading-4 text-[#2852a3]">
+            <span className="splash-tag mt-1 block text-[13px] italic leading-4 text-[var(--brand-ink)]">
               Powered by MIT
             </span>
           </div>

@@ -5,18 +5,20 @@ import {
   useState,
   type KeyboardEvent,
   type PointerEvent,
-  type ReactElement,
 } from "react";
 import { cn } from "@/lib/cn";
 import {
   AREAS,
   H_ROADS,
   MAP_POIS,
-  PARKS,
+  CANALS,
+  PATCHES,
+  PONDS,
   POI_COLORS,
   POI_GLYPH,
   RIVER,
   TOLL,
+  TOLL_RAMP,
   USER_LOCATION,
   V_ROADS,
   WORLD,
@@ -28,132 +30,92 @@ import {
 /** A vector "dummy" map: crisp at every zoom level, no tiles or network. */
 
 function MapArt() {
-  const cols = [0, ...V_ROADS.map((road) => road.x), WORLD];
-  const rows = [0, ...H_ROADS.map((road) => road.y), WORLD];
-  const blocks: ReactElement[] = [];
-  for (let c = 0; c < cols.length - 1; c += 1) {
-    for (let r = 0; r < rows.length - 1; r += 1) {
-      const x0 = cols[c] + 14;
-      const y0 = rows[r] + 14;
-      const w = cols[c + 1] - cols[c] - 28;
-      const h = rows[r + 1] - rows[r] - 28;
-      if (w <= 0 || h <= 0) continue;
-      if (PARKS.has(`${c}-${r}`)) {
-        blocks.push(<rect key={`p${c}-${r}`} x={x0} y={y0} width={w} height={h} rx={10} fill="#cfe7c4" />);
-        continue;
-      }
-      const mx = x0 + w / 2;
-      const my = y0 + h / 2;
-      const quads = [
-        [x0, y0, mx - 5 - x0, my - 5 - y0],
-        [mx + 5, y0, x0 + w - mx - 5, my - 5 - y0],
-        [x0, my + 5, mx - 5 - x0, y0 + h - my - 5],
-        [mx + 5, my + 5, x0 + w - mx - 5, y0 + h - my - 5],
-      ];
-      quads.forEach(([bx, by, bw, bh], index) => {
-        if (bw <= 0 || bh <= 0) return;
-        blocks.push(
-          <rect key={`b${c}-${r}-${index}`} x={bx} y={by} width={bw} height={bh} rx={5} fill="#e7e5df" />,
-        );
-        if ((c + r + index) % 3 === 0) {
-          blocks.push(
-            <rect
-              key={`h${c}-${r}-${index}`}
-              x={bx + 10}
-              y={by + 10}
-              width={Math.max(0, bw - 20)}
-              height={Math.max(0, bh / 2 - 12)}
-              rx={3}
-              fill="#dcd9d2"
-            />,
-          );
-        }
-      });
-    }
-  }
-
   return (
     <>
-      <rect x={-2000} y={-2000} width={WORLD + 4000} height={WORLD + 4000} fill="#f3f1ec" />
-      {blocks}
-      <ellipse cx={215} cy={1000} rx={62} ry={32} fill="#b7dcf3" />
-      <path d={RIVER} fill="none" stroke="#b7dcf3" strokeWidth={30} strokeLinecap="round" />
-      {/* minor roads */}
-      <g stroke="#ffffff" strokeLinecap="round">
-        {V_ROADS.filter((road) => !road.major).map((road) => (
-          <line key={road.name} x1={road.x} y1={-20} x2={road.x} y2={WORLD + 20} strokeWidth={14} />
-        ))}
-        {H_ROADS.filter((road) => !road.major).map((road) => (
-          <line key={road.name} x1={-20} y1={road.y} x2={WORLD + 20} y2={road.y} strokeWidth={14} />
+      <rect x={-2000} y={-2000} width={WORLD + 4000} height={WORLD + 4000} fill="#f4f4f5" />
+      {/* soft land-use patches */}
+      {PATCHES.map((patch, index) => (
+        <path key={index} d={patch.d} fill={patch.fill} />
+      ))}
+      {/* water */}
+      {PONDS.map((d, index) => (
+        <path key={index} d={d} fill="#8fd8ee" />
+      ))}
+      <g fill="none" stroke="#8fd8ee" strokeLinecap="round">
+        <path d={RIVER} strokeWidth={9} />
+        {CANALS.map((d, index) => (
+          <path key={index} d={d} strokeWidth={4} />
         ))}
       </g>
-      {/* arterial roads */}
-      {V_ROADS.filter((road) => road.major).map((road) => (
-        <g key={road.name}>
-          <line x1={road.x} y1={-20} x2={road.x} y2={WORLD + 20} stroke="#f1cf7a" strokeWidth={24} />
-          <line x1={road.x} y1={-20} x2={road.x} y2={WORLD + 20} stroke="#fde9a8" strokeWidth={20} />
-        </g>
-      ))}
-      {H_ROADS.filter((road) => road.major).map((road) => (
-        <g key={road.name}>
-          <line x1={-20} y1={road.y} x2={WORLD + 20} y2={road.y} stroke="#f1cf7a" strokeWidth={24} />
-          <line x1={-20} y1={road.y} x2={WORLD + 20} y2={road.y} stroke="#fde9a8" strokeWidth={20} />
-        </g>
-      ))}
-      <path d={TOLL} fill="none" stroke="#e9a35c" strokeWidth={28} />
-      <path d={TOLL} fill="none" stroke="#f9c48b" strokeWidth={22} />
+      {/* streets */}
+      <g stroke="#e3e6ea" strokeLinecap="round">
+        {V_ROADS.map((road) => (
+          <line key={road.name} x1={road.x} y1={-20} x2={road.x} y2={WORLD + 20} strokeWidth={road.major ? 9 : 5} />
+        ))}
+        {H_ROADS.map((road) => (
+          <line key={road.name} x1={-20} y1={road.y} x2={WORLD + 20} y2={road.y} strokeWidth={road.major ? 9 : 5} />
+        ))}
+      </g>
+      <g stroke="#ffffff" strokeLinecap="round">
+        {V_ROADS.map((road) => (
+          <line key={road.name} x1={road.x} y1={-20} x2={road.x} y2={WORLD + 20} strokeWidth={road.major ? 6 : 3} />
+        ))}
+        {H_ROADS.map((road) => (
+          <line key={road.name} x1={-20} y1={road.y} x2={WORLD + 20} y2={road.y} strokeWidth={road.major ? 6 : 3} />
+        ))}
+      </g>
+      {/* highway */}
+      <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <path d={TOLL_RAMP} stroke="#7d8db3" strokeWidth={20} />
+        <path d={TOLL} stroke="#7d8db3" strokeWidth={22} />
+        <path d={TOLL_RAMP} stroke="#a9b7d6" strokeWidth={15} />
+        <path d={TOLL} stroke="#a9b7d6" strokeWidth={17} />
+      </g>
       <path id="toll-label" d={TOLL} fill="none" />
 
       {/* labels */}
       <g
         fontFamily="inherit"
-        fontSize={11}
-        fill="#5f6873"
-        stroke="#ffffff"
+        fontSize={10}
+        fill="#8a93a0"
+        stroke="#f4f4f5"
         strokeWidth={3}
         style={{ paintOrder: "stroke" }}
         textAnchor="middle"
       >
         {V_ROADS.flatMap((road) =>
           [240, 720, 1190].map((y) => (
-            <text key={`${road.name}-${y}`} transform={`translate(${road.x + 4} ${y}) rotate(-90)`}>
+            <text key={`${road.name}-${y}`} transform={`translate(${road.x + 3.5} ${y}) rotate(-90)`}>
               {road.name}
             </text>
           )),
         )}
         {H_ROADS.flatMap((road) =>
           [215, 675, 1135].map((x) => (
-            <text key={`${road.name}-${x}`} x={x} y={road.y + 4}>
+            <text key={`${road.name}-${x}`} x={x} y={road.y + 3.5}>
               {road.name}
             </text>
           )),
         )}
-        <text fontSize={12} fill="#9a5a19">
-          <textPath href="#toll-label" startOffset="62%">
-            Jakarta Outer Ring Rd E
-          </textPath>
-        </text>
-        <text x={960} y={470} fill="#4b86b4" fontStyle="italic" transform="rotate(-70 960 470)">
+        <text x={1015} y={455} fill="#4aa9c9" fontStyle="italic" transform="rotate(-72 1015 455)">
           Kali Sunter
         </text>
-        <text x={215} y={925} fill="#3f7d3a" fontSize={10}>
-          Taman Kirana
-        </text>
-        <text x={905} y={960} fill="#3f7d3a" fontSize={10}>
-          Taman Pulomas
-        </text>
-        <text x={1135} y={484} fill="#3f7d3a" fontSize={10}>
-          Hutan Kota Gading
-        </text>
       </g>
-      <g
-        fontSize={13}
-        fontWeight={600}
-        letterSpacing="0.18em"
-        fill="#9aa3ad"
-        textAnchor="middle"
-        style={{ textTransform: "uppercase" }}
+      <text
+        fontSize={24}
+        fontWeight={500}
+        fill="#1f2937"
+        stroke="#ffffff"
+        strokeWidth={6}
+        style={{ paintOrder: "stroke" }}
       >
+        {[0.1, 0.36, 0.62, 0.88].map((offset) => (
+          <textPath key={offset} href="#toll-label" startOffset={`${offset * 100}%`}>
+            Jakarta Outer Ring Rd E
+          </textPath>
+        ))}
+      </text>
+      <g fontSize={13} fontWeight={600} letterSpacing="0.18em" fill="#b4bac3" textAnchor="middle">
         {AREAS.map((area) => (
           <text key={area.name} x={area.x} y={area.y}>
             {area.name.toUpperCase()}
@@ -170,7 +132,7 @@ function PoiMarkers({ z }: { z: number }) {
     <g>
       {MAP_POIS.map((poi) => (
         <g key={poi.id} transform={`translate(${poi.x} ${poi.y}) scale(${scale})`}>
-          <circle r={10} fill={POI_COLORS[poi.kind]} stroke="#fff" strokeWidth={2} />
+          <circle r={9} fill={POI_COLORS[poi.kind]} stroke="#fff" strokeWidth={2} opacity={0.9} />
           <path d={POI_GLYPH[poi.kind]} fill="none" stroke="#fff" strokeWidth={1.4} strokeLinejoin="round" />
           {z >= 0.9 ? (
             <text
@@ -348,8 +310,8 @@ export function DummyMap({
           <MapArt />
           <PoiMarkers z={view.z} />
           <g transform={`translate(${USER_LOCATION.x} ${USER_LOCATION.y}) scale(${1 / view.z})`}>
-            <circle r={18} fill="#2f6fe4" opacity={0.18} className="map-user-pulse" />
-            <circle r={8} fill="#2f6fe4" stroke="#fff" strokeWidth={3} />
+            <circle r={18} fill="var(--brand)" opacity={0.18} className="map-user-pulse" />
+            <circle r={9} fill="var(--brand)" stroke="#fff" strokeWidth={3} />
           </g>
         </g>
       </svg>

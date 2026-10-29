@@ -185,7 +185,7 @@ function filterIsActive(filter: ListFilter) {
   return Boolean(filter.time || filter.status || filter.kind);
 }
 
-function ActivityCard({
+export function ActivityCard({
   activity,
   onOpen,
   onCheckIn,
@@ -197,7 +197,7 @@ function ActivityCard({
   const status = activityStatus(activity);
   const meta = STATUS_META[status];
   return (
-    <article className="card-enter overflow-hidden rounded-[8px] bg-[#eff6ff] pt-1.5">
+    <article className="card-enter overflow-hidden rounded-[8px] bg-[var(--brand-soft)] pt-1.5">
       <div className="flex items-center justify-between gap-2 px-3 py-1">
         <Breadcrumb kind={activity.kind} area={activity.area} />
         <StatusChip tone={meta.tone}>{meta.label}</StatusChip>
@@ -216,7 +216,7 @@ function ActivityCard({
           </span>
           <Schedule activity={activity} />
           <span className="flex w-full items-center gap-2 rounded-[4px] border border-[#dfe4ea] px-2 py-1.5">
-            <MapPin size={20} className="flex-none text-[#2852a3]" aria-hidden="true" />
+            <MapPin size={20} className="flex-none text-[var(--brand-ink)]" aria-hidden="true" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13px] leading-[1.4] text-[#020618]">
                 {activity.locationName}
@@ -257,6 +257,7 @@ export function ActivityListScreen({
   onCheckIn,
   onCreate,
   onHome,
+  onProfile,
   onSoon,
 }: {
   activities: Activity[];
@@ -264,6 +265,7 @@ export function ActivityListScreen({
   onCheckIn: (id: string) => void;
   onCreate: () => void;
   onHome: () => void;
+  onProfile: () => void;
   onSoon: (label: string) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -371,7 +373,7 @@ export function ActivityListScreen({
       </main>
 
       {activities.length > 0 ? <Fab label="Tambah Aktivitas" above="nav" onClick={onCreate} /> : null}
-      <BottomNav active="activity" onHome={onHome} onActivity={() => undefined} onSoon={onSoon} />
+      <BottomNav active="activity" onHome={onHome} onActivity={() => undefined} onProfile={onProfile} onSoon={onSoon} />
 
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} label="Filter aktivitas">
         <div className="flex items-center justify-between">
@@ -379,7 +381,7 @@ export function ActivityListScreen({
           <button
             type="button"
             onClick={() => setDraft(EMPTY_FILTER)}
-            className="flex items-center gap-1 text-[13px] font-medium text-[#2852a3]"
+            className="flex items-center gap-1 text-[13px] font-medium text-[var(--brand-ink)]"
           >
             <ArrowCounterClockwise size={16} aria-hidden="true" />
             Reset
@@ -705,7 +707,7 @@ function PlaceSheet({
               <button
                 type="button"
                 onClick={onMap}
-                className="mt-1 flex w-full items-center gap-2 py-3 text-left text-[14px] font-medium text-[#2852a3]"
+                className="mt-1 flex w-full items-center gap-2 py-3 text-left text-[14px] font-medium text-[var(--brand-ink)]"
               >
                 <MapTrifold size={20} aria-hidden="true" />
                 Pilih Lokasi Lewat Peta
@@ -747,10 +749,10 @@ function PlaceRow({
       aria-pressed={selected}
       className={cn(
         "-mx-2 flex w-[calc(100%+16px)] items-start gap-2 rounded-[8px] border-b border-[#f1f1f1] px-2 py-3 text-left transition",
-        selected && "bg-[#f0f5fe]",
+        selected && "bg-[var(--brand-soft)]",
       )}
     >
-      <span className="mt-0.5 flex-none text-[#2852a3]" aria-hidden="true">
+      <span className="mt-0.5 flex-none text-[var(--brand-ink)]" aria-hidden="true">
         {icon}
       </span>
       <span className="min-w-0 flex-1">
@@ -825,9 +827,9 @@ export function ActivityMapScreen({
                     setQuery("");
                     flyTo({ x: item.x, y: item.y, z: Math.max(view.z, 1.5) });
                   }}
-                  className="flex w-full items-start gap-3 px-4 py-3 text-left transition active:bg-[#f0f5fe]"
+                  className="flex w-full items-start gap-3 px-4 py-3 text-left transition active:bg-[var(--brand-soft)]"
                 >
-                  <MapPin size={18} weight="fill" className="mt-0.5 flex-none text-[#2852a3]" aria-hidden="true" />
+                  <MapPin size={18} weight="fill" className="mt-0.5 flex-none text-[var(--brand-ink)]" aria-hidden="true" />
                   <span className="min-w-0">
                     <span className="block truncate text-[14px] font-medium leading-[1.4] text-[#16191c]">{item.name}</span>
                     <span className="block truncate text-[12px] leading-[1.4] text-[#4f5963]">{item.address}</span>
@@ -848,73 +850,74 @@ export function ActivityMapScreen({
         {/* fixed centre pin */}
         <div className="pointer-events-none absolute left-1/2 top-1/2" aria-hidden="true">
           <span className="map-pin-shadow" data-lifted={moving} />
-          <span className="map-pin" data-lifted={moving}>
-            <MapPin size={40} weight="fill" />
-          </span>
+          <svg className="map-pin" data-lifted={moving} width="44" height="52" viewBox="0 0 44 52">
+            <path d="M22 51 15.5 41.5A20 20 0 1 1 28.5 41.5Z" fill="var(--brand)" />
+            <circle cx="22" cy="21" r="8" fill="#fff" />
+            <circle cx="22" cy="21" r="3.5" fill="var(--brand)" />
+          </svg>
         </div>
 
-        <div className="absolute right-4 top-4 flex flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_6px_20px_-10px_rgba(15,23,42,0.45)]">
-          <button
-            type="button"
-            aria-label="Perbesar peta"
-            onClick={() => flyTo({ ...view, z: view.z * 1.4 })}
-            className="grid h-10 w-10 place-items-center text-[#16191c] transition active:bg-[#f0f5fe]"
-          >
-            <Plus size={18} weight="bold" />
-          </button>
-          <span className="mx-2 h-px bg-[#dfe4ea]" />
-          <button
-            type="button"
-            aria-label="Perkecil peta"
-            onClick={() => flyTo({ ...view, z: view.z / 1.4 })}
-            className="grid h-10 w-10 place-items-center text-[#16191c] transition active:bg-[#f0f5fe]"
-          >
-            <Minus size={18} weight="bold" />
-          </button>
-        </div>
-
-        <div className="absolute inset-x-4 bottom-4 flex flex-col gap-3">
-          <button
-            type="button"
-            aria-label="Kembali ke lokasi saya"
-            onClick={() => flyTo({ ...USER_LOCATION, z: Math.max(view.z, 1.25) })}
-            className="grid h-11 w-11 place-items-center self-end rounded-full bg-white text-[#2852a3] shadow-[0_6px_20px_-10px_rgba(15,23,42,0.45)] transition active:scale-95"
-          >
-            <Crosshair size={22} weight="bold" />
-          </button>
-          <div className="rounded-[12px] bg-white p-4 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.45)]">
-            <p className="text-[12px] leading-[1.4] text-[#65737f]">Titik lokasi aktivitas</p>
-            <div className="mt-1 min-h-[52px]" aria-live="polite">
-              {busy ? (
-                <div className="flex flex-col gap-2 pt-1" aria-label="Mencari alamat">
-                  <span className="skeleton h-4 w-3/5" />
-                  <span className="skeleton h-3 w-4/5" />
-                </div>
-              ) : (
-                <>
-                  <p className="flex items-start gap-1.5 text-[14px] font-semibold leading-[1.4] text-[#16191c]">
-                    <MapPin size={18} weight="fill" className="mt-px flex-none text-[#2852a3]" aria-hidden="true" />
-                    {place.name}
-                  </p>
-                  <p className="mt-1 text-[12px] leading-[1.4] text-[#4f5963]">{place.address}</p>
-                </>
-              )}
-            </div>
-            <Button
-              className="mt-3 w-full"
-              disabled={busy}
-              loading={confirming}
-              onClick={async () => {
-                setConfirming(true);
-                await wait(450);
-                onConfirm(place);
-              }}
+        <div className="absolute right-4 top-4 flex flex-col gap-3">
+          {(
+            [
+              ["Perbesar peta", Plus, 1.4],
+              ["Perkecil peta", Minus, 1 / 1.4],
+            ] as const
+          ).map(([label, Icon, factor]) => (
+            <button
+              key={label}
+              type="button"
+              aria-label={label}
+              onClick={() => flyTo({ ...view, z: view.z * factor })}
+              className="grid h-10 w-10 place-items-center rounded-[10px] bg-white text-[var(--brand-ink)] shadow-[0_4px_14px_-8px_rgba(15,23,42,0.35)] transition active:scale-95"
             >
-              Konfirmasi Lokasi
-            </Button>
-          </div>
+              <Icon size={20} />
+            </button>
+          ))}
         </div>
+
+        <button
+          type="button"
+          aria-label="Kembali ke lokasi saya"
+          onClick={() => flyTo({ ...USER_LOCATION, z: Math.max(view.z, 1.25) })}
+          className="absolute bottom-10 right-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[var(--brand-ink)] shadow-[0_4px_14px_-8px_rgba(15,23,42,0.35)] transition active:scale-95"
+        >
+          <Crosshair size={22} />
+        </button>
       </div>
+
+      <section className="pb-safe relative z-10 -mt-6 rounded-t-[24px] bg-white px-6 pt-3 shadow-[0_-8px_24px_-16px_rgba(15,23,42,0.3)]">
+        <span className="mx-auto block h-1 w-10 rounded-full bg-[#dfe4ea]" aria-hidden="true" />
+        <h2 className="mt-5 text-[18px] font-semibold leading-[1.3] text-[#16191c]">Titik Lokasi Aktivitas</h2>
+        <div className="mt-4 min-h-[60px]" aria-live="polite">
+          {busy ? (
+            <div className="flex flex-col gap-2 pl-8 pt-1" aria-label="Mencari alamat">
+              <span className="skeleton h-4 w-3/5" />
+              <span className="skeleton h-3 w-4/5" />
+            </div>
+          ) : (
+            <div className="flex items-start gap-3">
+              <MapPin size={22} weight="fill" className="mt-px flex-none text-[var(--brand-ink)]" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-[15px] font-medium leading-[1.4] text-[#16191c]">{place.name}</p>
+                <p className="mt-1 text-[13px] leading-[1.45] text-[#65737f]">{place.address}</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <Button
+          className="mb-2 mt-5 w-full"
+          disabled={busy}
+          loading={confirming}
+          onClick={async () => {
+            setConfirming(true);
+            await wait(450);
+            onConfirm(place);
+          }}
+        >
+          Konfirmasi Lokasi
+        </Button>
+      </section>
     </div>
   );
 }
@@ -1178,7 +1181,7 @@ export function ActivityDetailScreen({
             className={cn(
               "flex flex-1 items-center justify-center gap-1.5 border-b py-3 text-[14px] leading-[1.4] transition",
               tab === id
-                ? "border-b-2 border-[#2852a3] font-medium text-[#2852a3]"
+                ? "border-b-2 border-[var(--brand-ink)] font-medium text-[var(--brand-ink)]"
                 : "border-[#dfe4ea] text-[#4f5963]",
             )}
           >
@@ -1186,7 +1189,7 @@ export function ActivityDetailScreen({
             <span
               className={cn(
                 "rounded-[4px] px-1.5 text-[12px] leading-[18px]",
-                tab === id ? "bg-[#f0f5fe] text-[#2852a3]" : "bg-[#f1f3f5] text-[#4f5963]",
+                tab === id ? "bg-[var(--brand-soft)] text-[var(--brand-ink)]" : "bg-[#f1f3f5] text-[#4f5963]",
               )}
             >
               {count}
@@ -1283,7 +1286,7 @@ export function ActivityDetailScreen({
           <button
             type="button"
             onClick={() => setDraft({ simulation: null, heat: null })}
-            className="flex items-center gap-1 text-[13px] font-medium text-[#2852a3]"
+            className="flex items-center gap-1 text-[13px] font-medium text-[var(--brand-ink)]"
           >
             <ArrowCounterClockwise size={16} aria-hidden="true" />
             Reset
@@ -1420,7 +1423,7 @@ function ProspectCard({ lead, onClick }: { lead: Lead; onClick: () => void }) {
     >
       <span className="flex items-center justify-between gap-2 border-b border-[#f1f1f1] px-3 py-2">
         {lead.simulation ? (
-          <span className="flex items-center gap-1.5 text-[12px] leading-[1.4] text-[#2852a3]">
+          <span className="flex items-center gap-1.5 text-[12px] leading-[1.4] text-[var(--brand-ink)]">
             <Checks size={14} aria-hidden="true" />
             Sudah Simulasi
           </span>
@@ -1449,7 +1452,7 @@ function LeadHeader({ lead }: { lead: Lead }) {
   const heat = HEAT_META[lead.heat];
   return (
     <div className="flex items-center gap-3">
-      <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[#f0f5fe] text-[#2852a3]">
+      <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)]">
         <User size={18} aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1">
@@ -1464,9 +1467,9 @@ function LeadHeader({ lead }: { lead: Lead }) {
 function Estimate({ items }: { items: Collateral[] }) {
   const { low, high } = estimateCollateral(items);
   return (
-    <div className="rounded-[8px] bg-[#f0f5fe] px-4 py-4 text-center">
+    <div className="rounded-[8px] bg-[var(--brand-soft)] px-4 py-4 text-center">
       <p className="text-[13px] leading-[1.4] text-[#4f5963]">Estimasi Nilai Pinjaman</p>
-      <p className="mt-1 text-[16px] font-semibold leading-[1.4] text-[#2852a3]">
+      <p className="mt-1 text-[16px] font-semibold leading-[1.4] text-[var(--brand-ink)]">
         {rupiah(low)} - {rupiah(high)}
       </p>
     </div>
@@ -1611,7 +1614,7 @@ export function LeadVerifyScreen({
           <h2 className="text-[14px] font-medium leading-[1.4] text-[#16191c]">Manual via Chat WhatsApp</h2>
           <div className="mt-2 rounded-[8px] border border-[#dfe4ea] p-3">
             <div className="flex items-center gap-3">
-              <span className="grid h-8 w-8 flex-none place-items-center rounded-full bg-[#f0f5fe] text-[#2852a3]">
+              <span className="grid h-8 w-8 flex-none place-items-center rounded-full bg-[var(--brand-soft)] text-[var(--brand-ink)]">
                 <ChatCircleText size={18} aria-hidden="true" />
               </span>
               <span className="min-w-0 flex-1">
@@ -1621,7 +1624,7 @@ export function LeadVerifyScreen({
               <button
                 type="button"
                 onClick={() => copy("081277629902", "Nomor tujuan")}
-                className="grid h-9 w-9 place-items-center rounded-full text-[#2852a3] transition hover:bg-[#f0f5fe]"
+                className="grid h-9 w-9 place-items-center rounded-full text-[var(--brand-ink)] transition hover:bg-[var(--brand-soft)]"
                 aria-label="Salin nomor tujuan"
               >
                 <CopySimple size={18} />
@@ -1630,13 +1633,13 @@ export function LeadVerifyScreen({
             <button
               type="button"
               onClick={() => copy(message, "Format pesan")}
-              className="mt-3 w-full rounded-[8px] bg-[#f0f5fe] px-3 py-2.5 text-left transition active:scale-[0.99]"
+              className="mt-3 w-full rounded-[8px] bg-[var(--brand-soft)] px-3 py-2.5 text-left transition active:scale-[0.99]"
             >
               <span className="flex items-center justify-between text-[12px] leading-[1.4] text-[#4f5963]">
                 Format Pesan
-                <CopySimple size={14} className="text-[#2852a3]" aria-hidden="true" />
+                <CopySimple size={14} className="text-[var(--brand-ink)]" aria-hidden="true" />
               </span>
-              <span className="mt-0.5 block break-all text-[16px] leading-[1.4] text-[#2852a3]">{message}</span>
+              <span className="mt-0.5 block break-all text-[16px] leading-[1.4] text-[var(--brand-ink)]">{message}</span>
             </button>
           </div>
         </section>
@@ -1955,7 +1958,7 @@ export function SimulationScreen({
             type="button"
             onClick={() => setAdding(true)}
             disabled={items.length >= MAX_COLLATERAL}
-            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-[#2852a3] text-[14px] font-medium text-[#2852a3] transition active:scale-[0.99] disabled:border-[#c6ccd1] disabled:text-[#9aa5b1]"
+            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-[var(--brand-ink)] text-[14px] font-medium text-[var(--brand-ink)] transition active:scale-[0.99] disabled:border-[#c6ccd1] disabled:text-[#9aa5b1]"
           >
             <Plus size={16} aria-hidden="true" />
             Tambah Jaminan ({items.length}/{MAX_COLLATERAL})

@@ -1,11 +1,68 @@
-/** Dummy account for the prototype. Any other combination fails. */
-export const DEMO_ACCOUNT = {
-  name: "Rani Prameswari",
-  nik: "240812",
-  phone: "081288429901",
-  password: "Mitra@2026",
-  otp: "123456",
+export type AccountId = "new" | "returning";
+
+export type Account = {
+  id: AccountId;
+  label: string;
+  name: string;
+  nik: string;
+  phone: string;
+  password: string;
+  /** null until the user sets up a PIN on first login. */
+  pin: string | null;
+  enrolled: boolean;
 };
+
+/** Dummy accounts for the prototype. Any other combination fails. */
+export const DEMO_ACCOUNTS: Account[] = [
+  {
+    id: "new",
+    label: "Akun baru · login pertama",
+    name: "John Doe",
+    nik: "240901",
+    phone: "081200000001",
+    password: "Mitra@2026",
+    pin: null,
+    enrolled: false,
+  },
+  {
+    id: "returning",
+    label: "Akun lama · sudah terdaftar",
+    name: "Rani Prameswari",
+    nik: "240812",
+    phone: "081288429901",
+    password: "Mitra@2026",
+    pin: "123456",
+    enrolled: true,
+  },
+];
+
+export const DEMO_OTP = "123456";
+export const SESSION_DAYS = 30;
+
+export type BusinessUnit = "gmn" | "gms";
+
+export const BUSINESS_UNITS: {
+  id: BusinessUnit;
+  short: string;
+  name: string;
+  tagline: string;
+  color: string;
+}[] = [
+  {
+    id: "gmn",
+    short: "GMN",
+    name: "Gadai Mas Nusantara",
+    tagline: "Tema biru",
+    color: "#2852a3",
+  },
+  {
+    id: "gms",
+    short: "GMS",
+    name: "Gadai Mulia",
+    tagline: "Tema kuning",
+    color: "#f2b705",
+  },
+];
 
 export type Screen =
   | "checking"
@@ -14,6 +71,14 @@ export type Screen =
   | "forgot-otp"
   | "forgot-reset"
   | "change-password"
+  | "verify-choice"
+  | "verify-pin"
+  | "face-intro"
+  | "face-camera"
+  | "face-verifying"
+  | "pin-create"
+  | "success"
+  | "business-unit"
   | "home"
   | "activity"
   | "activity-create"
@@ -22,7 +87,8 @@ export type Screen =
   | "activity-detail"
   | "lead-add"
   | "lead-verify"
-  | "lead-simulation";
+  | "lead-simulation"
+  | "quick-simulation";
 
 export function screenLabel(screen: Screen) {
   const labels: Record<Screen, string> = {
@@ -32,6 +98,14 @@ export function screenLabel(screen: Screen) {
     "forgot-otp": "Kode Verifikasi",
     "forgot-reset": "Buat Kata Sandi Baru",
     "change-password": "Ubah Kata Sandi",
+    "verify-choice": "Verifikasi Identitas",
+    "verify-pin": "Masukkan PIN",
+    "face-intro": "Verifikasi Wajah",
+    "face-camera": "Ambil Foto Wajah",
+    "face-verifying": "Memverifikasi Wajah",
+    "pin-create": "Buat PIN",
+    success: "Verifikasi Berhasil",
+    "business-unit": "Pilih Unit Bisnis",
     home: "Beranda",
     activity: "Aktivitas",
     "activity-create": "Buat Aktivitas",
@@ -41,6 +115,7 @@ export function screenLabel(screen: Screen) {
     "lead-add": "Tambah Leads Baru",
     "lead-verify": "Verifikasi Nomor WhatsApp",
     "lead-simulation": "Simulasi Gadai",
+    "quick-simulation": "Simulasi Gadai",
   };
   return labels[screen];
 }

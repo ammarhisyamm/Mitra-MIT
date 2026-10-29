@@ -351,7 +351,7 @@ export function SearchField({
   autoFocus?: boolean;
 }) {
   return (
-    <label className="mfield flex items-center gap-3 focus-within:border-[#2852a3]">
+    <label className="mfield flex items-center gap-3 focus-within:border-[var(--brand-ink)]">
       <MagnifyingGlass size={16} className="flex-none text-[#16191c]" aria-hidden="true" />
       <input
         type="search"
@@ -387,7 +387,7 @@ export function FilterButton({ active, onClick }: { active: boolean; onClick: ()
     >
       <SlidersHorizontal size={20} />
       {active ? (
-        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#2852a3] ring-2 ring-white" />
+        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[var(--brand)] ring-2 ring-white" />
       ) : null}
     </button>
   );
@@ -398,13 +398,13 @@ export function RadioDot({ checked }: { checked: boolean }) {
     <span
       className={cn(
         "grid h-4 w-4 flex-none place-items-center rounded-full border transition",
-        checked ? "border-[#2852a3]" : "border-[#c6ccd1] bg-white",
+        checked ? "border-[var(--brand-ink)]" : "border-[#c6ccd1] bg-white",
       )}
       aria-hidden="true"
     >
       <span
         className={cn(
-          "h-2 w-2 rounded-full bg-[#2852a3] transition-transform duration-150",
+          "h-2 w-2 rounded-full bg-[var(--brand)] transition-transform duration-150",
           checked ? "scale-100" : "scale-0",
         )}
       />
@@ -429,7 +429,7 @@ export function RadioCard({
       onClick={onClick}
       className={cn(
         "flex flex-1 items-center gap-2 rounded-[8px] border p-3 text-left text-[14px] leading-[1.4] text-[#16191c] transition",
-        checked ? "border-[#2852a3] bg-[#f0f5fe]" : "border-[#dfe4ea] bg-white",
+        checked ? "border-[var(--brand-ink)] bg-[var(--brand-soft)]" : "border-[#dfe4ea] bg-white",
       )}
     >
       <RadioDot checked={checked} />
@@ -499,7 +499,7 @@ export function FilterChip({
       className={cn(
         "rounded-full border px-3 py-1.5 text-[13px] leading-[1.4] transition active:scale-95",
         selected
-          ? "border-[#2852a3] bg-[#f0f5fe] text-[#2852a3]"
+          ? "border-[var(--brand-ink)] bg-[var(--brand-soft)] text-[var(--brand-ink)]"
           : "border-[#dfe4ea] bg-white text-[#16191c]",
       )}
     >
@@ -512,7 +512,7 @@ export type ChipTone = "success" | "brand" | "muted" | "warm" | "hot" | "cold";
 
 const CHIP_TONES: Record<ChipTone, string> = {
   success: "border-[#288c50] bg-[#e9f6eb] text-[#288c50]",
-  brand: "border-[#2852a3] bg-[#f0f5fe] text-[#2852a3]",
+  brand: "border-[var(--brand-ink)] bg-[var(--brand-soft)] text-[var(--brand-ink)]",
   muted: "border-[#71808e] bg-[#e2e5e8] text-[#4f5963]",
   warm: "border-[#b58a1b] bg-[#fdf6e3] text-[#9a6f00]",
   hot: "border-[#e5484d] bg-[#feeceb] text-[#d73926]",
@@ -557,18 +557,20 @@ export function BottomNav({
   active,
   onHome,
   onActivity,
+  onProfile,
   onSoon,
 }: {
   active: "home" | "activity";
   onHome: () => void;
   onActivity: () => void;
+  onProfile?: () => void;
   onSoon: (label: string) => void;
 }) {
   const items = [
     { id: "home", label: "Home", icon: House, onClick: onHome },
     { id: "activity", label: "Aktivitas", icon: ClipboardText, onClick: onActivity },
     { id: "contact", label: "Kontak", icon: AddressBook, onClick: () => onSoon("Kontak") },
-    { id: "profile", label: "Profile", icon: User, onClick: () => onSoon("Profile") },
+    { id: "profile", label: "Profile", icon: User, onClick: onProfile ?? (() => onSoon("Profile")) },
   ];
   return (
     <nav className="pb-safe sticky bottom-0 z-10 flex bg-white" aria-label="Navigasi utama">
@@ -582,7 +584,7 @@ export function BottomNav({
             aria-current={current ? "page" : undefined}
             className={cn(
               "flex flex-1 flex-col items-center gap-1 p-3 transition active:scale-95",
-              current ? "border-t-2 border-[#2852a3] text-[#2852a3]" : "border-t border-[#dfe4ea] text-[#65737f]",
+              current ? "border-t-2 border-[var(--brand-ink)] text-[var(--brand-ink)]" : "border-t border-[#dfe4ea] text-[#65737f]",
             )}
           >
             <item.icon size={24} weight={current ? "fill" : "regular"} />
@@ -597,8 +599,8 @@ export function BottomNav({
 }
 
 /**
- * Extended floating action button. Shows icon + label, and shrinks to an icon-only
- * circle while the user scrolls down so it never hides content for long.
+ * Centered extended floating action button. It slides away while the user scrolls
+ * down so cards stay readable, and comes back on scroll up or at the end of the list.
  */
 export function Fab({
   label,
@@ -610,7 +612,7 @@ export function Fab({
   above?: "nav" | "screen";
 }) {
   const ref = useRef<HTMLButtonElement>(null);
-  const [collapsed, setCollapsed] = useState(false);
+  const [hidden, setHidden] = useState(false);
   useEffect(() => {
     const scroller = ref.current?.closest(".phone-scroll");
     if (!scroller) return;
@@ -618,7 +620,8 @@ export function Fab({
     const onScroll = () => {
       const top = scroller.scrollTop;
       if (Math.abs(top - last) < 6) return;
-      setCollapsed(top > last && top > 48);
+      const atEnd = top + scroller.clientHeight >= scroller.scrollHeight - 24;
+      setHidden(top > last && top > 48 && !atEnd);
       last = top;
     };
     scroller.addEventListener("scroll", onScroll, { passive: true });
@@ -626,19 +629,12 @@ export function Fab({
   }, []);
   return (
     <div className={cn("fab-dock", above === "nav" ? "fab-dock-nav" : "fab-dock-screen")}>
-      <button
-        ref={ref}
-        type="button"
-        onClick={onClick}
-        aria-label={label}
-        data-collapsed={collapsed}
-        className="fab"
-      >
-        <Plus size={22} weight="bold" aria-hidden="true" />
-        <span className="fab-label" aria-hidden="true">
+      <div className="fab-slot">
+        <button ref={ref} type="button" onClick={onClick} data-hidden={hidden} className="fab">
+          <Plus size={20} weight="bold" aria-hidden="true" />
           {label}
-        </span>
-      </button>
+        </button>
+      </div>
     </div>
   );
 }

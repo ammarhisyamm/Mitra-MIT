@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Info } from "lucide-react";
 import {
   ForgotScreen,
@@ -6,6 +6,16 @@ import {
   NewPasswordScreen,
   OtpScreen,
 } from "@/screens/AuthScreens";
+import {
+  BusinessUnitScreen,
+  FaceCameraScreen,
+  FaceIntroScreen,
+  FaceVerifyingScreen,
+  PinCreateScreen,
+  PinVerifyScreen,
+  SuccessScreen,
+  VerifyChoiceScreen,
+} from "@/screens/VerifyScreens";
 import { SplashScreen } from "@/screens/SplashScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
 import {
@@ -19,7 +29,16 @@ import {
   SimulationScreen,
 } from "@/screens/ActivityScreens";
 import { OverlayRoot } from "@/components/mobile";
-import { DEMO_ACCOUNT, screenLabel, type Screen } from "@/lib/demo";
+import { ProfileSheet } from "@/screens/ProfileSheet";
+import {
+  DEMO_ACCOUNTS,
+  screenLabel,
+  type Account,
+  type AccountId,
+  type BusinessUnit,
+  type Screen,
+} from "@/lib/demo";
+import { clearSession, readAccounts, readSession, writeAccounts, writeSession } from "@/lib/session";
 import {
   emptyForm,
   initialActivities,
@@ -30,10 +49,24 @@ import {
   type Lead,
 } from "@/lib/activity";
 
+const QUICK_LEAD: Lead = {
+  id: "quick",
+  name: "Calon Nasabah",
+  phone: "081200000000",
+  prospect: false,
+  heat: "cold",
+  simulation: null,
+};
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("checking");
-  const [accountPassword, setAccountPassword] = useState(DEMO_ACCOUNT.password);
-  const [resetPhone, setResetPhone] = useState(DEMO_ACCOUNT.phone);
+  const [accounts, setAccounts] = useState<Account[]>(() => readAccounts(DEMO_ACCOUNTS));
+  const [accountId, setAccountId] = useState<AccountId>("returning");
+  const [resumed, setResumed] = useState(false);
+  const [justEnrolled, setJustEnrolled] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [unit, setUnit] = useState<BusinessUnit | null>(null);
+  const [resetPhone, setResetPhone] = useState(DEMO_ACCOUNTS[1].phone);
   const [notice, setNotice] = useState("");
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [activityId, setActivityId] = useState("act-1");
@@ -42,10 +75,30 @@ export default function App() {
   const [createForm, setCreateForm] = useState<ActivityForm>(emptyForm);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const account = accounts.find((item) => item.id === accountId) ?? accounts[0];
+  const enrolling = !account.enrolled;
+
+  // Splash: a valid 30-day session skips the password and goes straight to face/PIN.
   useEffect(() => {
-    const timer = window.setTimeout(() => setScreen("login"), 2200);
+    const timer = window.setTimeout(() => {
+      const session = readSession();
+      if (session) {
+        setAccountId(session.accountId);
+        setUnit(session.unit);
+        setResumed(true);
+        setScreen("verify-choice");
+      } else {
+        setScreen("login");
+      }
+    }, 2200);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.brand = unit ?? "gmn";
+  }, [unit]);
+
+  useEffect(() => writeAccounts(accounts), [accounts]);
 
   useEffect(() => {
     if (!notice) return;
@@ -65,11 +118,24 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [screen]);
 
+  function updateAccount(id: AccountId, patch: Partial<Account>) {
+    setAccounts((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
   function logout() {
+    clearSession();
+    setUnit(null);
+    setResumed(false);
     setActivities(initialActivities());
     setCreateForm(emptyForm());
     setScreen("login");
   }
+
+  const faceDone = useCallback(() => setScreen("face-verifying"), []);
+  const faceVerified = useCallback(
+    () => setScreen(enrolling ? "pin-create" : "success"),
+    [enrolling],
+  );
 
   const activity = activities.find((item) => item.id === activityId) ?? activities[0];
   const lead = activity?.leads.find((item) => item.id === leadId) ?? null;
@@ -139,14 +205,24 @@ export default function App() {
       case "login":
         return (
           <LoginScreen
-            accountPassword={accountPassword}
+            accounts={accounts}
             onForgot={() => setScreen("forgot")}
-            onLoggedIn={(target) => setScreen(target === "change" ? "change-password" : "home")}
+            onResetDemo={() => {
+              setAccounts(DEMO_ACCOUNTS);
+              setNotice("Akun demo dikembalikan ke kondisi awal.");
+            }}
+            onLoggedIn={(next, changePassword) => {
+              setAccountId(next.id);
+              setResumed(false);
+              if (!next.enrolled) setScreen(changePassword ? "change-password" : "face-intro");
+              else setScreen("verify-choice");
+            }}
           />
         );
       case "forgot":
         return (
           <ForgotScreen
+            accounts={accounts}
             onBack={() => setScreen("login")}
             onSent={(phone) => {
               setResetPhone(phone);
@@ -169,7 +245,8 @@ export default function App() {
             mode="reset"
             onBack={() => setScreen("forgot-otp")}
             onDone={(password) => {
-              setAccountPassword(password);
+              const target = accounts.find((item) => item.phone === resetPhone);
+              if (target) updateAccount(target.id, { password });
               setScreen("login");
             }}
           />
@@ -178,9 +255,79 @@ export default function App() {
         return (
           <NewPasswordScreen
             mode="change"
-            onBack={() => setScreen("home")}
+            onBack={() => setScreen("login")}
             onDone={(password) => {
-              setAccountPassword(password);
+              updateAccount(account.id, { password });
+              setScreen("face-intro");
+            }}
+          />
+        );
+      case "verify-choice":
+        return (
+          <VerifyChoiceScreen
+            name={account.name}
+            sessionResumed={resumed}
+            onFace={() => setScreen("face-intro")}
+            onPin={() => setScreen("verify-pin")}
+            onLogout={logout}
+          />
+        );
+      case "face-intro":
+        return (
+          <FaceIntroScreen
+            enroll={enrolling}
+            onStart={() => setScreen("face-camera")}
+            onBack={() => setScreen(enrolling ? "login" : "verify-choice")}
+            onUsePin={enrolling ? undefined : () => setScreen("verify-pin")}
+          />
+        );
+      case "face-camera":
+        return <FaceCameraScreen onBack={() => setScreen("face-intro")} onDone={faceDone} />;
+      case "face-verifying":
+        return <FaceVerifyingScreen onDone={faceVerified} />;
+      case "pin-create":
+        return (
+          <PinCreateScreen
+            onBack={() => setScreen("face-intro")}
+            onDone={(pin) => {
+              updateAccount(account.id, { pin, enrolled: true });
+              setJustEnrolled(true);
+              setScreen("success");
+            }}
+          />
+        );
+      case "verify-pin":
+        return (
+          <PinVerifyScreen
+            expectedPin={account.pin ?? ""}
+            onBack={() => setScreen("verify-choice")}
+            onUseFace={() => setScreen("face-intro")}
+            onSuccess={() => setScreen("success")}
+          />
+        );
+      case "success":
+        return (
+          <SuccessScreen
+            title={justEnrolled ? "Akun Anda Siap" : "Verifikasi Berhasil"}
+            message={
+              justEnrolled
+                ? "Wajah dan PIN berhasil didaftarkan. Sesi Anda aktif selama 30 hari di perangkat ini."
+                : "Identitas Anda terverifikasi. Sesi aktif selama 30 hari di perangkat ini."
+            }
+            onContinue={() => {
+              writeSession(account.id, unit);
+              setJustEnrolled(false);
+              setScreen("business-unit");
+            }}
+          />
+        );
+      case "business-unit":
+        return (
+          <BusinessUnitScreen
+            value={unit}
+            onChange={setUnit}
+            onContinue={() => {
+              writeSession(account.id, unit);
               setScreen("home");
             }}
           />
@@ -188,14 +335,22 @@ export default function App() {
       case "home":
         return (
           <HomeScreen
-            name={DEMO_ACCOUNT.name}
+            name={account.name}
             activities={activities}
             onOpenActivity={(id) => {
               setActivityId(id);
               setScreen("activity-detail");
             }}
+            onCheckIn={(id) => {
+              setActivityId(id);
+              setScreen("activity-camera");
+            }}
             onActivities={() => setScreen("activity")}
-            onLogout={logout}
+            onSimulate={() => {
+              setLeadId(null);
+              setScreen("quick-simulation");
+            }}
+            onProfile={() => setProfileOpen(true)}
             onSoon={soon}
           />
         );
@@ -213,6 +368,7 @@ export default function App() {
             }}
             onCreate={() => setScreen("activity-create")}
             onHome={() => setScreen("home")}
+            onProfile={() => setProfileOpen(true)}
             onSoon={soon}
           />
         );
@@ -306,6 +462,15 @@ export default function App() {
             }}
           />
         );
+      case "quick-simulation":
+        return (
+          <SimulationScreen
+            lead={QUICK_LEAD}
+            onNotice={setNotice}
+            onBack={() => setScreen("home")}
+            onSent={() => setScreen("home")}
+          />
+        );
       case "lead-simulation":
         return lead ? (
           <SimulationScreen
@@ -333,6 +498,20 @@ export default function App() {
             </div>
           </div>
           <OverlayRoot />
+          <ProfileSheet
+            open={profileOpen}
+            name={account.name}
+            unit={unit ?? "gmn"}
+            onClose={() => setProfileOpen(false)}
+            onSwitchUnit={() => {
+              setProfileOpen(false);
+              setScreen("business-unit");
+            }}
+            onLogout={() => {
+              setProfileOpen(false);
+              logout();
+            }}
+          />
           <div className="sr-only" aria-live="polite">
             {screenLabel(screen)}
           </div>
