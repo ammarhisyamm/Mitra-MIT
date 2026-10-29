@@ -194,27 +194,36 @@ export function ActivityCard({
   activity,
   onOpen,
   onCheckIn,
+  compact = false,
 }: {
   activity: Activity;
   onOpen: () => void;
   onCheckIn: () => void;
+  /** Home carousel variant: single-line title, no check-in footer for upcoming activities. */
+  compact?: boolean;
 }) {
   const status = activityStatus(activity);
   const meta = STATUS_META[status];
+  const showFooter = status !== "ongoing" && !(compact && status === "upcoming");
   return (
-    <article className="card-enter overflow-hidden rounded-[8px] bg-[var(--brand-soft)] pt-1.5">
+    <article className="card-enter flex h-full w-full flex-col overflow-hidden rounded-[8px] bg-[var(--brand-soft)] pt-1.5">
       <div className="flex items-center justify-between gap-2 px-3 py-1">
         <Breadcrumb kind={activity.kind} area={activity.area} />
         <StatusChip tone={meta.tone}>{meta.label}</StatusChip>
       </div>
-      <div className="mt-1 rounded-[8px] border border-[#e2e8f0] bg-white">
+      <div className="mt-1 flex-1 rounded-[8px] border border-[#e2e8f0] bg-white">
         <button
           type="button"
           onClick={onOpen}
           className="flex w-full flex-col gap-3 p-3 text-left transition active:bg-[#f8fafc]"
         >
           <span className="flex w-full items-center gap-3">
-            <span className="min-w-0 flex-1 text-[14px] font-medium leading-[1.4] text-[#020618]">
+            <span
+              className={cn(
+                "min-w-0 flex-1 text-[14px] font-medium leading-[1.4] text-[#020618]",
+                compact && "truncate",
+              )}
+            >
               {activity.name}
             </span>
             <CaretRight size={16} className="flex-none text-[#16191c]" aria-hidden="true" />
@@ -232,7 +241,7 @@ export function ActivityCard({
             </span>
           </span>
         </button>
-        {status !== "ongoing" ? (
+        {showFooter ? (
           <div className="mx-3 flex items-center justify-between border-t border-[#f1f1f1] py-3">
             {status === "upcoming" ? (
               <>
