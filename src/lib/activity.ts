@@ -305,7 +305,7 @@ export function initialActivities(): Activity[] {
           name: "Rahmat Hidayat",
           phone: "081388120902",
           prospect: true,
-          heat: "hot",
+          heat: "warm",
           simulation: null,
         },
         {
@@ -418,7 +418,7 @@ export function initialActivities(): Activity[] {
       checkinTime: "08:10",
       checkoutTime: "15:02",
       leads: [
-        { id: "lead-8", name: "Sri Wahyuni", phone: "081311224455", prospect: true, heat: "hot", simulation: null },
+        { id: "lead-8", name: "Sri Wahyuni", phone: "081311224455", prospect: true, heat: "warm", simulation: null },
         { id: "lead-9", name: "Agus Salim", phone: "081377889900", prospect: false, heat: "cold", simulation: null },
       ],
     },

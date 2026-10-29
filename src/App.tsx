@@ -419,7 +419,6 @@ export default function App() {
           <LeadVerifyScreen
             name={leadName}
             registered={leadRegistered}
-            onNotice={setNotice}
             onCancel={() => {
               saveLead(false);
               setScreen("activity-detail");

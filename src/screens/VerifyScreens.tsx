@@ -445,9 +445,9 @@ export function FaceScanScreen({ photo, onDone }: { photo: string; onDone: () =>
   const finished = percent >= 100;
 
   return (
-    <div className="face-scan-screen flex min-h-full flex-col items-center px-6 pt-status text-center text-white">
+    <div className="face-scan-screen flex min-h-full flex-col items-center px-6 pt-status text-center text-[#16191c]">
       <h1 className="mt-14 text-[22px] font-semibold leading-[1.3]">Pindai Wajah</h1>
-      <p className="mt-2 max-w-[280px] text-[14px] leading-[1.4] text-white/75">
+      <p className="mt-2 max-w-[280px] text-[14px] leading-[1.4] text-[#16191c]/75">
         Tahan posisi wajah Anda di dalam lingkaran sampai pemindaian selesai.
       </p>
       <div
@@ -473,14 +473,14 @@ export function FaceScanScreen({ photo, onDone }: { photo: string; onDone: () =>
             />
           ))}
         </svg>
-        <div className="absolute inset-[34px] overflow-hidden rounded-full bg-[#16233f] ring-2 ring-white/10">
+        <div className="absolute inset-[34px] overflow-hidden rounded-full bg-[var(--brand-soft)] ring-2 ring-[var(--brand-softer)]">
           <img src={photo} alt="Foto wajah yang dipindai" className="h-full w-full object-cover" />
           <span className={cn("scan-grid", finished && "opacity-0")} aria-hidden="true" />
           {!finished ? <span className="scan-band" aria-hidden="true" /> : null}
           {finished ? (
-            <span className="absolute inset-0 grid place-items-center bg-[#0b1633]/45">
-              <span className="success-burst grid h-16 w-16 place-items-center rounded-full bg-[#22c55e]">
-                <Check size={34} weight="bold" />
+            <span className="absolute inset-0 grid place-items-center bg-white/55">
+              <span className="success-burst grid h-16 w-16 place-items-center rounded-full bg-[var(--brand)] text-white">
+                <Check size={34} weight="bold" className="text-white" />
               </span>
             </span>
           ) : null}
@@ -489,7 +489,7 @@ export function FaceScanScreen({ photo, onDone }: { photo: string; onDone: () =>
       <p className="mt-10 text-[16px] font-medium tabular-nums">
         {finished ? "Wajah terdeteksi" : `Completed ${percent}%`}
       </p>
-      <p className="mt-2 max-w-[280px] text-[13px] leading-[1.4] text-white/65">
+      <p className="mt-2 max-w-[280px] text-[13px] leading-[1.4] text-[#16191c]/65">
         {percent < 40
           ? "Memindai titik wajah…"
           : percent < 100
