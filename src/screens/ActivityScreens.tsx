@@ -10,7 +10,6 @@ import {
   Checks,
   Clock,
   Coins,
-  CopySimple,
   Crosshair,
   DeviceMobile,
   ImageSquare,
@@ -195,27 +194,36 @@ export function ActivityCard({
   activity,
   onOpen,
   onCheckIn,
+  compact = false,
 }: {
   activity: Activity;
   onOpen: () => void;
   onCheckIn: () => void;
+  /** Home carousel variant: single-line title, no check-in footer for upcoming activities. */
+  compact?: boolean;
 }) {
   const status = activityStatus(activity);
   const meta = STATUS_META[status];
+  const showFooter = status !== "ongoing" && !(compact && status === "upcoming");
   return (
-    <article className="card-enter overflow-hidden rounded-[8px] bg-[var(--brand-soft)] pt-1.5">
+    <article className="card-enter flex h-full w-full flex-col overflow-hidden rounded-[8px] bg-[var(--brand-soft)] pt-1.5">
       <div className="flex items-center justify-between gap-2 px-3 py-1">
         <Breadcrumb kind={activity.kind} area={activity.area} />
         <StatusChip tone={meta.tone}>{meta.label}</StatusChip>
       </div>
-      <div className="mt-1 rounded-[8px] border border-[#e2e8f0] bg-white">
+      <div className="mt-1 flex-1 rounded-[8px] border border-[#e2e8f0] bg-white">
         <button
           type="button"
           onClick={onOpen}
           className="flex w-full flex-col gap-3 p-3 text-left transition active:bg-[#f8fafc]"
         >
           <span className="flex w-full items-center gap-3">
-            <span className="min-w-0 flex-1 text-[14px] font-medium leading-[1.4] text-[#020618]">
+            <span
+              className={cn(
+                "min-w-0 flex-1 text-[14px] font-medium leading-[1.4] text-[#020618]",
+                compact && "truncate",
+              )}
+            >
               {activity.name}
             </span>
             <CaretRight size={16} className="flex-none text-[#16191c]" aria-hidden="true" />
@@ -233,7 +241,7 @@ export function ActivityCard({
             </span>
           </span>
         </button>
-        {status !== "ongoing" ? (
+        {showFooter ? (
           <div className="mx-3 flex items-center justify-between border-t border-[#f1f1f1] py-3">
             {status === "upcoming" ? (
               <>
@@ -489,6 +497,12 @@ function formReady(form: ActivityForm) {
   );
 }
 
+/** Types "0930" as "09:30" while the user writes, keeping only digits and a colon. */
+function formatTypedTime(raw: string) {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  return digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+}
+
 export function ActivityCreateScreen({
   form,
   onChange,
@@ -569,18 +583,22 @@ export function ActivityCreateScreen({
         <div className="grid grid-cols-2 gap-4">
           <TextField
             label="Dari Jam"
-            type="time"
+            placeholder="HH:MM"
+            inputMode="numeric"
+            maxLength={5}
+            autoComplete="off"
             value={form.start}
-            onChange={(event) => set({ start: event.target.value })}
-            className={cn(!form.start && "text-[#65737f]")}
+            onChange={(event) => set({ start: formatTypedTime(event.target.value) })}
           />
           <TextField
             label="Sampai Jam"
-            type="time"
+            placeholder="HH:MM"
+            inputMode="numeric"
+            maxLength={5}
+            autoComplete="off"
             value={form.end}
             error={timeError}
-            onChange={(event) => set({ end: event.target.value })}
-            className={cn(!form.end && "text-[#65737f]")}
+            onChange={(event) => set({ end: formatTypedTime(event.target.value) })}
           />
         </div>
       </div>
@@ -1474,7 +1492,8 @@ export function ActivityDetailScreen({
 }
 
 function ProspectCard({ lead, onClick }: { lead: Lead; onClick: () => void }) {
-  const heat = HEAT_META[lead.heat];
+  // Hot is only reachable after a simulation has been made.
+  const heat = HEAT_META[lead.simulation || lead.heat !== "hot" ? lead.heat : "warm"];
   return (
     <button
       type="button"
@@ -1628,14 +1647,12 @@ export function LeadVerifyScreen({
   onCancel,
   onRegistered,
   onVerified,
-  onNotice,
 }: {
   name: string;
   registered: boolean;
   onCancel: () => void;
   onRegistered: () => void;
   onVerified: (next: "simulate" | "activity") => void;
-  onNotice: (message: string) => void;
 }) {
   const [checking, setChecking] = useState(false);
   const [state, setState] = useState<"cancel" | "registered" | "verified" | null>(null);
@@ -1647,11 +1664,6 @@ export function LeadVerifyScreen({
     await wait(1400);
     setChecking(false);
     setState(registered ? "registered" : "verified");
-  }
-
-  function copy(value: string, label: string) {
-    void navigator.clipboard?.writeText(value).catch(() => undefined);
-    onNotice(`${label} disalin.`);
   }
 
   return (
@@ -1681,26 +1693,11 @@ export function LeadVerifyScreen({
                 <span className="block text-[12px] leading-[1.4] text-[#4f5963]">Nomor Tujuan</span>
                 <span className="block text-[16px] font-semibold leading-[1.4] text-[#16191c]">081277629902</span>
               </span>
-              <button
-                type="button"
-                onClick={() => copy("081277629902", "Nomor tujuan")}
-                className="grid h-9 w-9 place-items-center rounded-full text-[var(--brand-ink)] transition hover:bg-[var(--brand-soft)]"
-                aria-label="Salin nomor tujuan"
-              >
-                <CopySimple size={18} />
-              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => copy(message, "Format pesan")}
-              className="mt-3 w-full rounded-[8px] bg-[var(--brand-soft)] px-3 py-2.5 text-left transition active:scale-[0.99]"
-            >
-              <span className="flex items-center justify-between text-[12px] leading-[1.4] text-[#4f5963]">
-                Format Pesan
-                <CopySimple size={14} className="text-[var(--brand-ink)]" aria-hidden="true" />
-              </span>
+            <div className="mt-3 w-full rounded-[8px] bg-[var(--brand-soft)] px-3 py-2.5">
+              <span className="block text-[12px] leading-[1.4] text-[#4f5963]">Format Pesan</span>
               <span className="mt-0.5 block break-all text-[16px] leading-[1.4] text-[var(--brand-ink)]">{message}</span>
-            </button>
+            </div>
           </div>
         </section>
       </div>

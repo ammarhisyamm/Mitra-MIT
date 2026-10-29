@@ -312,8 +312,9 @@ export function HomeScreen({
                 className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-6 px-6"
               >
                 {running.map((activity) => (
-                  <div key={activity.id} className="w-[330px] max-w-[86%] flex-none snap-start">
+                  <div key={activity.id} className="flex w-[330px] max-w-[86%] flex-none snap-start">
                     <ActivityCard
+                      compact
                       activity={activity}
                       onOpen={() => onOpenActivity(activity.id)}
                       onCheckIn={() => onCheckIn(activity.id)}
