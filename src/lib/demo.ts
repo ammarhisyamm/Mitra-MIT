@@ -26,7 +26,7 @@ export const DEMO_ACCOUNTS: Account[] = [
   },
   {
     id: "returning",
-    label: "Akun lama · sudah terdaftar",
+    label: "Akun lama · sesi 30 hari berakhir",
     name: "Rani Prameswari",
     nik: "240812",
     phone: "081288429901",
@@ -39,8 +39,9 @@ export const DEMO_ACCOUNTS: Account[] = [
 export const DEMO_OTP = "123456";
 export const SESSION_DAYS = 30;
 
-export type BusinessUnit = "gmn" | "gms";
+export type BusinessUnit = "mit" | "gmn" | "gms";
 
+/** Brand themes shown to the client. MIT is the default look. */
 export const BUSINESS_UNITS: {
   id: BusinessUnit;
   short: string;
@@ -49,16 +50,23 @@ export const BUSINESS_UNITS: {
   color: string;
 }[] = [
   {
+    id: "mit",
+    short: "MIT",
+    name: "MIT",
+    tagline: "Tema default (biru)",
+    color: "#2852a3",
+  },
+  {
     id: "gmn",
     short: "GMN",
     name: "Gadai Mas Nusantara",
-    tagline: "Tema biru",
-    color: "#2852a3",
+    tagline: "Tema biru muda",
+    color: "#27a1d7",
   },
   {
     id: "gms",
     short: "GMS",
-    name: "Gadai Mulia",
+    name: "Gadai Mulia Sejahtera",
     tagline: "Tema kuning",
     color: "#f2b705",
   },
@@ -75,10 +83,11 @@ export type Screen =
   | "verify-pin"
   | "face-intro"
   | "face-camera"
+  | "face-scan"
   | "face-verifying"
+  | "face-error"
   | "pin-create"
-  | "success"
-  | "business-unit"
+  | "welcome"
   | "home"
   | "activity"
   | "activity-create"
@@ -102,10 +111,11 @@ export function screenLabel(screen: Screen) {
     "verify-pin": "Masukkan PIN",
     "face-intro": "Verifikasi Wajah",
     "face-camera": "Ambil Foto Wajah",
+    "face-scan": "Memindai Wajah",
     "face-verifying": "Memverifikasi Wajah",
-    "pin-create": "Buat PIN",
-    success: "Verifikasi Berhasil",
-    "business-unit": "Pilih Unit Bisnis",
+    "face-error": "Verifikasi Wajah Gagal",
+    "pin-create": "Buat PIN Baru",
+    welcome: "Selamat Datang",
     home: "Beranda",
     activity: "Aktivitas",
     "activity-create": "Buat Aktivitas",

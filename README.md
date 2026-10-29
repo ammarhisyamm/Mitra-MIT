@@ -26,7 +26,7 @@ bun run preview
 - Unit: `GMN` (default), `SMA`, `GMS`
 - Foto contoh verifikasi: Unsplash, hanya untuk ilustrasi prototype
 
-Prototype tampil sebagai web app mobile selebar 393px. Akun demo (kata sandi `Mitra@2026`): akun baru `081200000001` (login pertama: daftar wajah + buat PIN) dan akun lama `081288429901` (verifikasi wajah atau PIN `123456`). Sesi 30 hari disimpan di browser; OTP lupa kata sandi `123456`.
+Prototype tampil sebagai web app mobile selebar 393px. Akun demo (kata sandi `Mitra@2026`): akun baru `081200000001` (login pertama: daftar wajah + buat PIN) dan akun lama `081288429901` (verifikasi wajah atau PIN `123456`). Karena ini prototype, refresh selalu kembali ke halaman login (tidak ada data yang disimpan). Verifikasi wajah memakai kamera perangkat (ada foto contoh bila izin kamera ditolak). Tema bisnis unit dipilih di halaman Selamat Datang: MIT (default), Gadai Mas Nusantara, atau Gadai Mulia Sejahtera. OTP lupa kata sandi `123456`.
 
 ## Stack
 

@@ -123,14 +123,19 @@ export const MESSAGE_TEMPLATES = {
       detail: "Menanyakan kesesuaian estimasi pinjaman dengan kebutuhan leads.",
     },
     {
+      id: "booking",
+      title: "Follow-up Melanjutkan Booking",
+      detail: "Mengajak leads melanjutkan ke proses booking.",
+    },
+    {
       id: "konsultasi",
       title: "Konsultasi Pinjaman",
       detail: "Menawarkan bantuan dan informasi lebih lanjut terkait proses gadai.",
     },
     {
-      id: "booking",
-      title: "Follow-up Melanjutkan Booking",
-      detail: "Mengajak leads melanjutkan ke proses booking.",
+      id: "minat-lanjut",
+      title: "Konfirmasi Minat Leads",
+      detail: "Menanyakan kembali minat leads untuk melanjutkan proses gadai.",
     },
   ],
   fresh: [
@@ -206,6 +211,27 @@ export function todayIso(offsetDays = 0) {
 export function displayDate(iso: string) {
   const [year, month, day] = iso.split("-");
   return `${day}/${month}/${year}`;
+}
+
+export const MONTHS = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+];
+
+/** "2026-10-20" → "20 Oktober 2026" */
+export function longDate(iso: string) {
+  const [year, month, day] = iso.split("-").map(Number);
+  return `${day} ${MONTHS[month - 1]} ${year}`;
 }
 
 export function clockNow() {

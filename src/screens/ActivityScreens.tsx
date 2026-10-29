@@ -6,12 +6,14 @@ import {
   Camera,
   CaretRight,
   ChatCircleText,
+  ClipboardText,
   Checks,
   Clock,
   Coins,
   CopySimple,
   Crosshair,
   DeviceMobile,
+  ImageSquare,
   MapPin,
   MapTrifold,
   Minus,
@@ -21,11 +23,13 @@ import {
   SignOut,
   Trash,
   User,
+  UsersThree,
   X,
 } from "@phosphor-icons/react";
 import { MapPinOff, PackageX } from "lucide-react";
 import {
   AppBar,
+  BottomBar,
   BottomNav,
   Button,
   EmptyState,
@@ -45,6 +49,7 @@ import {
   type ChipTone,
 } from "@/components/mobile";
 import { DummyMap } from "@/components/DummyMap";
+import { DateWheelSheet } from "@/components/DateWheel";
 import {
   USER_LOCATION,
   animateView,
@@ -70,6 +75,7 @@ import {
   collateralDetail,
   displayDate,
   estimateCollateral,
+  longDate,
   maskPhone,
   rupiah,
   todayIso,
@@ -496,6 +502,7 @@ export function ActivityCreateScreen({
   onPickMap: () => void;
   onCreated: () => void;
 }) {
+  const [dateOpen, setDateOpen] = useState(false);
   const [kindOpen, setKindOpen] = useState(false);
   const [kindDraft, setKindDraft] = useState<string | null>(null);
   const [placeOpen, setPlaceOpen] = useState(false);
@@ -552,13 +559,12 @@ export function ActivityCreateScreen({
           emphasize
           onClick={() => setPlaceOpen(true)}
         />
-        <TextField
+        <SelectField
           label="Tanggal Pelaksanaan"
-          type="date"
-          value={form.date}
-          min={todayIso()}
-          onChange={(event) => set({ date: event.target.value })}
-          className={cn(!form.date && "text-[#65737f]")}
+          placeholder="DD/MM/YYYY"
+          value={form.date ? displayDate(form.date) : ""}
+          chevron="calendar"
+          onClick={() => setDateOpen(true)}
         />
         <div className="grid grid-cols-2 gap-4">
           <TextField
@@ -584,6 +590,15 @@ export function ActivityCreateScreen({
         </Button>
       </div>
 
+      <DateWheelSheet
+        open={dateOpen}
+        value={form.date}
+        onClose={() => setDateOpen(false)}
+        onApply={(date) => {
+          set({ date });
+          setDateOpen(false);
+        }}
+      />
       <Sheet open={kindOpen} onClose={() => setKindOpen(false)} label="Pilih jenis aktivitas">
         <h2 className="text-[18px] font-semibold leading-[1.3] text-[#16191c]">Jenis Aktivitas</h2>
         <div className="mt-2">
@@ -1064,6 +1079,7 @@ export function ActivityDetailScreen({
   const [draft, setDraft] = useState<LeadFilter>(filter);
   const [filterOpen, setFilterOpen] = useState(false);
   const [checkinOpen, setCheckinOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [sheet, setSheet] = useState<LeadSheet>(null);
   const [template, setTemplate] = useState<string | null>(null);
   const [templateQuery, setTemplateQuery] = useState("");
@@ -1124,13 +1140,12 @@ export function ActivityDetailScreen({
         <Breadcrumb kind={activity.kind} area={activity.area} light />
         <button
           type="button"
-          onClick={() => (activity.checkinTime ? setCheckinOpen(true) : undefined)}
+          onClick={() => setInfoOpen(true)}
           className="mt-1 flex w-full items-center gap-3 text-left"
-          aria-haspopup={activity.checkinTime ? "dialog" : undefined}
-          disabled={!activity.checkinTime}
+          aria-haspopup="dialog"
         >
           <h1 className="min-w-0 flex-1 text-[18px] font-semibold leading-[1.3]">{activity.name}</h1>
-          {activity.checkinTime ? <CaretRight size={18} aria-hidden="true" /> : null}
+          <CaretRight size={18} aria-label="Lihat detail aktivitas" />
         </button>
         <div className="mt-1.5">
           <Schedule activity={activity} light />
@@ -1169,7 +1184,7 @@ export function ActivityDetailScreen({
         {(
           [
             ["prospect", "Prospek", prospects.length],
-            ["other", "Belum Prospek", others.length],
+            ["other", status === "ended" ? "Tidak Prospek" : "Belum Prospek", others.length],
           ] as const
         ).map(([id, label, count]) => (
           <button
@@ -1198,7 +1213,7 @@ export function ActivityDetailScreen({
         ))}
       </div>
 
-      <main className="flex flex-1 flex-col px-6 pb-28 pt-4">
+      <main className={cn("flex flex-1 flex-col px-6 pt-4", status === "ongoing" ? "pb-6" : "pb-10")}>
         {empty ? (
           <div className="flex flex-1 items-center justify-center py-10">
             <EmptyState
@@ -1213,9 +1228,6 @@ export function ActivityDetailScreen({
           </div>
         ) : (
           <>
-            {tab === "other" ? (
-              <h2 className="mb-3 text-[14px] font-medium leading-[1.4] text-[#16191c]">Daftar Leads</h2>
-            ) : null}
             <div className="flex gap-2">
               <div className="min-w-0 flex-1">
                 <SearchField value={query} onChange={setQuery} placeholder="Cari Nama Leads" />
@@ -1257,27 +1269,75 @@ export function ActivityDetailScreen({
         )}
       </main>
 
-      {status === "ongoing" ? <Fab label="Tambah Leads" onClick={onAddLead} /> : null}
+      {status === "ongoing" ? (
+        <BottomBar>
+          <Button className="w-full" onClick={onAddLead}>
+            Tambah Leads Baru
+          </Button>
+        </BottomBar>
+      ) : null}
 
-      <Sheet open={checkinOpen} onClose={() => setCheckinOpen(false)} label="Detail check-in">
-        <h2 className="text-[18px] font-semibold leading-[1.3] text-[#16191c]">Detail Check-in</h2>
+      <Sheet open={infoOpen} onClose={() => setInfoOpen(false)} label="Detail aktivitas">
+        <h2 className="text-[18px] font-semibold leading-[1.3] text-[#16191c]">Detail Aktivitas</h2>
+        <dl className="mt-3 rounded-[8px] border border-[#dfe4ea] px-3">
+          {(
+            [
+              [ClipboardText, "Jenis Aktivitas", activity.kind],
+              [UsersThree, "Jangkauan Area", areaLabel(activity.area)],
+              [CalendarDots, "Tanggal Aktivitas", longDate(activity.date)],
+              [Clock, "Waktu Pelaksanaan", `${activity.start} - ${activity.end}`],
+              [MapPin, "Lokasi", activity.locationName],
+            ] as const
+          ).map(([Icon, label, value], index) => (
+            <div
+              key={label}
+              className={cn("flex items-center gap-2 py-3 text-[13px]", index < 4 && "border-b border-[#f1f1f1]")}
+            >
+              <Icon size={18} className="flex-none text-[#16191c]" aria-hidden="true" />
+              <dt className="flex-none text-[#16191c]">{label}</dt>
+              <dd className="ml-auto truncate pl-3 text-right font-medium text-[#16191c]">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <h2 className="mt-5 text-[16px] font-semibold leading-[1.3] text-[#16191c]">Detail Kehadiran</h2>
+        <div className="mt-3 rounded-[8px] border border-[#dfe4ea] px-3">
+          <button
+            type="button"
+            disabled={!activity.checkinTime}
+            onClick={() => {
+              setInfoOpen(false);
+              setCheckinOpen(true);
+            }}
+            className="flex w-full items-center gap-2 border-b border-[#f1f1f1] py-3 text-left text-[13px] text-[#16191c]"
+          >
+            <ImageSquare size={18} aria-hidden="true" />
+            <span className="flex-1">Foto Check-in</span>
+            {activity.checkinTime ? (
+              <CaretRight size={16} aria-hidden="true" />
+            ) : (
+              <span className="text-[#4f5963]">-</span>
+            )}
+          </button>
+          <div className="flex items-center gap-2 border-b border-[#f1f1f1] py-3 text-[13px] text-[#16191c]">
+            <Clock size={18} aria-hidden="true" />
+            <span className="flex-1">Waktu Check-in</span>
+            <span className="font-medium">{activity.checkinTime ?? "-"}</span>
+          </div>
+          <div className="flex items-center gap-2 py-3 text-[13px] text-[#16191c]">
+            <Clock size={18} aria-hidden="true" />
+            <span className="flex-1">Waktu Check-out</span>
+            <span className="font-medium">{activity.checkoutTime ?? "-"}</span>
+          </div>
+        </div>
+      </Sheet>
+
+      <Sheet open={checkinOpen} onClose={() => setCheckinOpen(false)} label="Foto check-in">
+        <h2 className="text-[18px] font-semibold leading-[1.3] text-[#16191c]">Foto Check-in</h2>
         <img
           src="/activity/checkin-photo.jpg"
           alt="Foto kegiatan saat check-in"
           className="mt-4 aspect-[345/350] w-full rounded-[8px] border border-[#dfe4ea] object-cover"
         />
-        <dl className="mt-3 rounded-[8px] border border-[#dfe4ea] px-3">
-          <div className="flex items-center gap-2 border-b border-[#f1f1f1] py-3 text-[14px]">
-            <Clock size={18} aria-hidden="true" />
-            <dt className="font-medium text-[#16191c]">Waktu</dt>
-            <dd className="ml-auto text-[13px] text-[#4f5963]">{activity.checkinTime}</dd>
-          </div>
-          <div className="flex items-center gap-2 py-3 text-[14px]">
-            <MapPin size={18} aria-hidden="true" />
-            <dt className="font-medium text-[#16191c]">Lokasi</dt>
-            <dd className="ml-auto truncate pl-3 text-[13px] text-[#4f5963]">{activity.locationName}</dd>
-          </div>
-        </dl>
       </Sheet>
 
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} label="Filter leads">
@@ -1338,7 +1398,7 @@ export function ActivityDetailScreen({
             footer={
               sheet.lead.simulation ? (
                 <Button className="w-full" onClick={() => openTemplate(sheet.lead)}>
-                  Kirim Pesan Penawaran
+                  Follow Up
                 </Button>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -1352,7 +1412,7 @@ export function ActivityDetailScreen({
                     Lanjut Simulasi Gadai
                   </Button>
                   <Button variant="link" onClick={() => openTemplate(sheet.lead)}>
-                    Kirim Pesan Penawaran
+                    Follow Up
                   </Button>
                 </div>
               )
@@ -1385,7 +1445,7 @@ export function ActivityDetailScreen({
         open={sent}
         tone="success"
         title="Pengiriman Berhasil"
-        message="Pesan penawaran Anda berhasil terkirim ke nomor WhatsApp leads."
+        message="Pesan Follow-up Anda berhasil terkirim ke nomor WhatsApp leads."
         onClose={() => setSent(false)}
       />
       <ResultDialog
@@ -1873,31 +1933,50 @@ function CollateralSheet({
   );
 }
 
+type ElectronicPicker = "category" | "product" | null;
+
 export function SimulationScreen({
   lead,
   onBack,
   onSent,
   onNotice,
 }: {
-  lead: Lead;
+  /** null for the quick simulation from the home page (no lead to send an offer to). */
+  lead: Lead | null;
   onBack: () => void;
   onSent: (items: Collateral[]) => void;
   onNotice: (message: string) => void;
 }) {
   const [type, setType] = useState<CollateralType>("emas");
   const [items, setItems] = useState<Collateral[]>([]);
+  const [category, setCategory] = useState("");
+  const [product, setProduct] = useState("");
+  const [picker, setPicker] = useState<ElectronicPicker>(null);
+  const [pick, setPick] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
   const [adding, setAdding] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  useAutoClose(sent, () => onSent(items));
+  useAutoClose(sent, () => onSent(result));
+
+  const result: Collateral[] =
+    type === "emas" ? items : product ? [{ id: "elektronik", type, item: product, category }] : [];
 
   function changeType(next: CollateralType) {
     if (next === type) return;
-    if (items.length) onNotice("Detail jaminan direset karena jenis barang berubah.");
+    if (items.length || category) onNotice("Detail jaminan direset karena jenis barang berubah.");
     setType(next);
     setItems([]);
+    setCategory("");
+    setProduct("");
+  }
+
+  function openPicker(next: Exclude<ElectronicPicker, null>) {
+    setPick(next === "category" ? category || null : product || null);
+    setQuery("");
+    setPicker(next);
   }
 
   async function calculate() {
@@ -1915,6 +1994,14 @@ export function SimulationScreen({
     setSent(true);
   }
 
+  const needle = query.trim().toLowerCase();
+  const pickerOptions =
+    picker === "category"
+      ? ELECTRONIC_CATEGORIES.filter((value) => value.toLowerCase().includes(needle))
+      : (ELECTRONIC_ITEMS[category] ?? [])
+          .map((entry) => entry.name)
+          .filter((value) => value.toLowerCase().includes(needle));
+
   return (
     <div className="flex min-h-full flex-col bg-white pt-status">
       <AppBar onBack={onBack} />
@@ -1923,60 +2010,91 @@ export function SimulationScreen({
           title="Simulasi Gadai"
           description="Masukkan detail barang jaminan untuk melihat estimasi nilai pinjaman."
         />
-        <div className="flex gap-3" role="radiogroup" aria-label="Jenis barang jaminan">
-          <RadioCard checked={type === "emas"} label="Emas" onClick={() => changeType("emas")} />
-          <RadioCard checked={type === "elektronik"} label="Elektronik" onClick={() => changeType("elektronik")} />
-        </div>
-        <div>
-          <h2 className="mb-3 text-[16px] font-medium leading-[1.4] text-[#16191c]">Detail Jaminan</h2>
-          <ul className="flex flex-col gap-3">
-            {items.map((item) => (
-              <li key={item.id} className="card-enter flex items-center gap-3 rounded-[8px] bg-[#f5f7f9] px-3 py-3">
-                <span className="min-w-0 flex-1 truncate text-[14px] font-medium leading-[1.4] text-[#16191c]">
-                  {item.item}
-                </span>
-                <span className="flex flex-none items-center gap-1.5 text-[12px] leading-[1.4] text-[#4f5963]">
-                  {collateralDetail(item).map((part, index) => (
-                    <span key={part} className="flex items-center gap-1.5">
-                      {index > 0 ? <span className="h-1 w-1 rounded-full bg-[#90a1b9]" aria-hidden="true" /> : null}
-                      {part}
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-3" role="radiogroup" aria-label="Jenis barang jaminan">
+            <RadioCard checked={type === "emas"} label="Emas" onClick={() => changeType("emas")} />
+            <RadioCard checked={type === "elektronik"} label="Elektronik" onClick={() => changeType("elektronik")} />
+          </div>
+          {type === "emas" ? (
+            <div>
+              <h2 className="mb-3 text-[16px] font-medium leading-[1.4] text-[#16191c]">Detail Jaminan</h2>
+              <ul className="flex flex-col gap-3">
+                {items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="card-enter flex items-center gap-3 rounded-[8px] bg-[var(--brand-soft)] p-3"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-[14px] font-medium leading-[1.4] text-[#020618]">
+                      {item.item}
                     </span>
-                  ))}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))}
-                  className="grid h-8 w-8 flex-none place-items-center rounded-full text-[#4f5963] transition hover:bg-white hover:text-[#d73926]"
-                  aria-label={`Hapus ${item.item}`}
-                >
-                  <Trash size={18} />
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            disabled={items.length >= MAX_COLLATERAL}
-            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-[var(--brand-ink)] text-[14px] font-medium text-[var(--brand-ink)] transition active:scale-[0.99] disabled:border-[#c6ccd1] disabled:text-[#9aa5b1]"
-          >
-            <Plus size={16} aria-hidden="true" />
-            Tambah Jaminan ({items.length}/{MAX_COLLATERAL})
-          </button>
+                    <span className="flex flex-none items-center gap-1.5 text-[12px] leading-[1.4] text-[#45556c]">
+                      {collateralDetail(item).map((part, index) => (
+                        <span key={part} className="flex items-center gap-1.5">
+                          {index > 0 ? (
+                            <span className="h-1 w-1 rounded-full bg-[#90a1b9]" aria-hidden="true" />
+                          ) : null}
+                          {part}
+                        </span>
+                      ))}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))}
+                      className="-m-1.5 grid h-8 w-8 flex-none place-items-center rounded-full text-[#16191c] transition hover:bg-white hover:text-[#d73926]"
+                      aria-label={`Hapus ${item.item}`}
+                    >
+                      <Trash size={20} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                disabled={items.length >= MAX_COLLATERAL}
+                className={cn(
+                  "flex h-10 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-[var(--brand)] text-[14px] font-medium text-[var(--brand-ink)] transition active:scale-[0.99] disabled:border-[#c6ccd1] disabled:text-[#9aa5b1]",
+                  items.length > 0 && "mt-3",
+                )}
+              >
+                <Plus size={16} aria-hidden="true" />
+                Tambah Jaminan ({items.length}/{MAX_COLLATERAL})
+              </button>
+            </div>
+          ) : (
+            <>
+              <SelectField
+                label="Barang Jaminan"
+                placeholder="Pilih Barang Jaminan"
+                value={category}
+                onClick={() => openPicker("category")}
+              />
+              <SelectField
+                label="Nama Barang"
+                placeholder="Pilih Nama Barang"
+                value={product}
+                disabled={!category}
+                onClick={() => openPicker("product")}
+              />
+            </>
+          )}
         </div>
+        {type === "elektronik" ? <Disclaimer /> : null}
       </div>
       <div className="sticky bottom-0 bg-white px-6 pb-6 pt-4">
-        <p className="mb-4 text-center text-[12px] leading-[1.4] text-[#4f5963]">
-          Hasil perkiraan nilai dapat berbeda dengan perhitungan di cabang sesuai dengan ketentuan yang berlaku.
-        </p>
-        <Button className="w-full" disabled={items.length === 0} loading={calculating} onClick={calculate}>
+        {type === "emas" ? (
+          <div className="mb-4">
+            <Disclaimer />
+          </div>
+        ) : null}
+        <Button className="w-full" disabled={result.length === 0} loading={calculating} onClick={calculate}>
           {calculating ? "Menghitung…" : "Hitung"}
         </Button>
       </div>
 
       <CollateralSheet
         open={adding}
-        type={type}
+        type="emas"
         onClose={() => setAdding(false)}
         onAdd={(item) => {
           setItems((current) => [...current, item]);
@@ -1984,20 +2102,74 @@ export function SimulationScreen({
         }}
       />
 
+      <Sheet
+        open={picker !== null}
+        onClose={() => setPicker(null)}
+        label={picker === "product" ? "Nama Barang" : "Barang Jaminan"}
+      >
+        <h2 className="text-[18px] font-semibold leading-[1.3] text-[#16191c]">
+          {picker === "product" ? "Nama Barang" : "Barang Jaminan"}
+        </h2>
+        <div className="mt-3">
+          <SearchField
+            value={query}
+            onChange={setQuery}
+            placeholder={picker === "product" ? "Cari Merek atau Seri" : "Cari Barang Jaminan"}
+          />
+        </div>
+        {pickerOptions.length === 0 ? (
+          <div className="flex flex-col items-center py-8 text-center">
+            <span className="grid h-16 w-16 place-items-center rounded-full bg-[#f1f3f5] text-[#71808e]">
+              <PackageX className="h-7 w-7" aria-hidden="true" />
+            </span>
+            <p className="mt-3 text-[16px] font-semibold leading-[1.4] text-[#16191c]">Barang Tidak Ditemukan</p>
+            <p className="mt-1 max-w-[270px] text-[12px] leading-[1.4] text-[#4f5963]">
+              Nama barang yang Anda cari tidak ada dalam sistem, periksa kata kunci dan coba lagi.
+            </p>
+          </div>
+        ) : (
+          <RadioList options={pickerOptions.map((value) => ({ value, label: value }))} value={pick} onChange={setPick} />
+        )}
+        <Button
+          className="mt-5 w-full"
+          disabled={pick === null || pickerOptions.length === 0}
+          onClick={() => {
+            if (pick === null) return;
+            if (picker === "category") {
+              if (pick !== category) setProduct("");
+              setCategory(pick);
+            } else setProduct(pick);
+            setPicker(null);
+          }}
+        >
+          Pilih
+        </Button>
+      </Sheet>
+
       <Sheet open={resultOpen} onClose={() => setResultOpen(false)} label="Hasil simulasi">
-        <LeadSummary
-          lead={{ ...lead, simulation: items }}
-          footer={
-            <div className="flex flex-col gap-3">
-              <Button className="w-full" loading={sending} onClick={sendOffer}>
-                {sending ? "Mengirim…" : "Kirim Penawaran"}
-              </Button>
-              <Button variant="link" disabled={sending} onClick={() => setResultOpen(false)}>
-                Kembali ke Simulasi
-              </Button>
-            </div>
-          }
-        />
+        {lead ? (
+          <LeadSummary
+            lead={{ ...lead, simulation: result }}
+            footer={
+              <div className="flex flex-col gap-3">
+                <Button className="w-full" loading={sending} onClick={sendOffer}>
+                  {sending ? "Mengirim…" : "Kirim Penawaran"}
+                </Button>
+                <Button variant="link" disabled={sending} onClick={() => setResultOpen(false)}>
+                  Kembali ke Simulasi
+                </Button>
+              </div>
+            }
+          />
+        ) : (
+          <div className="flex flex-col gap-4">
+            <Estimate items={result} />
+            <CollateralList items={result} />
+            <Button className="mt-1 w-full" onClick={() => setResultOpen(false)}>
+              Kembali
+            </Button>
+          </div>
+        )}
       </Sheet>
 
       <ResultDialog
@@ -2005,8 +2177,16 @@ export function SimulationScreen({
         tone="success"
         title="Penawaran Berhasil Dikirim"
         message="Penawaran berhasil dikirim ke nomor leads."
-        onClose={() => onSent(items)}
+        onClose={() => onSent(result)}
       />
     </div>
+  );
+}
+
+function Disclaimer() {
+  return (
+    <p className="text-center text-[12px] leading-[1.4] text-[#65737f]">
+      Hasil perkiraan nilai dapat berbeda dengan perhitungan di cabang sesuai dengan ketentuan yang berlaku.
+    </p>
   );
 }

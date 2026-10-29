@@ -138,12 +138,10 @@ function LockIllustration() {
 export function LoginScreen({
   onLoggedIn,
   onForgot,
-  onResetDemo,
   accounts,
 }: {
   onLoggedIn: (account: Account, changePassword: boolean) => void;
   onForgot: () => void;
-  onResetDemo: () => void;
   accounts: Account[];
 }) {
   const [userId, setUserId] = useState("");
@@ -254,18 +252,6 @@ export function LoginScreen({
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              onResetDemo();
-              setUserId("");
-              setPassword("");
-              setFailed(false);
-            }}
-            className="mt-2 text-[12px] font-medium text-[var(--brand-ink)] underline underline-offset-2"
-          >
-            Reset akun demo (ulang dari login pertama)
-          </button>
         </div>
       </form>
 

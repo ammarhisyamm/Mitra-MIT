@@ -7,14 +7,17 @@ import {
   OtpScreen,
 } from "@/screens/AuthScreens";
 import {
-  BusinessUnitScreen,
+  BusinessUnitSheet,
   FaceCameraScreen,
-  FaceIntroScreen,
+  FaceErrorScreen,
+  FaceGuideScreen,
+  FaceScanScreen,
   FaceVerifyingScreen,
   PinCreateScreen,
   PinVerifyScreen,
-  SuccessScreen,
   VerifyChoiceScreen,
+  WelcomeScreen,
+  type FaceCapture,
 } from "@/screens/VerifyScreens";
 import { SplashScreen } from "@/screens/SplashScreen";
 import { HomeScreen } from "@/screens/HomeScreen";
@@ -38,7 +41,6 @@ import {
   type BusinessUnit,
   type Screen,
 } from "@/lib/demo";
-import { clearSession, readAccounts, readSession, writeAccounts, writeSession } from "@/lib/session";
 import {
   emptyForm,
   initialActivities,
@@ -49,23 +51,16 @@ import {
   type Lead,
 } from "@/lib/activity";
 
-const QUICK_LEAD: Lead = {
-  id: "quick",
-  name: "Calon Nasabah",
-  phone: "081200000000",
-  prospect: false,
-  heat: "cold",
-  simulation: null,
-};
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("checking");
-  const [accounts, setAccounts] = useState<Account[]>(() => readAccounts(DEMO_ACCOUNTS));
+  // Prototype: nothing is persisted, so a refresh always starts again from login.
+  const [accounts, setAccounts] = useState<Account[]>(DEMO_ACCOUNTS);
   const [accountId, setAccountId] = useState<AccountId>("returning");
-  const [resumed, setResumed] = useState(false);
-  const [justEnrolled, setJustEnrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [unit, setUnit] = useState<BusinessUnit | null>(null);
+  const [unitOpen, setUnitOpen] = useState(false);
+  const [unit, setUnit] = useState<BusinessUnit>("mit");
+  const [face, setFace] = useState<FaceCapture | null>(null);
   const [resetPhone, setResetPhone] = useState(DEMO_ACCOUNTS[1].phone);
   const [notice, setNotice] = useState("");
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
@@ -78,27 +73,14 @@ export default function App() {
   const account = accounts.find((item) => item.id === accountId) ?? accounts[0];
   const enrolling = !account.enrolled;
 
-  // Splash: a valid 30-day session skips the password and goes straight to face/PIN.
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const session = readSession();
-      if (session) {
-        setAccountId(session.accountId);
-        setUnit(session.unit);
-        setResumed(true);
-        setScreen("verify-choice");
-      } else {
-        setScreen("login");
-      }
-    }, 2200);
+    const timer = window.setTimeout(() => setScreen("login"), 2200);
     return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.brand = unit ?? "gmn";
+    document.documentElement.dataset.brand = unit;
   }, [unit]);
-
-  useEffect(() => writeAccounts(accounts), [accounts]);
 
   useEffect(() => {
     if (!notice) return;
@@ -123,19 +105,18 @@ export default function App() {
   }
 
   function logout() {
-    clearSession();
-    setUnit(null);
-    setResumed(false);
+    setUnit("mit");
+    setFace(null);
     setActivities(initialActivities());
     setCreateForm(emptyForm());
     setScreen("login");
   }
 
-  const faceDone = useCallback(() => setScreen("face-verifying"), []);
-  const faceVerified = useCallback(
-    () => setScreen(enrolling ? "pin-create" : "success"),
-    [enrolling],
-  );
+  const faceScanned = useCallback(() => setScreen("face-verifying"), []);
+  const faceVerified = useCallback(() => {
+    if (face?.dark) setScreen("face-error");
+    else setScreen(enrolling ? "pin-create" : "welcome");
+  }, [enrolling, face]);
 
   const activity = activities.find((item) => item.id === activityId) ?? activities[0];
   const lead = activity?.leads.find((item) => item.id === leadId) ?? null;
@@ -207,13 +188,8 @@ export default function App() {
           <LoginScreen
             accounts={accounts}
             onForgot={() => setScreen("forgot")}
-            onResetDemo={() => {
-              setAccounts(DEMO_ACCOUNTS);
-              setNotice("Akun demo dikembalikan ke kondisi awal.");
-            }}
             onLoggedIn={(next, changePassword) => {
               setAccountId(next.id);
-              setResumed(false);
               if (!next.enrolled) setScreen(changePassword ? "change-password" : "face-intro");
               else setScreen("verify-choice");
             }}
@@ -265,34 +241,44 @@ export default function App() {
       case "verify-choice":
         return (
           <VerifyChoiceScreen
-            name={account.name}
-            sessionResumed={resumed}
+            onBack={logout}
             onFace={() => setScreen("face-intro")}
             onPin={() => setScreen("verify-pin")}
-            onLogout={logout}
           />
         );
       case "face-intro":
         return (
-          <FaceIntroScreen
+          <FaceGuideScreen
             enroll={enrolling}
             onStart={() => setScreen("face-camera")}
-            onBack={() => setScreen(enrolling ? "login" : "verify-choice")}
-            onUsePin={enrolling ? undefined : () => setScreen("verify-pin")}
+            onBack={() => (enrolling ? logout() : setScreen("verify-choice"))}
           />
         );
       case "face-camera":
-        return <FaceCameraScreen onBack={() => setScreen("face-intro")} onDone={faceDone} />;
+        return (
+          <FaceCameraScreen
+            onClose={() => setScreen("face-intro")}
+            onSubmit={(capture) => {
+              setFace(capture);
+              setScreen("face-scan");
+            }}
+          />
+        );
+      case "face-scan":
+        return <FaceScanScreen photo={face?.photo ?? "/face/sample-face.jpg"} onDone={faceScanned} />;
       case "face-verifying":
         return <FaceVerifyingScreen onDone={faceVerified} />;
+      case "face-error":
+        return (
+          <FaceErrorScreen onBack={() => setScreen("face-intro")} onRetry={() => setScreen("face-camera")} />
+        );
       case "pin-create":
         return (
           <PinCreateScreen
             onBack={() => setScreen("face-intro")}
             onDone={(pin) => {
               updateAccount(account.id, { pin, enrolled: true });
-              setJustEnrolled(true);
-              setScreen("success");
+              setScreen("welcome");
             }}
           />
         );
@@ -301,35 +287,18 @@ export default function App() {
           <PinVerifyScreen
             expectedPin={account.pin ?? ""}
             onBack={() => setScreen("verify-choice")}
-            onUseFace={() => setScreen("face-intro")}
-            onSuccess={() => setScreen("success")}
+            onForgot={() => setNotice("Reset PIN belum tersedia di prototype ini. Gunakan verifikasi wajah.")}
+            onSuccess={() => setScreen("welcome")}
           />
         );
-      case "success":
+      case "welcome":
         return (
-          <SuccessScreen
-            title={justEnrolled ? "Akun Anda Siap" : "Verifikasi Berhasil"}
-            message={
-              justEnrolled
-                ? "Wajah dan PIN berhasil didaftarkan. Sesi Anda aktif selama 30 hari di perangkat ini."
-                : "Identitas Anda terverifikasi. Sesi aktif selama 30 hari di perangkat ini."
-            }
-            onContinue={() => {
-              writeSession(account.id, unit);
-              setJustEnrolled(false);
-              setScreen("business-unit");
-            }}
-          />
-        );
-      case "business-unit":
-        return (
-          <BusinessUnitScreen
-            value={unit}
-            onChange={setUnit}
-            onContinue={() => {
-              writeSession(account.id, unit);
-              setScreen("home");
-            }}
+          <WelcomeScreen
+            account={account}
+            unit={unit}
+            onPickUnit={() => setUnitOpen(true)}
+            onBack={logout}
+            onContinue={() => setScreen("home")}
           />
         );
       case "home":
@@ -465,7 +434,7 @@ export default function App() {
       case "quick-simulation":
         return (
           <SimulationScreen
-            lead={QUICK_LEAD}
+            lead={null}
             onNotice={setNotice}
             onBack={() => setScreen("home")}
             onSent={() => setScreen("home")}
@@ -501,16 +470,22 @@ export default function App() {
           <ProfileSheet
             open={profileOpen}
             name={account.name}
-            unit={unit ?? "gmn"}
+            unit={unit}
             onClose={() => setProfileOpen(false)}
             onSwitchUnit={() => {
               setProfileOpen(false);
-              setScreen("business-unit");
+              setUnitOpen(true);
             }}
             onLogout={() => {
               setProfileOpen(false);
               logout();
             }}
+          />
+          <BusinessUnitSheet
+            open={unitOpen}
+            value={unit}
+            onChange={setUnit}
+            onClose={() => setUnitOpen(false)}
           />
           <div className="sr-only" aria-live="polite">
             {screenLabel(screen)}

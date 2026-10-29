@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import {
   AddressBook,
   ArrowLeft,
+  CalendarBlank,
   CaretDown,
   CaretRight,
   Check,
@@ -304,7 +305,7 @@ export function SelectField({
   value: string;
   placeholder: string;
   onClick: () => void;
-  chevron?: "down" | "right";
+  chevron?: "down" | "right" | "calendar";
   disabled?: boolean;
   emphasize?: boolean;
 }) {
@@ -331,6 +332,8 @@ export function SelectField({
         </span>
         {chevron === "down" ? (
           <CaretDown size={16} className="flex-none text-[#4f5963]" />
+        ) : chevron === "calendar" ? (
+          <CalendarBlank size={16} className="flex-none text-[#4f5963]" />
         ) : (
           <CaretRight size={16} className="flex-none text-[#4f5963]" />
         )}
@@ -429,7 +432,7 @@ export function RadioCard({
       onClick={onClick}
       className={cn(
         "flex flex-1 items-center gap-2 rounded-[8px] border p-3 text-left text-[14px] leading-[1.4] text-[#16191c] transition",
-        checked ? "border-[var(--brand-ink)] bg-[var(--brand-soft)]" : "border-[#dfe4ea] bg-white",
+        "border-[#dfe4ea] bg-white",
       )}
     >
       <RadioDot checked={checked} />
@@ -599,8 +602,8 @@ export function BottomNav({
 }
 
 /**
- * Centered extended floating action button. It slides away while the user scrolls
- * down so cards stay readable, and comes back on scroll up or at the end of the list.
+ * Centered extended floating action button. It is pinned to the phone screen
+ * (outside the scrolling content), so it stays put while the list scrolls.
  */
 export function Fab({
   label,
@@ -611,31 +614,16 @@ export function Fab({
   onClick: () => void;
   above?: "nav" | "screen";
 }) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const [hidden, setHidden] = useState(false);
-  useEffect(() => {
-    const scroller = ref.current?.closest(".phone-scroll");
-    if (!scroller) return;
-    let last = scroller.scrollTop;
-    const onScroll = () => {
-      const top = scroller.scrollTop;
-      if (Math.abs(top - last) < 6) return;
-      const atEnd = top + scroller.clientHeight >= scroller.scrollHeight - 24;
-      setHidden(top > last && top > 48 && !atEnd);
-      last = top;
-    };
-    scroller.addEventListener("scroll", onScroll, { passive: true });
-    return () => scroller.removeEventListener("scroll", onScroll);
-  }, []);
-  return (
-    <div className={cn("fab-dock", above === "nav" ? "fab-dock-nav" : "fab-dock-screen")}>
-      <div className="fab-slot">
-        <button ref={ref} type="button" onClick={onClick} data-hidden={hidden} className="fab">
-          <Plus size={20} weight="bold" aria-hidden="true" />
-          {label}
-        </button>
-      </div>
-    </div>
+  const root = useOverlayRoot();
+  if (!root) return null;
+  return createPortal(
+    <div className={cn("fab-float", above === "nav" ? "fab-float-nav" : "fab-float-screen")}>
+      <button type="button" onClick={onClick} className="fab">
+        <Plus size={20} weight="bold" aria-hidden="true" />
+        {label}
+      </button>
+    </div>,
+    root,
   );
 }
 
