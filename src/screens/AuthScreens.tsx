@@ -1,495 +1,632 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { Check, ChevronLeft, LogOut } from "lucide-react";
 import {
-  Field,
-  InlineAlert,
-  MitraLogo,
-  PasswordField,
-  PasswordRules,
-  PinInput,
-  PrimaryButton,
-} from "@/components/primitives";
-import { DEMO } from "@/lib/demo";
+  useEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+import { CheckCircle, Circle, Eye, EyeSlash, Info, WarningCircle } from "@phosphor-icons/react";
+import { MitraMark } from "@/components/primitives";
+import { AppBar, Button, FieldLabel, ResultDialog, TextField } from "@/components/mobile";
+import { cn } from "@/lib/cn";
+import { DEMO_OTP, type Account } from "@/lib/demo";
 
-function PageFooter() {
-  return (
-    <p className="pt-8 text-center text-[13px] leading-5 text-[#6b7280]">
-      V1. Mitra powered by MIT
-    </p>
-  );
+
+const digits = (value: string) => value.replace(/\D/g, "");
+
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-function BackButton({ onClick }: { onClick: () => void }) {
+function maskPhone(phone: string) {
+  const value = `62${digits(phone).replace(/^0/, "")}`;
+  return `${value.slice(0, 3)}${"*".repeat(Math.max(0, value.length - 5))}${value.slice(-2)}`;
+}
+
+function AlertBox({ children }: { children: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="-ml-2.5 grid h-11 w-11 place-items-center rounded-full text-[#151b2b] transition hover:bg-[#f3f4f6]"
-      aria-label="Kembali"
+    <div
+      role="alert"
+      className="card-enter flex items-start gap-2 rounded-[8px] border border-[#f5c2bb] bg-[#fdf1ef] px-3 py-2.5 text-[13px] leading-[1.4] text-[#b42318]"
     >
-      <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-    </button>
-  );
-}
-
-function PageHeader({
-  title,
-  description,
-  onBack,
-}: {
-  title: string;
-  description: string;
-  onBack?: () => void;
-}) {
-  return (
-    <div>
-      {onBack ? <BackButton onClick={onBack} /> : <div className="h-11" />}
-      <h1 className="mt-7 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-        {title}
-      </h1>
-      <p className="mt-2 text-[14px] leading-6 text-[#6b7280]">{description}</p>
+      <WarningCircle size={18} weight="fill" className="mt-px flex-none" aria-hidden="true" />
+      {children}
     </div>
   );
 }
 
-export function LoginScreen({
-  onSuccess,
-  onForgot,
-  forceFail,
+function PasswordInput({
+  label,
+  value,
+  onChange,
+  error,
+  autoComplete,
+  invalid,
 }: {
-  onSuccess: () => void;
-  onForgot: () => void;
-  forceFail: boolean;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  autoComplete: string;
+  invalid?: boolean;
 }) {
-  const [nip, setNip] = useState(DEMO.nip);
-  const [password, setPassword] = useState(DEMO.password);
-  const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [errors, setErrors] = useState<{ nip?: string; password?: string }>({});
+  const [show, setShow] = useState(false);
+  const id = label.toLowerCase().replace(/\s+/g, "-");
+  return (
+    <div>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <div className="relative">
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          className="mfield pr-11"
+          value={value}
+          autoComplete={autoComplete}
+          placeholder="Masukkan kata sandi"
+          data-invalid={error || invalid ? "true" : undefined}
+          aria-invalid={error || invalid ? true : undefined}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <button
+          type="button"
+          onClick={() => setShow((current) => !current)}
+          aria-label={show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+          aria-pressed={show}
+          className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-[#4f5963] transition active:bg-[#f1f3f5]"
+        >
+          {show ? <EyeSlash size={20} /> : <Eye size={20} />}
+        </button>
+      </div>
+      {error ? <p className="mt-1 text-[12px] leading-[1.4] text-[#d73926]">{error}</p> : null}
+    </div>
+  );
+}
 
-  function submit(event?: FormEvent) {
+function Footer() {
+  return (
+    <p className="pb-safe pt-6 text-center text-[13px] leading-5 text-[#45556c]">V1. Mitra powered by MIT</p>
+  );
+}
+
+function StickyAction({ children }: { children: ReactNode }) {
+  return <div className="pb-safe sticky bottom-0 mt-auto bg-white px-6 pt-4">{children}</div>;
+}
+
+function LockIllustration() {
+  return (
+    <svg viewBox="0 0 160 96" className="mx-auto h-[96px] w-[160px]" aria-hidden="true">
+      <defs>
+        <linearGradient id="lock-card" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#e6edfb" />
+          <stop offset="1" stopColor="#f5f8fe" />
+        </linearGradient>
+        <linearGradient id="lock-body" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#3fa6c9" />
+          <stop offset="1" stopColor="#1f7aa1" />
+        </linearGradient>
+        <linearGradient id="lock-shackle" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#7cc8e2" />
+          <stop offset="1" stopColor="#3b9ec4" />
+        </linearGradient>
+      </defs>
+      <rect x="6" y="22" width="148" height="70" rx="8" fill="url(#lock-card)" />
+      <path
+        d="M0 96c6-10 18-12 26-6 6-8 20-8 26 0h56c6-8 20-8 26 0 8-6 20-4 26 6Z"
+        fill="#fff"
+        opacity="0.95"
+      />
+      <path
+        d="M58 44V30a22 22 0 0 1 44 0v14"
+        fill="none"
+        stroke="url(#lock-shackle)"
+        strokeWidth="9"
+        strokeLinecap="round"
+      />
+      <path d="M62 30a18 18 0 0 1 14-17" fill="none" stroke="#fff" strokeOpacity="0.5" strokeWidth="3" strokeLinecap="round" />
+      <rect x="44" y="40" width="72" height="54" rx="7" fill="url(#lock-body)" />
+      <path d="M50 46h22l-14 42h-8Z" fill="#fff" opacity="0.14" />
+      <circle cx="80" cy="62" r="7" fill="#155f80" />
+      <path d="M76.5 64h7l1.8 13h-10.6Z" fill="#155f80" />
+    </svg>
+  );
+}
+
+/* ---------------------------------- Login ---------------------------------- */
+
+export function LoginScreen({
+  onLoggedIn,
+  onForgot,
+  accounts,
+}: {
+  onLoggedIn: (account: Account, changePassword: boolean) => void;
+  onForgot: () => void;
+  accounts: Account[];
+}) {
+  const [userId, setUserId] = useState("");
+  const [matched, setMatched] = useState<Account | null>(null);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [askChange, setAskChange] = useState(false);
+  const ready = userId.trim().length > 0 && password.length > 0;
+
+  async function submit(event?: FormEvent) {
     event?.preventDefault();
-    if (loading) return;
-    const next: typeof errors = {};
-    if (!nip.trim()) next.nip = "Masukkan NIP atau nomor telepon.";
-    else if (!/^\+?[\d\s-]{4,20}$/.test(nip.trim()))
-      next.nip = "Masukkan NIP atau nomor telepon yang valid.";
-    if (!password) next.password = "Masukkan kata sandi.";
-    else if (password.length < 6) next.password = "Kata sandi minimal 6 karakter.";
-    setErrors(next);
-    setFormError("");
-    if (Object.keys(next).length > 0) return;
+    if (!ready || loading) return;
     setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
-      if (forceFail) {
-        setFormError("NIP/nomor telepon atau kata sandi tidak sesuai. Periksa kembali.");
-        return;
-      }
-      onSuccess();
-    }, 950);
+    setFailed(false);
+    await wait(900);
+    setLoading(false);
+    const id = digits(userId);
+    const account = accounts.find((item) => item.nik === id || item.phone === id);
+    if (!account || password !== account.password) {
+      setFailed(true);
+      return;
+    }
+    // First login uses a default password, so suggest changing it.
+    if (!account.enrolled) {
+      setMatched(account);
+      setAskChange(true);
+      return;
+    }
+    onLoggedIn(account, false);
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
-      <div className="flex flex-1 flex-col justify-center pb-6">
-        <MitraLogo tagline className="pt-6" />
+    <div className="flex min-h-full flex-col bg-white pt-status">
+      <form onSubmit={submit} className="flex flex-1 flex-col justify-center px-6 py-10" noValidate>
+        <div className="auth-logo flex flex-col items-center text-center">
+          <div className="flex items-center gap-3">
+            <MitraMark size={46} />
+            <span className="text-[36px] font-extrabold italic leading-none tracking-[0.02em] text-[#151b2b]">
+              MITRA
+            </span>
+          </div>
+          <p className="mt-3 text-[14px] leading-5 text-[#45556c]">MIT Relationship &amp; Activity Tracker</p>
+        </div>
 
-        <form onSubmit={submit} className="mt-10" noValidate>
-          <Field
-            label="NIP / Nomor telepon"
-            value={nip}
-            onChange={(event) => {
-              setNip(event.target.value);
-              setErrors((current) => ({ ...current, nip: undefined }));
-              setFormError("");
-            }}
-            error={errors.nip}
-            inputMode="tel"
+        <h1 className="sr-only">Masuk ke MITRA</h1>
+
+        <div className="mt-10 flex flex-col gap-4">
+          {failed ? <AlertBox>Nomor atau kata sandi salah, silahkan coba lagi.</AlertBox> : null}
+          <TextField
+            label="NIK / Nomor HP"
+            inputMode="numeric"
             autoComplete="username"
-            placeholder="Masukkan NIP / Nomor telepon"
+            placeholder="Masukkan NIK atau nomor HP"
+            value={userId}
+            data-invalid={failed ? "true" : undefined}
+            onChange={(event) => {
+              setUserId(event.target.value);
+              setFailed(false);
+            }}
           />
-          <div className="mt-5">
-            <PasswordField
+          <div>
+            <PasswordInput
               label="Kata Sandi"
               value={password}
+              autoComplete="current-password"
+              invalid={failed}
               onChange={(value) => {
                 setPassword(value);
-                setErrors((current) => ({ ...current, password: undefined }));
-                setFormError("");
+                setFailed(false);
               }}
-              error={errors.password}
-              autoComplete="current-password"
-              onEnter={() => submit()}
-              placeholder="Masukkan Kata Sandi"
             />
+            <button
+              type="button"
+              onClick={onForgot}
+              className="mt-2 text-[13px] font-medium leading-5 text-[#16191c] underline underline-offset-2 transition active:text-[var(--brand-ink)]"
+            >
+              Lupa Kata Sandi?
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onForgot}
-            className="mt-0 inline-flex min-h-11 items-center text-left text-[13px] leading-5 text-[#151b2b] underline decoration-[#151b2b] underline-offset-2"
-          >
-            Lupa Kata Sandi?
-          </button>
+        </div>
 
-          {formError ? <InlineAlert className="mt-5">{formError}</InlineAlert> : null}
+        <Button type="submit" className="mt-6 w-full" disabled={!ready} loading={loading}>
+          Masuk
+        </Button>
 
-          <PrimaryButton
-            type="submit"
-            className="mt-8"
-            loading={loading}
-            loadingLabel="Memeriksa akun…"
-          >
-            Masuk
-          </PrimaryButton>
-        </form>
-      </div>
+        <div className="mt-6 rounded-[8px] border border-dashed border-[var(--brand-line)] bg-[var(--brand-soft)] p-3">
+          <p className="flex items-center gap-2 text-[12px] font-semibold leading-[1.4] text-[var(--brand-ink)]">
+            <Info size={16} weight="fill" aria-hidden="true" />
+            Akun demo · ketuk untuk isi otomatis
+          </p>
+          <div className="mt-2 flex flex-col gap-2">
+            {accounts.map((account) => (
+              <button
+                key={account.id}
+                type="button"
+                onClick={() => {
+                  setUserId(account.phone);
+                  setPassword(account.password);
+                  setFailed(false);
+                }}
+                className="rounded-[6px] bg-white px-3 py-2 text-left transition active:scale-[0.99]"
+              >
+                <span className="block text-[12px] font-medium leading-[1.4] text-[#16191c]">{account.label}</span>
+                <span className="block text-[12px] leading-[1.4] text-[#4f5963]">
+                  {account.phone} / {account.password}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </form>
 
-      <PageFooter />
+      <Footer />
+
+      <ResultDialog
+        open={askChange}
+        tone="success"
+        title="Ubah Kata Sandi?"
+        message="Demi menjaga keamanan transaksi Anda. Segera ubah password Anda terlebih dahulu."
+      >
+        <Button className="w-full" onClick={() => matched && onLoggedIn(matched, true)}>
+          Ubah Sekarang
+        </Button>
+        <Button variant="outline" className="w-full" onClick={() => matched && onLoggedIn(matched, false)}>
+          Nanti Saja
+        </Button>
+      </ResultDialog>
     </div>
   );
 }
 
+/* ----------------------------- Forgot: phone ------------------------------- */
+
 export function ForgotScreen({
+  accounts,
   onBack,
   onSent,
 }: {
+  accounts: Account[];
   onBack: () => void;
-  onSent: (identifier: string) => void;
+  onSent: (phone: string) => void;
 }) {
-  const [identifier, setIdentifier] = useState(DEMO.nip);
-  const [error, setError] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!identifier.trim()) {
-      setError("Masukkan NIP atau nomor telepon.");
-      return;
-    }
-    if (!/^\+?[\d\s-]{4,20}$/.test(identifier.trim())) {
-      setError("Masukkan NIP atau nomor telepon yang valid.");
-      return;
-    }
-    setError("");
+  async function submit(event?: FormEvent) {
+    event?.preventDefault();
+    if (!phone.trim() || loading) return;
     setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
-      setSent(true);
-      window.setTimeout(() => onSent(identifier), 700);
-    }, 800);
+    await wait(800);
+    setLoading(false);
+    if (!accounts.some((account) => account.phone === digits(phone))) {
+      setError("Nomor tidak terdaftar");
+      return;
+    }
+    onSent(digits(phone));
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
-      <PageHeader
-        title="Lupa kata sandi"
-        description="Masukkan NIP atau nomor telepon terdaftar. Kode verifikasi dikirim lewat SMS."
-        onBack={onBack}
-      />
-
-      <form onSubmit={submit} className="mt-8" noValidate>
-        <Field
-          label="NIP / Nomor telepon"
-          value={identifier}
-          onChange={(event) => {
-            setIdentifier(event.target.value);
-            setError("");
-          }}
-          error={error}
-          inputMode="tel"
-          autoComplete="username"
-          placeholder="Masukkan NIP / Nomor telepon"
-        />
-        <p className="mt-3 text-[12px] leading-[18px] text-[#6b7280]">
-          Demi keamanan, kami tidak menampilkan apakah akun terdaftar.
+    <form onSubmit={submit} className="flex min-h-full flex-col bg-white pt-status" noValidate>
+      <AppBar onBack={onBack} />
+      <div className="px-6 pt-4">
+        <LockIllustration />
+        <h1 className="mt-8 text-[24px] font-semibold leading-[1.2] text-[#16191c]">Atur Ulang Kata Sandi</h1>
+        <p className="mt-2 text-[14px] leading-[1.4] text-[#4f5963]">
+          Masukkan nomor handphone terdaftar. Kami akan mengirim kode verifikasi ke kontak yang terdaftar.
         </p>
-        {sent ? (
-          <p className="mt-5 text-[13px] leading-5 text-[#24663f]">
-            Kode verifikasi dikirim melalui SMS ke nomor terdaftar.
-          </p>
-        ) : null}
-        <PrimaryButton
-          type="submit"
-          className="mt-7"
-          loading={loading}
-          loadingLabel="Mengirim kode…"
-        >
-          Kirim kode verifikasi
-        </PrimaryButton>
-      </form>
-
-      <button
-        type="button"
-        onClick={onBack}
-        className="mx-auto mt-2 inline-flex min-h-11 items-center text-[13px] leading-5 text-[#151b2b] underline underline-offset-2"
-      >
-        Kembali masuk
-      </button>
-      <div className="flex-1" />
-      <PageFooter />
-    </div>
+        <div className="mt-5">
+          <TextField
+            label="Nomor Handphone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="Contoh: 081234567890"
+            value={phone}
+            error={error}
+            onChange={(event) => {
+              setPhone(event.target.value);
+              setError("");
+            }}
+          />
+          {!error ? (
+            <p className="mt-2 text-[12px] leading-[1.4] text-[#65737f]">
+              Nomor demo: <span className="font-medium text-[var(--brand-ink)]">{accounts[1].phone}</span>
+            </p>
+          ) : null}
+        </div>
+      </div>
+      <StickyAction>
+        <Button type="submit" className="w-full" disabled={!phone.trim()} loading={loading}>
+          Kirim Kode Verifikasi
+        </Button>
+      </StickyAction>
+    </form>
   );
 }
 
+/* ------------------------------- Forgot: OTP ------------------------------- */
+
+const OTP_LENGTH = 6;
+const RESEND_SECONDS = 30;
+
 export function OtpScreen({
+  phone,
   onBack,
   onVerified,
+  onNotice,
 }: {
+  phone: string;
   onBack: () => void;
   onVerified: () => void;
+  onNotice: (message: string) => void;
 }) {
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
+  const [code, setCode] = useState<string[]>(() => Array(OTP_LENGTH).fill(""));
+  const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [seconds, setSeconds] = useState(30);
-  const [focusRequest, setFocusRequest] = useState(0);
+  const [seconds, setSeconds] = useState(RESEND_SECONDS);
+  const inputs = useRef<(HTMLInputElement | null)[]>([]);
+  const value = code.join("");
 
   useEffect(() => {
     if (seconds <= 0) return;
-    const timer = window.setInterval(() => setSeconds((value) => value - 1), 1000);
-    return () => window.clearInterval(timer);
+    const timer = window.setTimeout(() => setSeconds((current) => current - 1), 1000);
+    return () => window.clearTimeout(timer);
   }, [seconds]);
 
-  function verify(value = code) {
-    if (value.length < 6) {
-      setError("Masukkan 6 angka kode verifikasi.");
+  useEffect(() => {
+    // Runs after the app's heading focus so the keyboard opens on the first box.
+    const timer = window.setTimeout(() => inputs.current[0]?.focus(), 80);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  async function verify(entered: string) {
+    if (entered.length < OTP_LENGTH || loading) return;
+    setLoading(true);
+    await wait(700);
+    setLoading(false);
+    if (entered !== DEMO_OTP) {
+      setError(true);
       return;
     }
-    setError("");
-    setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
-      if (value !== DEMO.otp) {
-        setCode("");
-        setError("Kode verifikasi tidak sesuai. Periksa kembali.");
-        setFocusRequest((current) => current + 1);
-        return;
-      }
-      onVerified();
-    }, 800);
+    onVerified();
+  }
+
+  function fill(start: number, chars: string) {
+    // After a wrong code, the next keystroke starts a fresh attempt.
+    const next = error ? Array<string>(OTP_LENGTH).fill("") : [...code];
+    let index = error ? 0 : start;
+    for (const char of chars) {
+      if (index >= OTP_LENGTH) break;
+      next[index] = char;
+      index += 1;
+    }
+    setCode(next);
+    setError(false);
+    inputs.current[Math.min(index, OTP_LENGTH - 1)]?.focus();
+    if (next.every(Boolean)) void verify(next.join(""));
+  }
+
+  function onKey(index: number, event: KeyboardEvent<HTMLInputElement>) {
+    if (/^\d$/.test(event.key)) {
+      // Handle digits here so retyping the same digit still advances.
+      event.preventDefault();
+      fill(index, event.key);
+    } else if (event.key === "Backspace" && !code[index] && index > 0) {
+      const next = [...code];
+      next[index - 1] = "";
+      setCode(next);
+      inputs.current[index - 1]?.focus();
+      event.preventDefault();
+    } else if (event.key === "ArrowLeft" && index > 0) {
+      inputs.current[index - 1]?.focus();
+    } else if (event.key === "ArrowRight" && index < OTP_LENGTH - 1) {
+      inputs.current[index + 1]?.focus();
+    }
+  }
+
+  function onPaste(index: number, event: ClipboardEvent<HTMLInputElement>) {
+    const pasted = digits(event.clipboardData.getData("text"));
+    if (!pasted) return;
+    event.preventDefault();
+    fill(index, pasted);
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
-      <PageHeader
-        title="Masukkan kode verifikasi"
-        description={`Kode 6 angka dikirim melalui SMS ke ${DEMO.maskedPhone}.`}
-        onBack={onBack}
-      />
+    <div className="flex min-h-full flex-col bg-white pt-status">
+      <AppBar onBack={onBack} />
+      <div className="px-6 pt-4">
+        <h1 className="text-[24px] font-semibold leading-[1.2] text-[#16191c]">Masukkan Kode Verifikasi</h1>
+        <p className="mt-2 text-[14px] leading-[1.4] text-[#4f5963]">
+          Kode 6 angka dikirim ke <span className="font-medium text-[#16191c]">{maskPhone(phone)}</span>
+        </p>
 
-      <div className="mt-8">
-        <PinInput
-          value={code}
-          onChange={(value) => {
-            setCode(value);
-            setError("");
-          }}
-          label="Kode verifikasi"
-          invalid={Boolean(error)}
-          autoFocus
-          autoComplete="one-time-code"
-          errorId="otp-error"
-          focusRequest={focusRequest}
-          onComplete={verify}
-        />
-        <p className="mt-4 text-center text-[12px] leading-[18px] text-[#6b7280]">
-          Kode demo <span className="font-semibold text-[#151b2b]">123456</span>
+        {error ? (
+          <div className="mt-5">
+            <AlertBox>Kode verifikasi tidak sesuai. Periksa kembali.</AlertBox>
+          </div>
+        ) : null}
+
+        <div className={cn("mt-6 flex justify-between gap-2", error && "otp-shake")} role="group" aria-label="Kode verifikasi">
+          {code.map((char, index) => (
+            <input
+              key={index}
+              ref={(node) => {
+                inputs.current[index] = node;
+              }}
+              value={char}
+              inputMode="numeric"
+              autoComplete={index === 0 ? "one-time-code" : "off"}
+              maxLength={1}
+              aria-label={`Digit ${index + 1}`}
+              data-invalid={error ? "true" : undefined}
+              data-filled={char ? "true" : undefined}
+              className="otp-box"
+              onFocus={(event) => event.target.select()}
+              onKeyDown={(event) => onKey(index, event)}
+              onPaste={(event) => onPaste(index, event)}
+              onChange={(event) => {
+                const entered = digits(event.target.value);
+                if (!entered) {
+                  const next = [...code];
+                  next[index] = "";
+                  setCode(next);
+                  return;
+                }
+                fill(index, entered.slice(-1));
+              }}
+            />
+          ))}
+        </div>
+
+        <p className="mt-5 text-[13px] leading-[1.5] text-[#4f5963]">
+          Jika tidak menerima pesan silakan kirim ulang{" "}
+          {seconds > 0 ? (
+            <span className="font-medium tabular-nums text-[#16191c]">
+              00:{String(seconds).padStart(2, "0")} detik
+            </span>
+          ) : (
+            <button
+              type="button"
+              className="font-semibold text-[var(--brand-ink)] underline underline-offset-2"
+              onClick={() => {
+                setSeconds(RESEND_SECONDS);
+                setCode(Array(OTP_LENGTH).fill(""));
+                setError(false);
+                inputs.current[0]?.focus();
+                onNotice(`Kode verifikasi baru dikirim ke ${maskPhone(phone)}.`);
+              }}
+            >
+              Kirim Ulang
+            </button>
+          )}
+        </p>
+        <p className="mt-2 text-[12px] leading-[1.4] text-[#65737f]">
+          Kode demo: <span className="font-medium text-[var(--brand-ink)]">{DEMO_OTP}</span>
         </p>
       </div>
-
-      {error ? (
-        <InlineAlert id="otp-error" className="mt-5">
-          {error}
-        </InlineAlert>
-      ) : null}
-
-      <PrimaryButton
-        type="button"
-        className="mt-7"
-        onClick={() => verify()}
-        loading={loading}
-        loadingLabel="Memeriksa kode…"
-      >
-        Verifikasi kode
-      </PrimaryButton>
-
-      <div className="mt-5 text-center text-[13px] leading-5 text-[#6b7280]">
-        {seconds > 0 ? (
-          <>
-            Kirim ulang kode dalam{" "}
-            <span className="font-medium tabular-nums text-[#151b2b]">
-              00:{String(seconds).padStart(2, "0")}
-            </span>
-          </>
-        ) : (
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center font-medium text-[#151b2b] underline underline-offset-2"
-            onClick={() => {
-              setSeconds(30);
-              setCode("");
-              setError("");
-              setFocusRequest((current) => current + 1);
-            }}
-          >
-            Kirim ulang kode
-          </button>
-        )}
-      </div>
-      <div className="flex-1" />
-      <PageFooter />
+      <StickyAction>
+        <Button
+          className="w-full"
+          disabled={value.length < OTP_LENGTH}
+          loading={loading}
+          onClick={() => void verify(value)}
+        >
+          Verifikasi
+        </Button>
+      </StickyAction>
     </div>
   );
 }
 
-export function ResetPasswordScreen({
+/* ----------------------------- New password -------------------------------- */
+
+const RULES = [
+  { label: "Huruf kapital", test: (value: string) => /[A-Z]/.test(value) },
+  { label: "Angka", test: (value: string) => /\d/.test(value) },
+  { label: "Huruf kecil", test: (value: string) => /[a-z]/.test(value) },
+  { label: "Spesial karakter", test: (value: string) => /[^A-Za-z0-9]/.test(value) },
+];
+
+export function NewPasswordScreen({
+  mode,
   onBack,
-  onSaved,
-  forceChange = false,
-  defaultPassword = false,
+  onDone,
 }: {
+  mode: "reset" | "change";
   onBack: () => void;
-  onSaved: () => void;
-  forceChange?: boolean;
-  defaultPassword?: boolean;
+  onDone: (password: string) => void;
 }) {
   const [password, setPassword] = useState("");
-  const [confirmation, setConfirmation] = useState("");
-  const [errors, setErrors] = useState<{ password?: string; confirmation?: string }>({});
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const longEnough = password.length >= 8;
+  const strong = longEnough && RULES.every((rule) => rule.test(password));
+  const mismatch = confirm.length > 0 && confirm !== password;
+  const ready = strong && confirm === password;
 
-  function submit(event?: FormEvent) {
+  async function submit(event?: FormEvent) {
     event?.preventDefault();
-    const next: typeof errors = {};
-    if (password.length < 8) next.password = "Kata sandi minimal 8 karakter.";
-    else if (!/[a-zA-Z]/.test(password) || !/\d/.test(password))
-      next.password = "Gunakan kombinasi huruf dan angka.";
-    if (confirmation !== password) next.confirmation = "Konfirmasi belum sama.";
-    setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    setTouched(true);
+    if (!ready || loading) return;
     setLoading(true);
-    window.setTimeout(() => {
-      setLoading(false);
-      onSaved();
-    }, 900);
+    await wait(900);
+    setLoading(false);
+    setDone(true);
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-14">
-      <PageHeader
-        title={forceChange ? "Ganti kata sandi default" : "Buat kata sandi baru"}
-        description="Gunakan kata sandi yang kuat dan belum pernah dipakai di MITRA."
-        onBack={forceChange ? undefined : onBack}
-      />
+    <form onSubmit={submit} className="flex min-h-full flex-col bg-white pt-status" noValidate>
+      <AppBar onBack={onBack} />
+      <div className="px-6 pt-4">
+        <h1 className="text-[24px] font-semibold leading-[1.2] text-[#16191c]">Buat Kata Sandi Baru</h1>
+        <p className="mt-2 text-[14px] leading-[1.4] text-[#4f5963]">
+          Gunakan kata sandi yang kuat dan belum pernah dipakai di MITRA.
+        </p>
 
-      {defaultPassword ? (
-        <div className="mt-6 border-l-2 border-[#f9a11f] bg-[#fffaf0] px-3.5 py-3 text-[12px] leading-[18px] text-[#8a4b08]">
-          Kata sandi akun ini baru direset oleh admin. Buat kata sandi pribadi sebelum
-          melanjutkan.
-        </div>
-      ) : null}
-
-      <form onSubmit={submit} className="mt-7" noValidate>
-        <PasswordField
-          label="Kata Sandi Baru"
-          value={password}
-          onChange={(value) => {
-            setPassword(value);
-            setErrors((current) => ({ ...current, password: undefined }));
-          }}
-          error={errors.password}
-          autoComplete="new-password"
-          placeholder="Minimal 8 karakter"
-        />
-        <div className="mt-5">
-          <PasswordField
+        <div className="mt-6 flex flex-col gap-4">
+          <div>
+            <PasswordInput
+              label="Kata Sandi Baru"
+              value={password}
+              autoComplete="new-password"
+              onChange={setPassword}
+            />
+            <div className="mt-3 rounded-[8px] bg-[#f8fafc] p-3">
+              <p className={cn("text-[12px] leading-[1.4]", longEnough ? "text-[#13a06b]" : "text-[#4f5963]")}>
+                Password harus berisi minimal 8 karakter dan kombinasi dari:
+              </p>
+              <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                {RULES.map((rule) => {
+                  const met = rule.test(password);
+                  return (
+                    <li
+                      key={rule.label}
+                      className={cn(
+                        "flex items-center gap-1.5 text-[12px] leading-[1.4] transition-colors",
+                        met ? "text-[#13a06b]" : "text-[#65737f]",
+                      )}
+                    >
+                      {met ? (
+                        <CheckCircle size={16} weight="fill" aria-hidden="true" />
+                      ) : (
+                        <Circle size={16} aria-hidden="true" />
+                      )}
+                      {rule.label}
+                      <span className="sr-only">{met ? "terpenuhi" : "belum terpenuhi"}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+          <PasswordInput
             label="Ulangi Kata Sandi Baru"
-            value={confirmation}
-            onChange={(value) => {
-              setConfirmation(value);
-              setErrors((current) => ({ ...current, confirmation: undefined }));
-            }}
-            error={errors.confirmation}
+            value={confirm}
             autoComplete="new-password"
-            placeholder="Masukkan ulang kata sandi"
-            onEnter={() => submit()}
+            onChange={setConfirm}
+            error={mismatch || (touched && !confirm) ? "Password tidak sama, silakan cek kembali!" : undefined}
           />
         </div>
-        <PasswordRules password={password} confirmation={confirmation} />
-        <PrimaryButton
-          type="submit"
-          className="mt-7"
-          loading={loading}
-          loadingLabel="Menyimpan…"
-        >
-          {forceChange ? "Simpan dan lanjutkan" : "Simpan kata sandi"}
-        </PrimaryButton>
-      </form>
-      <div className="flex-1" />
-      {forceChange ? <ForceChangeHeader onLogout={onBack} /> : <PageFooter />}
-    </div>
-  );
-}
-
-export function ForgotDoneScreen({ onLogin }: { onLogin: () => void }) {
-  return (
-    <div className="flex min-h-full flex-col bg-white px-6 pb-6 pt-16">
-      <div className="flex flex-1 flex-col items-center justify-center pb-10 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-full bg-[#eaf7f0] text-[#24663f]">
-          <Check className="h-7 w-7" strokeWidth={2.4} aria-hidden="true" />
-        </span>
-        <h1 className="mt-7 text-[26px] font-semibold leading-8 tracking-[-0.02em] text-[#151b2b]">
-          Kata sandi diperbarui
-        </h1>
-        <p className="mt-2 max-w-[290px] text-[14px] leading-6 text-[#667085]">
-          Masuk kembali dengan kata sandi baru Anda.
-        </p>
-        <PrimaryButton type="button" className="mt-8" onClick={onLogin}>
-          Kembali masuk
-        </PrimaryButton>
       </div>
-      <PageFooter />
-    </div>
-  );
-}
+      <StickyAction>
+        <Button type="submit" className="w-full" disabled={!ready} loading={loading}>
+          Atur Ulang Kata Sandi
+        </Button>
+      </StickyAction>
 
-export function ForceChangeHeader({ onLogout }: { onLogout: () => void }) {
-  const [confirming, setConfirming] = useState(false);
-  if (!confirming) {
-    return (
-      <button
-        type="button"
-        onClick={() => setConfirming(true)}
-        className="mx-auto flex min-h-11 items-center gap-1.5 text-[13px] leading-5 text-[#667085]"
+      <ResultDialog
+        open={done}
+        tone="success"
+        title="Kata Sandi Diperbarui"
+        message={
+          mode === "reset"
+            ? "Masuk kembali dengan kata sandi baru Anda."
+            : "Kata sandi baru sudah aktif. Lanjutkan dengan mendaftarkan wajah Anda."
+        }
       >
-        <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
-        Keluar dari akun
-      </button>
-    );
-  }
-  return (
-    <div className="rounded-[12px] border border-[#e5e7eb] bg-[#f8fafc] p-3 text-center">
-      <p className="text-[12px] leading-[18px] text-[#151b2b]">
-        Keluar sekarang? Anda harus masuk lagi untuk membuat kata sandi baru.
-      </p>
-      <div className="mt-2 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setConfirming(false)}
-          className="min-h-11 flex-1 rounded-[8px] border border-[#dfe4ea] bg-white text-[13px] font-medium text-[#151b2b]"
-        >
-          Batal
-        </button>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="min-h-11 flex-1 rounded-[8px] bg-[#2852a3] text-[13px] font-medium text-white"
-        >
-          Ya, keluar
-        </button>
-      </div>
-    </div>
+        <Button className="w-full" onClick={() => onDone(password)}>
+          {mode === "reset" ? "Login Ulang" : "Lanjutkan"}
+        </Button>
+      </ResultDialog>
+    </form>
   );
 }

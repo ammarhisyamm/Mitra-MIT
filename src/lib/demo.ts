@@ -1,181 +1,131 @@
-export type Mode = "first" | "returning";
-export type BusinessUnit = "sma" | "gmn" | "gms";
-export type Scenario = "normal" | "default-password";
+export type AccountId = "new" | "returning";
 
-export type Screen =
-  | "checking"
-  | "login"
-  | "verify-choice"
-  | "verify-pin"
-  | "face-intro"
-  | "face-camera"
-  | "face-processing"
-  | "face-review"
-  | "face-check"
-  | "face-failed"
-  | "pin-create"
-  | "success"
-  | "unit"
-  | "home"
-  | "forgot"
-  | "forgot-otp"
-  | "forgot-reset"
-  | "forgot-done"
-  | "force-change"
-  | "activity"
-  | "activity-type"
-  | "activity-schedule"
-  | "activity-created"
-  | "activity-checkin"
-  | "activity-leads"
-  | "activity-checkout"
-  | "activity-done";
-
-export const DEMO = {
-  name: "Rani Prameswari",
-  firstName: "Rani",
-  role: "Sales Officer",
-  nip: "240812",
-  phone: "0812-8842-9901",
-  maskedPhone: "0812\u00A0••••\u00A09901",
-  pin: "731904",
-  otp: "123456",
-  password: "mitra2026",
-};
-
-export type ActivityKind = "kunjungan" | "prospek" | "followup";
-export type ActivityArea = "inside" | "outside";
-
-export type ActivityDraft = {
-  kind: ActivityKind;
-  area: ActivityArea;
+export type Account = {
+  id: AccountId;
+  label: string;
   name: string;
-  locationName: string;
-  address: string;
-  village: string;
-  region: string;
-  time: string;
-};
-
-export type ActivityLead = {
-  name: string;
+  nik: string;
   phone: string;
-  note: string;
+  password: string;
+  /** null until the user sets up a PIN on first login. */
+  pin: string | null;
+  enrolled: boolean;
 };
 
-export const ACTIVITY_LEADS: ActivityLead[] = [
-  { name: "Dewi Lestari", phone: "0812 7788 1020", note: "Tertarik gadai emas" },
-  { name: "Bambang Wijaya", phone: "0813 9021 4477", note: "Minta simulasi pembiayaan" },
-  { name: "Siti Rahmawati", phone: "0821 3344 8890", note: "Follow-up minggu depan" },
+/** Dummy accounts for the prototype. Any other combination fails. */
+export const DEMO_ACCOUNTS: Account[] = [
+  {
+    id: "new",
+    label: "Akun baru · login pertama",
+    name: "John Doe",
+    nik: "240901",
+    phone: "081200000001",
+    password: "Mitra@2026",
+    pin: null,
+    enrolled: false,
+  },
+  {
+    id: "returning",
+    label: "Akun lama · sesi 30 hari berakhir",
+    name: "Rani Prameswari",
+    nik: "240812",
+    phone: "081288429901",
+    password: "Mitra@2026",
+    pin: "123456",
+    enrolled: true,
+  },
 ];
 
-export function defaultActivityName(kind: ActivityKind) {
-  if (kind === "prospek") return "Pencarian prospek baru";
-  if (kind === "followup") return "Follow-up prospek";
-  return "Kunjungan mitra binaan";
-}
+export const DEMO_OTP = "123456";
+export const SESSION_DAYS = 30;
 
-export function defaultActivityTime() {
-  const date = new Date(Date.now() + 30 * 60 * 1000);
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${hours}:${minutes}`;
-}
+export type BusinessUnit = "mit" | "gmn" | "gms";
 
-export type UnitDefinition = {
+/** Brand themes shown to the client. MIT is the default look. */
+export const BUSINESS_UNITS: {
   id: BusinessUnit;
   short: string;
   name: string;
-  description: string;
+  tagline: string;
   color: string;
-  soft: string;
-  ink: string;
-};
-
-export const UNITS: UnitDefinition[] = [
+}[] = [
   {
-    id: "sma",
-    short: "SMA",
-    name: "Branding SMA",
-    description: "Sales & marketing agent",
+    id: "mit",
+    short: "MIT",
+    name: "MIT",
+    tagline: "Tema default (biru)",
     color: "#2852a3",
-    soft: "#edf3fd",
-    ink: "#1c3d7f",
   },
   {
     id: "gmn",
     short: "GMN",
-    name: "GMN",
-    description: "Mitra penjualan gadai",
-    color: "#0e9f6e",
-    soft: "#e9f8f1",
-    ink: "#086c4b",
+    name: "Gadai Mas Nusantara",
+    tagline: "Tema biru muda",
+    color: "#27a1d7",
   },
   {
     id: "gms",
     short: "GMS",
-    name: "GMS",
-    description: "Mitra penjualan syariah",
-    color: "#1f8a70",
-    soft: "#e8f6f2",
-    ink: "#14614f",
+    name: "Gadai Mulia Sejahtera",
+    tagline: "Tema kuning",
+    color: "#f2b705",
   },
 ];
 
-export function getUnit(id: BusinessUnit) {
-  return UNITS.find((unit) => unit.id === id) ?? UNITS[1];
-}
-
-export const FACE_SCREENS: Screen[] = [
-  "face-intro",
-  "face-camera",
-  "face-processing",
-  "face-review",
-  "face-check",
-  "face-failed",
-];
-
-export const PIN_SCREENS: Screen[] = ["pin-create", "verify-pin"];
-
-export const AUTH_SCREENS: Screen[] = [
-  "login",
-  "forgot",
-  "forgot-otp",
-  "forgot-reset",
-  "forgot-done",
-  "force-change",
-  "checking",
-];
+export type Screen =
+  | "checking"
+  | "login"
+  | "forgot"
+  | "forgot-otp"
+  | "forgot-reset"
+  | "change-password"
+  | "verify-choice"
+  | "verify-pin"
+  | "face-intro"
+  | "face-camera"
+  | "face-scan"
+  | "face-verifying"
+  | "face-error"
+  | "pin-create"
+  | "welcome"
+  | "home"
+  | "activity"
+  | "activity-create"
+  | "activity-map"
+  | "activity-camera"
+  | "activity-detail"
+  | "lead-add"
+  | "lead-verify"
+  | "lead-simulation"
+  | "quick-simulation";
 
 export function screenLabel(screen: Screen) {
   const labels: Record<Screen, string> = {
-    checking: "Memeriksa sesi",
+    checking: "Memuat",
     login: "Masuk",
-    "verify-choice": "Pilih verifikasi",
-    "verify-pin": "Verifikasi PIN",
-    "face-intro": "Pengantar wajah",
-    "face-camera": "Ambil foto",
-    "face-processing": "Menganalisis foto",
-    "face-review": "Tinjau foto",
-    "face-check": "Memverifikasi wajah",
-    "face-failed": "Verifikasi gagal",
-    "pin-create": "Buat PIN",
-    success: "Akun siap",
-    unit: "Unit kerja",
-    home: "Beranda unit",
-    forgot: "Lupa kata sandi",
-    "forgot-otp": "Kode verifikasi",
-    "forgot-reset": "Kata sandi baru",
-    "forgot-done": "Kata sandi diperbarui",
-    "force-change": "Ganti kata sandi default",
+    forgot: "Atur Ulang Kata Sandi",
+    "forgot-otp": "Kode Verifikasi",
+    "forgot-reset": "Buat Kata Sandi Baru",
+    "change-password": "Ubah Kata Sandi",
+    "verify-choice": "Verifikasi Identitas",
+    "verify-pin": "Masukkan PIN",
+    "face-intro": "Verifikasi Wajah",
+    "face-camera": "Ambil Foto Wajah",
+    "face-scan": "Memindai Wajah",
+    "face-verifying": "Memverifikasi Wajah",
+    "face-error": "Verifikasi Wajah Gagal",
+    "pin-create": "Buat PIN Baru",
+    welcome: "Selamat Datang",
+    home: "Beranda",
     activity: "Aktivitas",
-    "activity-type": "Buat aktivitas",
-    "activity-schedule": "Detail aktivitas",
-    "activity-created": "Aktivitas dibuat",
-    "activity-checkin": "Check-in aktivitas",
-    "activity-leads": "Input leads",
-    "activity-checkout": "Checkout",
-    "activity-done": "Aktivitas selesai",
+    "activity-create": "Buat Aktivitas",
+    "activity-map": "Pilih Lokasi di Peta",
+    "activity-camera": "Foto Kegiatan",
+    "activity-detail": "Detail Aktivitas",
+    "lead-add": "Tambah Leads Baru",
+    "lead-verify": "Verifikasi Nomor WhatsApp",
+    "lead-simulation": "Simulasi Gadai",
+    "quick-simulation": "Simulasi Gadai",
   };
   return labels[screen];
 }
