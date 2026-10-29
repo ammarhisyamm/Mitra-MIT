@@ -17,6 +17,7 @@ import {
   ClipboardText,
   House,
   MagnifyingGlass,
+  Plus,
   SlidersHorizontal,
   User,
   Warning,
@@ -570,7 +571,7 @@ export function BottomNav({
     { id: "profile", label: "Profile", icon: User, onClick: () => onSoon("Profile") },
   ];
   return (
-    <nav className="sticky bottom-0 z-10 flex bg-white pb-3" aria-label="Navigasi utama">
+    <nav className="pb-safe sticky bottom-0 z-10 flex bg-white" aria-label="Navigasi utama">
       {items.map((item) => {
         const current = item.id === active;
         return (
@@ -592,6 +593,53 @@ export function BottomNav({
         );
       })}
     </nav>
+  );
+}
+
+/**
+ * Extended floating action button. Shows icon + label, and shrinks to an icon-only
+ * circle while the user scrolls down so it never hides content for long.
+ */
+export function Fab({
+  label,
+  onClick,
+  above = "screen",
+}: {
+  label: string;
+  onClick: () => void;
+  above?: "nav" | "screen";
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    const scroller = ref.current?.closest(".phone-scroll");
+    if (!scroller) return;
+    let last = scroller.scrollTop;
+    const onScroll = () => {
+      const top = scroller.scrollTop;
+      if (Math.abs(top - last) < 6) return;
+      setCollapsed(top > last && top > 48);
+      last = top;
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <div className={cn("fab-dock", above === "nav" ? "fab-dock-nav" : "fab-dock-screen")}>
+      <button
+        ref={ref}
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        data-collapsed={collapsed}
+        className="fab"
+      >
+        <Plus size={22} weight="bold" aria-hidden="true" />
+        <span className="fab-label" aria-hidden="true">
+          {label}
+        </span>
+      </button>
+    </div>
   );
 }
 

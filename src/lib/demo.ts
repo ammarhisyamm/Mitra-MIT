@@ -1,27 +1,20 @@
-export type Mode = "first" | "returning";
-export type BusinessUnit = "sma" | "gmn" | "gms";
-export type Scenario = "normal" | "default-password";
+/** Dummy account for the prototype. Any other combination fails. */
+export const DEMO_ACCOUNT = {
+  name: "Rani Prameswari",
+  nik: "240812",
+  phone: "081288429901",
+  password: "Mitra@2026",
+  otp: "123456",
+};
 
 export type Screen =
   | "checking"
   | "login"
-  | "verify-choice"
-  | "verify-pin"
-  | "face-intro"
-  | "face-camera"
-  | "face-processing"
-  | "face-review"
-  | "face-check"
-  | "face-failed"
-  | "pin-create"
-  | "success"
-  | "unit"
-  | "home"
   | "forgot"
   | "forgot-otp"
   | "forgot-reset"
-  | "forgot-done"
-  | "force-change"
+  | "change-password"
+  | "home"
   | "activity"
   | "activity-create"
   | "activity-map"
@@ -31,104 +24,15 @@ export type Screen =
   | "lead-verify"
   | "lead-simulation";
 
-export const DEMO = {
-  name: "Rani Prameswari",
-  firstName: "Rani",
-  role: "Sales Officer",
-  nip: "240812",
-  phone: "0812-8842-9901",
-  maskedPhone: "0812\u00A0••••\u00A09901",
-  pin: "731904",
-  otp: "123456",
-  password: "mitra2026",
-};
-
-export type UnitDefinition = {
-  id: BusinessUnit;
-  short: string;
-  name: string;
-  description: string;
-  color: string;
-  soft: string;
-  ink: string;
-};
-
-export const UNITS: UnitDefinition[] = [
-  {
-    id: "sma",
-    short: "SMA",
-    name: "Branding SMA",
-    description: "Sales & marketing agent",
-    color: "#2852a3",
-    soft: "#edf3fd",
-    ink: "#1c3d7f",
-  },
-  {
-    id: "gmn",
-    short: "GMN",
-    name: "GMN",
-    description: "Mitra penjualan gadai",
-    color: "#0e9f6e",
-    soft: "#e9f8f1",
-    ink: "#086c4b",
-  },
-  {
-    id: "gms",
-    short: "GMS",
-    name: "GMS",
-    description: "Mitra penjualan syariah",
-    color: "#1f8a70",
-    soft: "#e8f6f2",
-    ink: "#14614f",
-  },
-];
-
-export function getUnit(id: BusinessUnit) {
-  return UNITS.find((unit) => unit.id === id) ?? UNITS[1];
-}
-
-export const FACE_SCREENS: Screen[] = [
-  "face-intro",
-  "face-camera",
-  "face-processing",
-  "face-review",
-  "face-check",
-  "face-failed",
-];
-
-export const PIN_SCREENS: Screen[] = ["pin-create", "verify-pin"];
-
-export const AUTH_SCREENS: Screen[] = [
-  "login",
-  "forgot",
-  "forgot-otp",
-  "forgot-reset",
-  "forgot-done",
-  "force-change",
-  "checking",
-];
-
 export function screenLabel(screen: Screen) {
   const labels: Record<Screen, string> = {
-    checking: "Memeriksa sesi",
+    checking: "Memuat",
     login: "Masuk",
-    "verify-choice": "Pilih verifikasi",
-    "verify-pin": "Verifikasi PIN",
-    "face-intro": "Pengantar wajah",
-    "face-camera": "Ambil foto",
-    "face-processing": "Menganalisis foto",
-    "face-review": "Tinjau foto",
-    "face-check": "Memverifikasi wajah",
-    "face-failed": "Verifikasi gagal",
-    "pin-create": "Buat PIN",
-    success: "Akun siap",
-    unit: "Unit kerja",
-    home: "Beranda unit",
-    forgot: "Lupa kata sandi",
-    "forgot-otp": "Kode verifikasi",
-    "forgot-reset": "Kata sandi baru",
-    "forgot-done": "Kata sandi diperbarui",
-    "force-change": "Ganti kata sandi default",
+    forgot: "Atur Ulang Kata Sandi",
+    "forgot-otp": "Kode Verifikasi",
+    "forgot-reset": "Buat Kata Sandi Baru",
+    "change-password": "Ubah Kata Sandi",
+    home: "Beranda",
     activity: "Aktivitas",
     "activity-create": "Buat Aktivitas",
     "activity-map": "Pilih Lokasi di Peta",

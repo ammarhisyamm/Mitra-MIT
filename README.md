@@ -26,7 +26,7 @@ bun run preview
 - Unit: `GMN` (default), `SMA`, `GMS`
 - Foto contoh verifikasi: Unsplash, hanya untuk ilustrasi prototype
 
-Prototype tampil sebagai aplikasi mobile murni: di desktop berupa satu frame ponsel di tengah layar, di mobile tampil layar penuh.
+Prototype tampil sebagai web app mobile selebar 393px (tanpa frame ponsel). Login demo: `081288429901` (atau NIK `240812`) dengan kata sandi `Mitra@2026`; kode OTP lupa kata sandi `123456`.
 
 ## Stack
 

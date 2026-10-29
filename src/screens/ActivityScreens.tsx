@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowCounterClockwise,
   ArrowUpRight,
@@ -14,6 +14,7 @@ import {
   DeviceMobile,
   MapPin,
   MapTrifold,
+  Minus,
   Plus,
   Scales,
   SignIn,
@@ -25,10 +26,10 @@ import {
 import { MapPinOff, PackageX } from "lucide-react";
 import {
   AppBar,
-  BottomBar,
   BottomNav,
   Button,
   EmptyState,
+  Fab,
   FieldLabel,
   FilterButton,
   FilterChip,
@@ -43,6 +44,15 @@ import {
   TextField,
   type ChipTone,
 } from "@/components/mobile";
+import { DummyMap } from "@/components/DummyMap";
+import {
+  USER_LOCATION,
+  animateView,
+  clampView,
+  resolvePoint,
+  useMapSearch,
+  type MapView,
+} from "@/lib/map";
 import { cn } from "@/lib/cn";
 import {
   ACTIVITY_KINDS,
@@ -52,7 +62,6 @@ import {
   FILTER_KINDS,
   GOLD_ITEMS,
   GOLD_KARATS,
-  MAP_PLACE,
   MESSAGE_TEMPLATES,
   PLACES,
   activityStatus,
@@ -283,8 +292,8 @@ export function ActivityListScreen({
   const searching = query.trim() !== "" || filterIsActive(filter);
 
   return (
-    <div className="flex min-h-full flex-col bg-white pt-status">
-      <header className="hero-bg flex flex-col gap-3 p-6">
+    <div className="flex min-h-full flex-col bg-white">
+      <header className="hero-bg hero-safe flex flex-col gap-3 px-6 pb-6">
         <div>
           <h1 className="text-[18px] font-semibold leading-[1.2] text-white">Aktivitas</h1>
           <p className="mt-2 text-[14px] leading-[1.4] text-white">
@@ -305,7 +314,7 @@ export function ActivityListScreen({
         </div>
       </header>
 
-      <main className="flex flex-1 flex-col px-6 py-6">
+      <main className="flex flex-1 flex-col px-6 pb-24 pt-6">
         {activities.length === 0 ? (
           <div className="flex flex-1 items-center justify-center">
             <EmptyState
@@ -357,14 +366,11 @@ export function ActivityListScreen({
                 />
               </div>
             ))}
-            <Button variant="outline" size="sm" className="mt-1 px-5" onClick={onCreate}>
-              <Plus size={16} aria-hidden="true" />
-              Tambah Aktivitas
-            </Button>
           </div>
         )}
       </main>
 
+      {activities.length > 0 ? <Fab label="Tambah Aktivitas" above="nav" onClick={onCreate} /> : null}
       <BottomNav active="activity" onHome={onHome} onActivity={() => undefined} onSoon={onSoon} />
 
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} label="Filter aktivitas">
@@ -765,33 +771,148 @@ export function ActivityMapScreen({
   onConfirm: (place: Place) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [view, setView] = useState<MapView>({ ...USER_LOCATION, z: 1.25 });
+  const [moving, setMoving] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  const [place, setPlace] = useState<Place>(() => resolvePoint(USER_LOCATION));
   const [confirming, setConfirming] = useState(false);
+  const cancelFly = useRef<(() => void) | null>(null);
+  const results = useMapSearch(query);
+  const busy = moving || resolving;
+
+  // Fake reverse-geocoding once the map settles.
+  useEffect(() => {
+    if (moving) return;
+    setResolving(true);
+    const timer = window.setTimeout(() => {
+      setPlace(resolvePoint(view));
+      setResolving(false);
+    }, 380);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moving]);
+
+  const handleMoving = useCallback((next: boolean) => {
+    if (next) cancelFly.current?.();
+    setMoving(next);
+  }, []);
+
+  function flyTo(target: MapView) {
+    cancelFly.current?.();
+    setMoving(true);
+    cancelFly.current = animateView(view, clampView(target), setView, () => {
+      cancelFly.current = null;
+      setMoving(false);
+    });
+  }
+
   return (
     <div className="relative flex h-full min-h-full flex-col bg-white pt-status">
-      <AppBar onBack={onBack} />
-      <div className="px-6 pb-3">
-        <SearchField value={query} onChange={setQuery} placeholder="Cari nama jalan, gedung, no tempat" />
+      <div className="flex items-center gap-1 pr-6">
+        <AppBar onBack={onBack} />
+        <h1 className="text-[16px] font-semibold leading-[1.4] text-[#16191c]">Pilih Titik Lokasi</h1>
       </div>
-      <div className="relative flex-1 overflow-hidden">
-        <img src="/activity/map.jpg" alt="Peta lokasi" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-x-6 bottom-6 flex flex-col gap-3">
-          <div className="card-enter rounded-[8px] bg-white p-3 shadow-[0_8px_24px_-12px_rgba(15,23,42,0.35)]">
-            <p className="flex items-center gap-2 text-[14px] font-medium leading-[1.4] text-[#16191c]">
-              <MapPin size={18} weight="fill" className="text-[#2852a3]" aria-hidden="true" />
-              {MAP_PLACE.name}
-            </p>
-            <p className="mt-1 text-[12px] leading-[1.4] text-[#4f5963]">{MAP_PLACE.address}</p>
+      <div className="relative z-20 px-6 pb-3">
+        <SearchField value={query} onChange={setQuery} placeholder="Cari nama jalan, gedung, no tempat" />
+        {query.trim() ? (
+          <div className="card-enter absolute inset-x-6 top-[52px] max-h-[280px] overflow-y-auto rounded-[8px] border border-[#dfe4ea] bg-white py-1 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.35)]">
+            {results.length ? (
+              results.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    flyTo({ x: item.x, y: item.y, z: Math.max(view.z, 1.5) });
+                  }}
+                  className="flex w-full items-start gap-3 px-4 py-3 text-left transition active:bg-[#f0f5fe]"
+                >
+                  <MapPin size={18} weight="fill" className="mt-0.5 flex-none text-[#2852a3]" aria-hidden="true" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14px] font-medium leading-[1.4] text-[#16191c]">{item.name}</span>
+                    <span className="block truncate text-[12px] leading-[1.4] text-[#4f5963]">{item.address}</span>
+                  </span>
+                </button>
+              ))
+            ) : (
+              <p className="px-4 py-4 text-[13px] leading-[1.4] text-[#4f5963]">
+                Lokasi tidak ditemukan. Coba geser peta untuk memilih titik secara manual.
+              </p>
+            )}
           </div>
-          <Button
-            loading={confirming}
-            onClick={async () => {
-              setConfirming(true);
-              await wait(500);
-              onConfirm(MAP_PLACE);
-            }}
+        ) : null}
+      </div>
+      <div className="relative flex-1 overflow-hidden border-t border-[#eef0f3]">
+        <DummyMap view={view} onViewChange={setView} onMovingChange={handleMoving} className="absolute inset-0" />
+
+        {/* fixed centre pin */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2" aria-hidden="true">
+          <span className="map-pin-shadow" data-lifted={moving} />
+          <span className="map-pin" data-lifted={moving}>
+            <MapPin size={40} weight="fill" />
+          </span>
+        </div>
+
+        <div className="absolute right-4 top-4 flex flex-col overflow-hidden rounded-[10px] bg-white shadow-[0_6px_20px_-10px_rgba(15,23,42,0.45)]">
+          <button
+            type="button"
+            aria-label="Perbesar peta"
+            onClick={() => flyTo({ ...view, z: view.z * 1.4 })}
+            className="grid h-10 w-10 place-items-center text-[#16191c] transition active:bg-[#f0f5fe]"
           >
-            Konfirmasi Lokasi
-          </Button>
+            <Plus size={18} weight="bold" />
+          </button>
+          <span className="mx-2 h-px bg-[#dfe4ea]" />
+          <button
+            type="button"
+            aria-label="Perkecil peta"
+            onClick={() => flyTo({ ...view, z: view.z / 1.4 })}
+            className="grid h-10 w-10 place-items-center text-[#16191c] transition active:bg-[#f0f5fe]"
+          >
+            <Minus size={18} weight="bold" />
+          </button>
+        </div>
+
+        <div className="absolute inset-x-4 bottom-4 flex flex-col gap-3">
+          <button
+            type="button"
+            aria-label="Kembali ke lokasi saya"
+            onClick={() => flyTo({ ...USER_LOCATION, z: Math.max(view.z, 1.25) })}
+            className="grid h-11 w-11 place-items-center self-end rounded-full bg-white text-[#2852a3] shadow-[0_6px_20px_-10px_rgba(15,23,42,0.45)] transition active:scale-95"
+          >
+            <Crosshair size={22} weight="bold" />
+          </button>
+          <div className="rounded-[12px] bg-white p-4 shadow-[0_12px_32px_-16px_rgba(15,23,42,0.45)]">
+            <p className="text-[12px] leading-[1.4] text-[#65737f]">Titik lokasi aktivitas</p>
+            <div className="mt-1 min-h-[52px]" aria-live="polite">
+              {busy ? (
+                <div className="flex flex-col gap-2 pt-1" aria-label="Mencari alamat">
+                  <span className="skeleton h-4 w-3/5" />
+                  <span className="skeleton h-3 w-4/5" />
+                </div>
+              ) : (
+                <>
+                  <p className="flex items-start gap-1.5 text-[14px] font-semibold leading-[1.4] text-[#16191c]">
+                    <MapPin size={18} weight="fill" className="mt-px flex-none text-[#2852a3]" aria-hidden="true" />
+                    {place.name}
+                  </p>
+                  <p className="mt-1 text-[12px] leading-[1.4] text-[#4f5963]">{place.address}</p>
+                </>
+              )}
+            </div>
+            <Button
+              className="mt-3 w-full"
+              disabled={busy}
+              loading={confirming}
+              onClick={async () => {
+                setConfirming(true);
+                await wait(450);
+                onConfirm(place);
+              }}
+            >
+              Konfirmasi Lokasi
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -1074,7 +1195,7 @@ export function ActivityDetailScreen({
         ))}
       </div>
 
-      <main className="flex flex-1 flex-col px-6 py-4">
+      <main className="flex flex-1 flex-col px-6 pb-28 pt-4">
         {empty ? (
           <div className="flex flex-1 items-center justify-center py-10">
             <EmptyState
@@ -1133,13 +1254,7 @@ export function ActivityDetailScreen({
         )}
       </main>
 
-      {status === "ongoing" ? (
-        <BottomBar>
-          <Button className="w-full" onClick={onAddLead}>
-            Tambah Leads Baru
-          </Button>
-        </BottomBar>
-      ) : null}
+      {status === "ongoing" ? <Fab label="Tambah Leads" onClick={onAddLead} /> : null}
 
       <Sheet open={checkinOpen} onClose={() => setCheckinOpen(false)} label="Detail check-in">
         <h2 className="text-[18px] font-semibold leading-[1.3] text-[#16191c]">Detail Check-in</h2>

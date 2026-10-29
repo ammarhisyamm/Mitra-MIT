@@ -84,11 +84,6 @@ export const CURRENT_PLACE: Place = {
   address: "Jl. Boulevard Raya No. 8, Kelapa Gading Timur, Kota Jakarta Utara",
 };
 
-export const MAP_PLACE: Place = {
-  name: "Titik Pilihan di Peta",
-  address: "Jakarta Outer Ring Rd E, Cakung Barat, Kota Jakarta Timur",
-};
-
 export const GOLD_ITEMS = ["LM Antam", "LM Non Antam", "Gelang", "Kalung", "Cincin"];
 export const GOLD_KARATS = [
   { value: 24, label: "24 Karat (99.9%)", purity: 0.999 },

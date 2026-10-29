@@ -1,29 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Info } from "lucide-react";
 import {
-  ForgotDoneScreen,
   ForgotScreen,
   LoginScreen,
+  NewPasswordScreen,
   OtpScreen,
-  ResetPasswordScreen,
 } from "@/screens/AuthScreens";
-import {
-  FaceCameraScreen,
-  FaceCheckScreen,
-  FaceFailedScreen,
-  FaceIntroScreen,
-  FaceProcessingScreen,
-  FaceReviewScreen,
-  PinCreateScreen,
-  SplashScreen,
-} from "@/screens/OnboardingScreens";
-import {
-  SuccessScreen,
-  UnitHomeScreen,
-  UnitScreen,
-  VerifyChoiceScreen,
-  VerifyPinScreen,
-} from "@/screens/ResultScreens";
+import { SplashScreen } from "@/screens/SplashScreen";
+import { HomeScreen } from "@/screens/HomeScreen";
 import {
   ActivityCameraScreen,
   ActivityCreateScreen,
@@ -34,18 +18,9 @@ import {
   LeadVerifyScreen,
   SimulationScreen,
 } from "@/screens/ActivityScreens";
-import { StatusBar } from "@/components/primitives";
 import { OverlayRoot } from "@/components/mobile";
+import { DEMO_ACCOUNT, screenLabel, type Screen } from "@/lib/demo";
 import {
-  getUnit,
-  screenLabel,
-  type BusinessUnit,
-  type Mode,
-  type Scenario,
-  type Screen,
-} from "@/lib/demo";
-import {
-  activityStatus,
   emptyForm,
   initialActivities,
   uid,
@@ -56,38 +31,21 @@ import {
 } from "@/lib/activity";
 
 export default function App() {
-  const [mode, setMode] = useState<Mode>("returning");
-  const [sessionActive, setSessionActive] = useState(true);
-  const [scenario] = useState<Scenario>("normal");
-  const [forceFaceFail] = useState(false);
-  const [forceLoginFail] = useState(false);
-  const [unit] = useState<BusinessUnit>("gmn");
   const [screen, setScreen] = useState<Screen>("checking");
-  const [firstAccess, setFirstAccess] = useState(false);
-  const [faceImage, setFaceImage] = useState<string | null>(null);
-  const [lastMethod, setLastMethod] = useState<"face" | "pin">("face");
-  const [runId, setRunId] = useState(0);
+  const [accountPassword, setAccountPassword] = useState(DEMO_ACCOUNT.password);
+  const [resetPhone, setResetPhone] = useState(DEMO_ACCOUNT.phone);
   const [notice, setNotice] = useState("");
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [activityId, setActivityId] = useState("act-1");
   const [leadId, setLeadId] = useState<string | null>(null);
   const [leadName, setLeadName] = useState("");
   const [createForm, setCreateForm] = useState<ActivityForm>(emptyForm);
-  const startConfig = useRef({ mode: "returning" as Mode, sessionActive: true });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const config = startConfig.current;
-    const timer = window.setTimeout(() => {
-      setFirstAccess(config.mode === "first");
-      if (config.mode === "returning" && config.sessionActive) {
-        setScreen("activity");
-      } else {
-        setScreen("login");
-      }
-    }, 2400);
+    const timer = window.setTimeout(() => setScreen("login"), 2200);
     return () => window.clearTimeout(timer);
-  }, [runId]);
+  }, []);
 
   useEffect(() => {
     if (!notice) return;
@@ -107,33 +65,10 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [screen]);
 
-  function startFlow(nextMode: Mode, nextSession: boolean) {
-    startConfig.current = { mode: nextMode, sessionActive: nextSession };
-    setScreen("checking");
-    setFaceImage(null);
-    setFirstAccess(nextMode === "first");
+  function logout() {
     setActivities(initialActivities());
     setCreateForm(emptyForm());
-    setRunId((current) => current + 1);
-  }
-
-  function loginSuccess() {
-    if (scenario === "default-password") {
-      setScreen("force-change");
-      return;
-    }
-    setScreen(firstAccess ? "face-intro" : "verify-choice");
-  }
-
-  function faceDone() {
-    setLastMethod("face");
-    setScreen(firstAccess ? "pin-create" : "success");
-  }
-
-  function logout() {
-    setMode("first");
-    startFlow("first", false);
-    setSessionActive(false);
+    setScreen("login");
   }
 
   const activity = activities.find((item) => item.id === activityId) ?? activities[0];
@@ -200,157 +135,70 @@ export default function App() {
   function renderScreen() {
     switch (screen) {
       case "checking":
-        return <SplashScreen mode={mode} sessionActive={sessionActive} />;
+        return <SplashScreen />;
       case "login":
         return (
           <LoginScreen
-            onSuccess={loginSuccess}
+            accountPassword={accountPassword}
             onForgot={() => setScreen("forgot")}
-            forceFail={forceLoginFail}
+            onLoggedIn={(target) => setScreen(target === "change" ? "change-password" : "home")}
           />
         );
-      case "verify-choice":
+      case "forgot":
         return (
-          <VerifyChoiceScreen
-            onFace={() => {
-              setFaceImage(null);
-              setScreen("face-intro");
+          <ForgotScreen
+            onBack={() => setScreen("login")}
+            onSent={(phone) => {
+              setResetPhone(phone);
+              setScreen("forgot-otp");
             }}
-            onPin={() => setScreen("verify-pin")}
-            onLogout={logout}
           />
         );
-      case "verify-pin":
+      case "forgot-otp":
         return (
-          <VerifyPinScreen
-            onSuccess={() => {
-              setLastMethod("pin");
-              setScreen("success");
-            }}
-            onBack={() => setScreen("verify-choice")}
-            onUseFace={() => {
-              setFaceImage(null);
-              setScreen("face-intro");
-            }}
-            onForgotPin={() => {
-              setSessionActive(false);
+          <OtpScreen
+            phone={resetPhone}
+            onNotice={setNotice}
+            onBack={() => setScreen("forgot")}
+            onVerified={() => setScreen("forgot-reset")}
+          />
+        );
+      case "forgot-reset":
+        return (
+          <NewPasswordScreen
+            mode="reset"
+            onBack={() => setScreen("forgot-otp")}
+            onDone={(password) => {
+              setAccountPassword(password);
               setScreen("login");
             }}
           />
         );
-      case "face-intro":
+      case "change-password":
         return (
-          <FaceIntroScreen
-            onStart={() => {
-              setFaceImage(null);
-              setScreen("face-camera");
+          <NewPasswordScreen
+            mode="change"
+            onBack={() => setScreen("home")}
+            onDone={(password) => {
+              setAccountPassword(password);
+              setScreen("home");
             }}
-            onBack={() => setScreen(firstAccess ? "login" : "verify-choice")}
-            allowPin={!firstAccess}
-            enroll={firstAccess}
-            onUsePin={() => setScreen("verify-pin")}
-            onHelp={() =>
-              setNotice("Hubungi admin unit untuk bantuan verifikasi wajah.")
-            }
           />
         );
-      case "face-camera":
+      case "home":
         return (
-          <FaceCameraScreen
-            onCaptured={(image) => {
-              setFaceImage(image);
-              setScreen("face-processing");
+          <HomeScreen
+            name={DEMO_ACCOUNT.name}
+            activities={activities}
+            onOpenActivity={(id) => {
+              setActivityId(id);
+              setScreen("activity-detail");
             }}
-            onBack={() => setScreen("face-intro")}
-            onboarding={firstAccess}
-          />
-        );
-      case "face-processing":
-        return (
-          <FaceProcessingScreen
-            image={faceImage}
-            onDone={() => setScreen("face-review")}
-          />
-        );
-      case "face-review":
-        return (
-          <FaceReviewScreen
-            image={faceImage}
-            onUse={() => setScreen("face-check")}
-            onRetake={() => {
-              setFaceImage(null);
-              setScreen("face-camera");
-            }}
-            onBack={() => setScreen("face-intro")}
-            onboarding={firstAccess}
-          />
-        );
-      case "face-check":
-        return (
-          <FaceCheckScreen
-            image={faceImage}
-            fail={forceFaceFail}
-            onDone={faceDone}
-            onFail={() => setScreen("face-failed")}
-          />
-        );
-      case "face-failed":
-        return (
-          <FaceFailedScreen
-            allowPin={!firstAccess}
-            onRetry={() => {
-              setFaceImage(null);
-              setScreen("face-camera");
-            }}
-            onUsePin={() => setScreen("verify-pin")}
-            onBack={() => setScreen("login")}
-            onHelp={() =>
-              setNotice("Hubungi Admin Unit melalui kanal resmi MITRA untuk bantuan verifikasi.")
-            }
-          />
-        );
-      case "pin-create":
-        return (
-          <PinCreateScreen
-            onComplete={() => {
-              setScreen("unit");
-            }}
-            onBack={() => setScreen("face-intro")}
-          />
-        );
-      case "success":
-        return (
-          <SuccessScreen
-            returning={!firstAccess}
-            unit={getUnit(unit)}
-            method={firstAccess ? "face-pin" : lastMethod}
-            onContinue={() => setScreen("home")}
-          />
-        );
-      case "unit":
-        return (
-          <UnitScreen
-            unit={unit}
-            onContinue={() => setScreen("success")}
-            onHelp={() =>
-              setNotice("Perubahan unit diproses Admin Unit. Prototype ini tidak mengirim permintaan.")
-            }
-          />
-        );
-      case "home": {
-        const next =
-          activities.find((item) => activityStatus(item) !== "ended") ?? activities[0];
-        return (
-          <UnitHomeScreen
-            unit={unit}
-            activity={{ name: next?.name ?? "Belum ada aktivitas", time: next?.start ?? "--:--" }}
-            activityCompleted={next ? activityStatus(next) === "ended" : false}
-            activityLeadCount={next?.leads.length ?? 0}
+            onActivities={() => setScreen("activity")}
             onLogout={logout}
-            onActivity={() => setScreen("activity")}
+            onSoon={soon}
           />
         );
-      }
       case "activity":
         return (
           <ActivityListScreen
@@ -470,78 +318,32 @@ export default function App() {
             }}
           />
         ) : null;
-      case "forgot":
-        return (
-          <ForgotScreen
-            onBack={() => setScreen("login")}
-            onSent={() => setScreen("forgot-otp")}
-          />
-        );
-      case "forgot-otp":
-        return (
-          <OtpScreen
-            onBack={() => setScreen("forgot")}
-            onVerified={() => setScreen("forgot-reset")}
-          />
-        );
-      case "forgot-reset":
-        return (
-          <ResetPasswordScreen
-            onBack={() => setScreen("forgot-otp")}
-            onSaved={() => setScreen("forgot-done")}
-          />
-        );
-      case "forgot-done":
-        return (
-          <ForgotDoneScreen
-            onLogin={() => {
-              setSessionActive(false);
-              startFlow(mode, false);
-            }}
-          />
-        );
-      case "force-change":
-        return (
-          <ResetPasswordScreen
-            forceChange
-            defaultPassword
-            onBack={logout}
-            onSaved={() => setScreen("face-intro")}
-          />
-        );
       default:
         return null;
     }
   }
 
-  const darkStatus = ["face-camera", "face-processing", "face-review", "activity-camera"].includes(screen);
-
-  const phone = (
-    <div className="phone-frame">
-      <div className="phone-screen">
-        <StatusBar tone={darkStatus ? "light" : "dark"} />
-        <div className="phone-scroll" ref={scrollRef}>
-          <div key={screen} className="screen-enter min-h-full">
-            {renderScreen()}
-          </div>
-        </div>
-        <OverlayRoot />
-        <div className="sr-only" aria-live="polite">
-          {screenLabel(screen)}
-        </div>
-        {notice ? (
-          <div className="toast" role="status">
-            <Info className="mt-0.5 h-4 w-4 flex-none text-[#f9a11f]" aria-hidden="true" />
-            <span>{notice}</span>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-
   return (
-    <div className="page-canvas flex min-h-dvh items-center justify-center lg:py-8">
-      {phone}
+    <div className="page-canvas">
+      <div className="phone-frame">
+        <div className="phone-screen">
+          <div className="phone-scroll" ref={scrollRef}>
+            <div key={screen} className="screen-enter min-h-full">
+              {renderScreen()}
+            </div>
+          </div>
+          <OverlayRoot />
+          <div className="sr-only" aria-live="polite">
+            {screenLabel(screen)}
+          </div>
+          {notice ? (
+            <div className="toast" role="status">
+              <Info className="mt-0.5 h-4 w-4 flex-none text-[#f9a11f]" aria-hidden="true" />
+              <span>{notice}</span>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
