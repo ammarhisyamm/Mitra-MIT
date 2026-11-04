@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ArrowCounterClockwise, CaretRight, Checks, ClipboardText, Scales } from "@phosphor-icons/react";
 import {
   BottomNav,
@@ -89,6 +89,26 @@ export function ContactScreen({
   const [filter, setFilter] = useState<ContactFilter>(EMPTY);
   const [draft, setDraft] = useState<ContactFilter>(EMPTY);
   const [filterOpen, setFilterOpen] = useState(false);
+  const titleRef = useRef<HTMLElement>(null);
+  const [titleHeight, setTitleHeight] = useState(0);
+  const [stuck, setStuck] = useState(false);
+
+  // Title and subtitle stay pinned; the search bar sticks right below them.
+  useEffect(() => {
+    const node = titleRef.current;
+    if (!node) return;
+    const measure = () => setTitleHeight(node.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    const scroller = node.closest<HTMLElement>(".phone-scroll");
+    const onScroll = () => setStuck((scroller?.scrollTop ?? 0) > 56);
+    scroller?.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      scroller?.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   // Contacts are leads that already count as a prospect (warm or hot).
   const contacts = useMemo<Contact[]>(
@@ -116,26 +136,36 @@ export function ContactScreen({
 
   return (
     <div className="flex min-h-full flex-col bg-white">
-      <header className="hero-safe px-6 pb-4">
+      <header
+        ref={titleRef}
+        className="hero-safe sticky top-0 z-10 bg-white px-6 pb-3"
+      >
         <h1 className="text-[24px] font-semibold leading-[1.2] text-[#16191c]">Kontak</h1>
         <p className="mt-2 text-[14px] leading-[1.4] text-[#384047]">Hubungi dan tindak lanjuti calon nasabah Anda.</p>
-        <dl className="mt-4 grid grid-cols-3 gap-2">
-          {(
-            [
-              ["Total", counts.total],
-              ["Warm", counts.warm],
-              ["Hot", counts.hot],
-            ] as const
-          ).map(([label, value]) => (
-            <div key={label} className="rounded-[4px] bg-[var(--brand-soft)] px-3 py-2.5">
-              <dt className="text-[14px] leading-[1.4] text-[var(--brand-ink)]">{label}</dt>
-              <dd className="text-[24px] font-medium leading-[1.3] text-[#16191c]">{value}</dd>
-            </div>
-          ))}
-        </dl>
       </header>
 
-      <div className="sticky top-0 z-[5] flex gap-2 bg-white px-6 py-3">
+      <dl className="grid grid-cols-3 gap-2 px-6 pb-4">
+        {(
+          [
+            ["Total", counts.total],
+            ["Warm", counts.warm],
+            ["Hot", counts.hot],
+          ] as const
+        ).map(([label, value]) => (
+          <div key={label} className="rounded-[4px] bg-[var(--brand-soft)] px-3 py-2.5">
+            <dt className="text-[14px] leading-[1.4] text-[var(--brand-ink)]">{label}</dt>
+            <dd className="text-[24px] font-medium leading-[1.3] text-[#16191c]">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div
+        className={cn(
+          "sticky z-[5] flex gap-2 border-b bg-white px-6 py-3 transition-colors",
+          stuck ? "border-[#e2e8f0]" : "border-transparent",
+        )}
+        style={{ top: titleHeight }}
+      >
         <div className="min-w-0 flex-1">
           <SearchField value={query} onChange={setQuery} placeholder="Cari Nama Kontak" />
         </div>

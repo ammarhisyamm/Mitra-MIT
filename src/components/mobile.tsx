@@ -15,14 +15,12 @@ import {
   CalendarBlank,
   CaretDown,
   CaretRight,
-  Check,
   ClipboardText,
   House,
   MagnifyingGlass,
   Plus,
   SlidersHorizontal,
   User,
-  Warning,
   X,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/cn";
@@ -136,6 +134,12 @@ export function Sheet({
 
 type DialogTone = "success" | "error" | "warning";
 
+const DIALOG_ICONS: Record<DialogTone, string> = {
+  success: "/icons/dialog-success.png",
+  error: "/icons/dialog-error.png",
+  warning: "/icons/dialog-confirm.png",
+};
+
 export function ResultDialog({
   open,
   tone,
@@ -155,14 +159,6 @@ export function ResultDialog({
   const { mounted, visible } = usePresence(open);
   useEscape(open, onClose);
   if (!root || !mounted) return null;
-  const icon =
-    tone === "success" ? (
-      <Check size={24} weight="bold" />
-    ) : tone === "error" ? (
-      <X size={24} weight="bold" />
-    ) : (
-      <Warning size={24} weight="fill" />
-    );
   return createPortal(
     <div className="overlay-layer overlay-center" data-visible={visible}>
       <button
@@ -173,9 +169,7 @@ export function ResultDialog({
         onClick={onClose}
       />
       <div role="alertdialog" aria-modal="true" aria-label={title} className="dialog-panel">
-        <span className={cn("dialog-icon", `dialog-icon-${tone}`)} aria-hidden="true">
-          {icon}
-        </span>
+        <img src={DIALOG_ICONS[tone]} alt="" width={64} height={64} className="dialog-icon h-16 w-16" />
         <h2 className="mt-4 text-[18px] font-semibold leading-[1.3] text-[#16191c]">{title}</h2>
         <p className="mt-2 text-[14px] leading-[1.4] text-[#4f5963]">{message}</p>
         {children ? <div className="mt-5 flex flex-col gap-3">{children}</div> : null}
