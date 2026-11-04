@@ -972,31 +972,8 @@ h2 {
   transform: none;
 }
 
-.dialog-icon {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-}
-
 .overlay-layer[data-visible="true"] .dialog-icon {
   animation: icon-pop 520ms var(--ease-spring) 80ms both;
-}
-
-.dialog-icon-success {
-  background: #dcfce7;
-  color: #16a34a;
-}
-
-.dialog-icon-error {
-  background: #feeceb;
-  color: #e5484d;
-}
-
-.dialog-icon-warning {
-  background: #fef6dc;
-  color: #f5b301;
 }
 
 .mbtn {

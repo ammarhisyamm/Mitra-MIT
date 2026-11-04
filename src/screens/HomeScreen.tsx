@@ -78,32 +78,8 @@ function AccentLabel({ children }: { children: string }) {
 }
 
 function CalculatorArt() {
-  return (
-    <svg viewBox="0 0 80 80" className="h-[60px] w-[60px] flex-none" aria-hidden="true">
-      <circle cx="40" cy="40" r="38" fill="var(--brand-softer)" />
-      <g transform="rotate(14 40 40)">
-        <rect x="22" y="14" width="36" height="52" rx="6" fill="#3b4cc0" />
-        <rect x="24" y="16" width="32" height="48" rx="5" fill="#4f63e0" />
-        <rect x="28" y="20" width="24" height="10" rx="2" fill="#bfe9ff" />
-        <text x="40" y="27.5" textAnchor="middle" fontSize="6" fontWeight="700" fill="#1e3a8a">12345</text>
-        {[0, 1, 2].map((row) =>
-          [0, 1, 2].map((col) => (
-            <rect
-              key={`${row}-${col}`}
-              x={28 + col * 8.5}
-              y={34 + row * 9}
-              width="6.5"
-              height="6.5"
-              rx="1.5"
-              fill={col === 2 && row > 0 ? "#facc15" : "#93c5fd"}
-            />
-          )),
-        )}
-      </g>
-    </svg>
-  );
+  return <img src="/icons/calculator.png" alt="" width={60} height={60} className="h-[60px] w-[60px] flex-none" />;
 }
-
 export function HomeScreen({
   name,
   activities,
