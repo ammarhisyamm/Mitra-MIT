@@ -10,6 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import {
   AddressBook,
+  ChartPieSlice,
   ArrowLeft,
   CalendarBlank,
   CaretDown,
@@ -556,25 +557,16 @@ export function EmptyState({
   );
 }
 
-export function BottomNav({
-  active,
-  onHome,
-  onActivity,
-  onProfile,
-  onSoon,
-}: {
-  active: "home" | "activity";
-  onHome: () => void;
-  onActivity: () => void;
-  onProfile?: () => void;
-  onSoon: (label: string) => void;
-}) {
+export type NavId = "home" | "activity" | "contact" | "report" | "profile";
+
+export function BottomNav({ active, onNavigate }: { active: NavId; onNavigate: (id: NavId) => void }) {
   const items = [
-    { id: "home", label: "Home", icon: House, onClick: onHome },
-    { id: "activity", label: "Aktivitas", icon: ClipboardText, onClick: onActivity },
-    { id: "contact", label: "Kontak", icon: AddressBook, onClick: () => onSoon("Kontak") },
-    { id: "profile", label: "Profile", icon: User, onClick: onProfile ?? (() => onSoon("Profile")) },
-  ];
+    { id: "home", label: "Home", icon: House },
+    { id: "activity", label: "Aktivitas", icon: ClipboardText },
+    { id: "contact", label: "Kontak", icon: AddressBook },
+    { id: "report", label: "Report", icon: ChartPieSlice },
+    { id: "profile", label: "Profil", icon: User },
+  ] as const;
   return (
     <nav className="pb-safe sticky bottom-0 z-10 flex bg-white" aria-label="Navigasi utama">
       {items.map((item) => {
@@ -583,10 +575,10 @@ export function BottomNav({
           <button
             key={item.id}
             type="button"
-            onClick={item.onClick}
+            onClick={() => onNavigate(item.id)}
             aria-current={current ? "page" : undefined}
             className={cn(
-              "flex flex-1 flex-col items-center gap-1 p-3 transition active:scale-95",
+              "flex flex-1 flex-col items-center gap-1 px-1 py-3 transition active:scale-95",
               current ? "border-t-2 border-[var(--brand-ink)] text-[var(--brand-ink)]" : "border-t border-[#dfe4ea] text-[#65737f]",
             )}
           >

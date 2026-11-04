@@ -195,6 +195,11 @@ export function areaLabel(area: ActivityArea) {
   return area === "inside" ? "Dalam Area Unit" : "Luar Area Unit";
 }
 
+/** Hot is only reachable after a simulation has been made. */
+export function effectiveHeat(lead: Lead): LeadHeat {
+  return lead.simulation || lead.heat !== "hot" ? lead.heat : "warm";
+}
+
 export function maskPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
   return `${digits.slice(0, 4)}****${digits.slice(-3)}`;

@@ -13,6 +13,7 @@ import {
   FaceGuideScreen,
   FaceScanScreen,
   FaceVerifyingScreen,
+  PinChangeScreen,
   PinCreateScreen,
   PinVerifyScreen,
   VerifyChoiceScreen,
@@ -31,8 +32,9 @@ import {
   LeadVerifyScreen,
   SimulationScreen,
 } from "@/screens/ActivityScreens";
-import { OverlayRoot } from "@/components/mobile";
-import { ProfileSheet } from "@/screens/ProfileSheet";
+import { OverlayRoot, type NavId } from "@/components/mobile";
+import { ContactScreen } from "@/screens/ContactScreen";
+import { ProfileScreen } from "@/screens/ProfileScreens";
 import {
   DEMO_ACCOUNTS,
   screenLabel,
@@ -57,7 +59,7 @@ export default function App() {
   // Prototype: nothing is persisted, so a refresh always starts again from login.
   const [accounts, setAccounts] = useState<Account[]>(DEMO_ACCOUNTS);
   const [accountId, setAccountId] = useState<AccountId>("returning");
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [detailFrom, setDetailFrom] = useState<Screen>("activity");
   const [unitOpen, setUnitOpen] = useState(false);
   const [unit, setUnit] = useState<BusinessUnit>("mit");
   const [face, setFace] = useState<FaceCapture | null>(null);
@@ -178,6 +180,17 @@ export default function App() {
     ),
   );
   const soon = (label: string) => setNotice(`Menu ${label} belum tersedia di prototype ini.`);
+
+  function navigate(id: NavId) {
+    if (id === "report") soon("Report");
+    else setScreen(id === "activity" ? "activity" : id);
+  }
+
+  function openActivity(id: string, from: Screen) {
+    setActivityId(id);
+    setDetailFrom(from);
+    setScreen("activity-detail");
+  }
 
   function renderScreen() {
     switch (screen) {
@@ -306,10 +319,7 @@ export default function App() {
           <HomeScreen
             name={account.name}
             activities={activities}
-            onOpenActivity={(id) => {
-              setActivityId(id);
-              setScreen("activity-detail");
-            }}
+            onOpenActivity={(id) => openActivity(id, "home")}
             onCheckIn={(id) => {
               setActivityId(id);
               setScreen("activity-camera");
@@ -319,7 +329,7 @@ export default function App() {
               setLeadId(null);
               setScreen("quick-simulation");
             }}
-            onProfile={() => setProfileOpen(true)}
+            onNavigate={navigate}
             onSoon={soon}
           />
         );
@@ -327,18 +337,54 @@ export default function App() {
         return (
           <ActivityListScreen
             activities={activities}
-            onOpen={(id) => {
-              setActivityId(id);
-              setScreen("activity-detail");
-            }}
+            onOpen={(id) => openActivity(id, "activity")}
             onCheckIn={(id) => {
               setActivityId(id);
               setScreen("activity-camera");
             }}
             onCreate={() => setScreen("activity-create")}
-            onHome={() => setScreen("home")}
-            onProfile={() => setProfileOpen(true)}
-            onSoon={soon}
+            onNavigate={navigate}
+          />
+        );
+      case "contact":
+        return (
+          <ContactScreen
+            activities={activities}
+            onOpen={(id) => openActivity(id, "contact")}
+            onNavigate={navigate}
+          />
+        );
+      case "profile":
+        return (
+          <ProfileScreen
+            name={account.name}
+            onChangePassword={() => setScreen("profile-password")}
+            onChangePin={() => setScreen("profile-pin")}
+            onLogout={logout}
+            onNavigate={navigate}
+          />
+        );
+      case "profile-password":
+        return (
+          <NewPasswordScreen
+            mode="profile"
+            currentPassword={account.password}
+            onBack={() => setScreen("profile")}
+            onDone={(password) => {
+              updateAccount(account.id, { password });
+              logout();
+            }}
+          />
+        );
+      case "profile-pin":
+        return (
+          <PinChangeScreen
+            expectedPin={account.pin ?? ""}
+            onBack={() => setScreen("profile")}
+            onDone={(pin) => {
+              updateAccount(account.id, { pin });
+              setScreen("profile");
+            }}
           />
         );
       case "activity-create":
@@ -380,7 +426,7 @@ export default function App() {
         return (
           <ActivityDetailScreen
             activity={activity}
-            onBack={() => setScreen("activity")}
+            onBack={() => setScreen(detailFrom)}
             onCheckIn={() => setScreen("activity-camera")}
             onCheckOut={() => {
               const now = new Date();
@@ -466,20 +512,6 @@ export default function App() {
             </div>
           </div>
           <OverlayRoot />
-          <ProfileSheet
-            open={profileOpen}
-            name={account.name}
-            unit={unit}
-            onClose={() => setProfileOpen(false)}
-            onSwitchUnit={() => {
-              setProfileOpen(false);
-              setUnitOpen(true);
-            }}
-            onLogout={() => {
-              setProfileOpen(false);
-              logout();
-            }}
-          />
           <BusinessUnitSheet
             open={unitOpen}
             value={unit}

@@ -44,6 +44,7 @@ function PasswordInput({
   error,
   autoComplete,
   invalid,
+  placeholder = "Masukkan kata sandi",
 }: {
   label: string;
   value: string;
@@ -51,6 +52,7 @@ function PasswordInput({
   error?: string;
   autoComplete: string;
   invalid?: boolean;
+  placeholder?: string;
 }) {
   const [show, setShow] = useState(false);
   const id = label.toLowerCase().replace(/\s+/g, "-");
@@ -64,7 +66,7 @@ function PasswordInput({
           className="mfield pr-11"
           value={value}
           autoComplete={autoComplete}
-          placeholder="Masukkan kata sandi"
+          placeholder={placeholder}
           data-invalid={error || invalid ? "true" : undefined}
           aria-invalid={error || invalid ? true : undefined}
           onChange={(event) => onChange(event.target.value)}
@@ -526,13 +528,19 @@ const RULES = [
 
 export function NewPasswordScreen({
   mode,
+  currentPassword,
   onBack,
   onDone,
 }: {
-  mode: "reset" | "change";
+  /** "profile" is the Ubah Kata Sandi page: it also asks for the current password. */
+  mode: "reset" | "change" | "profile";
+  currentPassword?: string;
   onBack: () => void;
   onDone: (password: string) => void;
 }) {
+  const profile = mode === "profile";
+  const [current, setCurrent] = useState("");
+  const [currentWrong, setCurrentWrong] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -541,12 +549,16 @@ export function NewPasswordScreen({
   const longEnough = password.length >= 8;
   const strong = longEnough && RULES.every((rule) => rule.test(password));
   const mismatch = confirm.length > 0 && confirm !== password;
-  const ready = strong && confirm === password;
+  const ready = strong && confirm === password && (!profile || current.length > 0);
 
   async function submit(event?: FormEvent) {
     event?.preventDefault();
     setTouched(true);
     if (!ready || loading) return;
+    if (profile && current !== currentPassword) {
+      setCurrentWrong(true);
+      return;
+    }
     setLoading(true);
     await wait(900);
     setLoading(false);
@@ -557,15 +569,31 @@ export function NewPasswordScreen({
     <form onSubmit={submit} className="flex min-h-full flex-col bg-white pt-status" noValidate>
       <AppBar onBack={onBack} />
       <div className="px-6 pt-4">
-        <h1 className="text-[24px] font-semibold leading-[1.2] text-[#16191c]">Buat Kata Sandi Baru</h1>
+        <h1 className="text-[24px] font-semibold leading-[1.2] text-[#16191c]">
+          {profile ? "Ubah Kata Sandi" : "Buat Kata Sandi Baru"}
+        </h1>
         <p className="mt-2 text-[14px] leading-[1.4] text-[#4f5963]">
           Gunakan kata sandi yang kuat dan belum pernah dipakai di MITRA.
         </p>
 
         <div className="mt-6 flex flex-col gap-4">
+          {profile ? (
+            <PasswordInput
+              label="Kata Sandi Saat ini"
+              placeholder="Masukkan Kata Sandi Saat ini"
+              value={current}
+              autoComplete="current-password"
+              onChange={(value) => {
+                setCurrent(value);
+                setCurrentWrong(false);
+              }}
+              error={currentWrong ? "Kata sandi salah, silakan periksa dan coba lagi." : undefined}
+            />
+          ) : null}
           <div>
             <PasswordInput
               label="Kata Sandi Baru"
+              placeholder="Masukkan Kata Sandi Baru"
               value={password}
               autoComplete="new-password"
               onChange={setPassword}
@@ -600,6 +628,7 @@ export function NewPasswordScreen({
           </div>
           <PasswordInput
             label="Ulangi Kata Sandi Baru"
+            placeholder="Masukkan Ulang Kata Sandi Baru"
             value={confirm}
             autoComplete="new-password"
             onChange={setConfirm}
@@ -609,7 +638,7 @@ export function NewPasswordScreen({
       </div>
       <StickyAction>
         <Button type="submit" className="w-full" disabled={!ready} loading={loading}>
-          Atur Ulang Kata Sandi
+          {profile ? "Atur Ulang Password" : "Atur Ulang Kata Sandi"}
         </Button>
       </StickyAction>
 
@@ -618,13 +647,13 @@ export function NewPasswordScreen({
         tone="success"
         title="Kata Sandi Diperbarui"
         message={
-          mode === "reset"
+          mode !== "change"
             ? "Masuk kembali dengan kata sandi baru Anda."
             : "Kata sandi baru sudah aktif. Lanjutkan dengan mendaftarkan wajah Anda."
         }
       >
         <Button className="w-full" onClick={() => onDone(password)}>
-          {mode === "reset" ? "Login Ulang" : "Lanjutkan"}
+          {mode !== "change" ? "Login Ulang" : "Lanjutkan"}
         </Button>
       </ResultDialog>
     </form>
