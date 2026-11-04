@@ -14,7 +14,7 @@ import {
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
-import { AppBar, Button, RadioDot, Sheet } from "@/components/mobile";
+import { AppBar, Button, RadioDot, ResultDialog, Sheet } from "@/components/mobile";
 import { cn } from "@/lib/cn";
 import { BUSINESS_UNITS, type Account, type BusinessUnit } from "@/lib/demo";
 
@@ -800,6 +800,86 @@ export function PinVerifyScreen({
         </div>
       }
     />
+  );
+}
+
+type PinChangeStep = "current" | "new" | "confirm";
+
+/** Ubah PIN from the profile page: current PIN, new PIN, then confirm it. */
+export function PinChangeScreen({
+  expectedPin,
+  onBack,
+  onDone,
+}: {
+  expectedPin: string;
+  onBack: () => void;
+  onDone: (pin: string) => void;
+}) {
+  const [step, setStep] = useState<PinChangeStep>("current");
+  const [next, setNext] = useState("");
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  const entry = usePinEntry((pin) => {
+    if (step === "current") {
+      if (pin === expectedPin) {
+        setStep("new");
+        entry.setPin("");
+      } else setError(PIN_MISMATCH);
+    } else if (step === "new") {
+      setNext(pin);
+      setStep("confirm");
+      entry.setPin("");
+    } else if (pin === next) setSaved(true);
+    else setError(PIN_MISMATCH);
+  });
+
+  const finish = useRef(onDone);
+  finish.current = onDone;
+  useEffect(() => {
+    if (!saved) return;
+    const timer = window.setTimeout(() => finish.current(next), 1800);
+    return () => window.clearTimeout(timer);
+  }, [saved, next]);
+
+  const copy: Record<PinChangeStep, [string, string]> = {
+    current: ["Masukkan PIN Anda", "Masukkan 6 angka PIN MITRA Anda untuk melanjutkan."],
+    new: ["Buat PIN Baru", "Masukkan 6 angka PIN baru untuk melanjutkan."],
+    confirm: ["Konfirmasi PIN Anda", "Silakan masukkan kembali 6 Digit PIN yang dibuat."],
+  };
+
+  return (
+    <>
+      <PinLayout
+        key={step}
+        title={copy[step][0]}
+        description={copy[step][1]}
+        pin={entry.pin}
+        error={error}
+        onBack={() => {
+          setError("");
+          entry.setPin("");
+          if (step === "current") onBack();
+          else setStep(step === "confirm" ? "new" : "current");
+        }}
+        onDigit={(value) => {
+          if (saved) return;
+          if (error) {
+            setError("");
+            entry.setPin(value);
+          } else entry.add(value);
+        }}
+        onDelete={() => {
+          setError("");
+          entry.remove();
+        }}
+      />
+      <ResultDialog
+        open={saved}
+        tone="success"
+        title="PIN Berhasil Diperbarui"
+        message="PIN keamanan berhasil diperbarui"
+      />
+    </>
   );
 }
 

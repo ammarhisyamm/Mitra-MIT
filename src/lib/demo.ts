@@ -97,7 +97,11 @@ export type Screen =
   | "lead-add"
   | "lead-verify"
   | "lead-simulation"
-  | "quick-simulation";
+  | "quick-simulation"
+  | "contact"
+  | "profile"
+  | "profile-password"
+  | "profile-pin";
 
 export function screenLabel(screen: Screen) {
   const labels: Record<Screen, string> = {
@@ -126,6 +130,10 @@ export function screenLabel(screen: Screen) {
     "lead-verify": "Verifikasi Nomor WhatsApp",
     "lead-simulation": "Simulasi Gadai",
     "quick-simulation": "Simulasi Gadai",
+    contact: "Kontak",
+    profile: "Profil",
+    "profile-password": "Ubah Kata Sandi",
+    "profile-pin": "Ubah PIN",
   };
   return labels[screen];
 }

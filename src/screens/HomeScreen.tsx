@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { CaretDown, CaretRight, ClockCounterClockwise, Info, User } from "@phosphor-icons/react";
-import { BottomNav, RadioList, Sheet } from "@/components/mobile";
+import { BottomNav, RadioList, Sheet, type NavId } from "@/components/mobile";
 import { ActivityCard } from "@/screens/ActivityScreens";
 import { cn } from "@/lib/cn";
 import { activityStatus, rupiah, type Activity } from "@/lib/activity";
@@ -111,7 +111,7 @@ export function HomeScreen({
   onCheckIn,
   onActivities,
   onSimulate,
-  onProfile,
+  onNavigate,
   onSoon,
 }: {
   name: string;
@@ -120,7 +120,7 @@ export function HomeScreen({
   onCheckIn: (id: string) => void;
   onActivities: () => void;
   onSimulate: () => void;
-  onProfile: () => void;
+  onNavigate: (id: NavId) => void;
   onSoon: (label: string) => void;
 }) {
   const [period, setPeriod] = useState<Period>("today");
@@ -345,7 +345,7 @@ export function HomeScreen({
         </section>
       </main>
 
-      <BottomNav active="home" onHome={() => undefined} onActivity={onActivities} onProfile={onProfile} onSoon={onSoon} />
+      <BottomNav active="home" onNavigate={onNavigate} />
 
       <Sheet open={periodOpen} onClose={() => setPeriodOpen(false)} label="Pilih periode">
         <h2 className="mb-3 text-[18px] font-semibold leading-[1.3] text-[#16191c]">Pilih Periode</h2>

@@ -46,6 +46,7 @@ import {
   StatusChip,
   TextField,
   type ChipTone,
+  type NavId,
 } from "@/components/mobile";
 import { DummyMap } from "@/components/DummyMap";
 import { DateWheelSheet } from "@/components/DateWheel";
@@ -58,6 +59,7 @@ import {
   type MapView,
 } from "@/lib/map";
 import { cn } from "@/lib/cn";
+import { HEAT_META } from "@/lib/heat";
 import {
   ACTIVITY_KINDS,
   CURRENT_PLACE,
@@ -73,6 +75,7 @@ import {
   clockNow,
   collateralDetail,
   displayDate,
+  effectiveHeat,
   estimateCollateral,
   longDate,
   maskPhone,
@@ -92,12 +95,6 @@ const STATUS_META: Record<ActivityStatus, { label: string; tone: ChipTone }> = {
   ongoing: { label: "Berjalan", tone: "success" },
   upcoming: { label: "Segera", tone: "brand" },
   ended: { label: "Berakhir", tone: "muted" },
-};
-
-const HEAT_META: Record<Lead["heat"], { label: string; tone: ChipTone }> = {
-  warm: { label: "Warm", tone: "warm" },
-  hot: { label: "Hot", tone: "hot" },
-  cold: { label: "Cold", tone: "cold" },
 };
 
 function wait(ms: number) {
@@ -270,17 +267,13 @@ export function ActivityListScreen({
   onOpen,
   onCheckIn,
   onCreate,
-  onHome,
-  onProfile,
-  onSoon,
+  onNavigate,
 }: {
   activities: Activity[];
   onOpen: (id: string) => void;
   onCheckIn: (id: string) => void;
   onCreate: () => void;
-  onHome: () => void;
-  onProfile: () => void;
-  onSoon: (label: string) => void;
+  onNavigate: (id: NavId) => void;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ListFilter>(EMPTY_FILTER);
@@ -387,7 +380,7 @@ export function ActivityListScreen({
       </main>
 
       {activities.length > 0 ? <Fab label="Tambah Aktivitas" above="nav" onClick={onCreate} /> : null}
-      <BottomNav active="activity" onHome={onHome} onActivity={() => undefined} onProfile={onProfile} onSoon={onSoon} />
+      <BottomNav active="activity" onNavigate={onNavigate} />
 
       <Sheet open={filterOpen} onClose={() => setFilterOpen(false)} label="Filter aktivitas">
         <div className="flex items-center justify-between">
@@ -1492,8 +1485,7 @@ export function ActivityDetailScreen({
 }
 
 function ProspectCard({ lead, onClick }: { lead: Lead; onClick: () => void }) {
-  // Hot is only reachable after a simulation has been made.
-  const heat = HEAT_META[lead.simulation || lead.heat !== "hot" ? lead.heat : "warm"];
+  const heat = HEAT_META[effectiveHeat(lead)];
   return (
     <button
       type="button"
