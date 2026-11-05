@@ -1,0 +1,3 @@
+{
+  "rewrites": [{ "source": "/dashboard/:path*", "destination": "/index.html" }]
+}
